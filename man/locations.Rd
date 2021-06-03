@@ -9,7 +9,11 @@ Matrix with birthplace locations of some sociologists.
 }
 \usage{data("locations")}
 \format{
-  A matrix with birthplace locations (latitude and longitude) of 16 sociologists.
+  A matrix with birthplace locations of 16 sociologists:
+  \describe{
+    \item{\code{lat}}{: latitude.}
+    \item{\code{lon}}{: longitude.}
+  }
 }
 \source{
 Own elaboration from manuals of sociology and OpenStreetMap

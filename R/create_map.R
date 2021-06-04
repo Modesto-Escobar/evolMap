@@ -1,4 +1,4 @@
-create_map <- function(items, layout,
+create_map <- function(markers, locations,
   links = NULL, name = NULL, source = NULL, target = NULL,
   label = NULL, image = NULL, color = NULL, info = NULL,
   start = NULL, end = NULL,
@@ -8,7 +8,7 @@ create_map <- function(items, layout,
 options <- list()
 
 if(!is.null(name)){
-  items$name <- as.character(items[[name]])
+  markers$name <- as.character(markers[[name]])
   if(is.null(source)){
     source <- 1
   }
@@ -18,7 +18,7 @@ if(!is.null(name)){
   links <- data.frame(source=links[[source]], target=links[[target]])
 }else if(!is.null(links)){
   links <- NULL
-  warning("You must provide 'name' in order to identify each link with his items")
+  warning("You must provide 'name' in order to identify each link with his markers")
 }
 
 if(!is.null(markerCluster) && markerCluster){
@@ -29,38 +29,38 @@ if(!is.null(provider)){
 }
 
 if(!is.null(label)){
-  items$label <- items[[label]]
+  markers$label <- markers[[label]]
 }
 if(!is.null(image)){
-  items$image <- items[[image]]
+  markers$image <- markers[[image]]
   if(!is.null(color)){
     color <- NULL
     warning("images and colors cannot be set at the same time")
   }
 }
 if(!is.null(color)){
-  items$color <- categoryColors(items[[color]])
+  markers$color <- categoryColors(markers[[color]])
 }
 if(!is.null(info)){
-  items$info <- items[[info]]
+  markers$info <- markers[[info]]
 }
 
 if(!is.null(start) || !is.null(end)){
     options$time <- "numeric"
     isPOSIXct <- TRUE
     if(!is.null(start)){
-      if(inherits(items[[start]],"Date")){
-        items[[start]] <- as.POSIXct(items[[start]])
+      if(inherits(markers[[start]],"Date")){
+        markers[[start]] <- as.POSIXct(markers[[start]])
       }
-      if(!inherits(items[[start]],"POSIXct")){
+      if(!inherits(markers[[start]],"POSIXct")){
         isPOSIXct <- FALSE
       }
     }
     if(!is.null(end)){
-      if(inherits(items[[end]],"Date")){
-        items[[end]] <- as.POSIXct(items[[end]])
+      if(inherits(markers[[end]],"Date")){
+        markers[[end]] <- as.POSIXct(markers[[end]])
       }
-      if(!inherits(items[[end]],"POSIXct")){
+      if(!inherits(markers[[end]],"POSIXct")){
         isPOSIXct <- FALSE
       }
     }
@@ -68,33 +68,33 @@ if(!is.null(start) || !is.null(end)){
       options$time <- "POSIXct"
     }
     if(!is.null(start)){
-      items$start <- as.numeric(items[[start]])
+      markers$start <- as.numeric(markers[[start]])
     }else{
-      items$start <- min(as.numeric(items[[end]]))
+      markers$start <- min(as.numeric(markers[[end]]))
     }
     if(!is.null(end)){
-      items$end <- as.numeric(items[[end]])
+      markers$end <- as.numeric(markers[[end]])
     }else{
-      items$end <- max(as.numeric(items[[start]]))
+      markers$end <- max(as.numeric(markers[[start]]))
     }
 }
 
-items$x <- layout[,1]
-items$y <- layout[,2]
+markers$x <- locations[,1]
+markers$y <- locations[,2]
 if(jitteredPoints){
-  items$x <- jitter(items$x, amount = 0.01)
-  items$y <- jitter(items$y, amount = 0.01)
+  markers$x <- jitter(markers$x, amount = 0.01)
+  markers$y <- jitter(markers$y, amount = 0.01)
 }
 
-keepitems <- items[!is.na(layout[,1]) & !is.na(layout[,2]),intersect(c("name","label","image","color","info","start","end","x","y"),colnames(items))]
+keepmarkers <- markers[!is.na(locations[,1]) & !is.na(locations[,2]),intersect(c("name","label","image","color","info","start","end","x","y"),colnames(markers))]
 
 if(!is.null(options$time)){
-  options$time <- c(min(keepitems$start,na.rm=TRUE), max(keepitems$end,na.rm=TRUE), options$time)
+  options$time <- c(min(keepmarkers$start,na.rm=TRUE), max(keepmarkers$end,na.rm=TRUE), options$time)
 }
 
-objlist <- list(items=keepitems, options=options)
+objlist <- list(markers=keepmarkers, options=options)
 if(!is.null(links)){
-  links <- links[links$source %in% keepitems$name & links$target %in% keepitems$name,]
+  links <- links[links$source %in% keepmarkers$name & links$target %in% keepmarkers$name,]
   if(nrow(links)){
     objlist$links <- links
   } 
@@ -131,21 +131,21 @@ map_html <- function(object, directory){
   unlink(directory,recursive=TRUE)
   dir.create(directory)
 
-  if("image" %in% colnames(object$items)){
+  if("image" %in% colnames(object$markers)){
     dir.create(paste0(directory,"/images"))
-    for(i in seq_along(object$items$image)){
-      imagefile <- object$items$image[i]
+    for(i in seq_along(object$markers$image)){
+      imagefile <- object$markers$image[i]
       file.copy(imagefile,paste0(directory,"/images/",basename(imagefile)))
     }
   }
 
   #prepare data and parse to json
-  data <- list(items=unname(as.list(object$items)), itemnames = colnames(object$items), options=object$options)
+  data <- list(markers=unname(as.list(object$markers)), markernames = colnames(object$markers), options=object$options)
 
   #prepare links
   if(length(object$links)){
-    idx <- seq_along(object$items$name)-1
-    names(idx) <- as.character(object$items$name)
+    idx <- seq_along(object$markers$name)-1
+    names(idx) <- as.character(object$markers$name)
 
     source <- idx[as.character(object$links$source)]
     target <- idx[as.character(object$links$target)]
@@ -196,7 +196,7 @@ printTable <- function(x, name){
 }
 
 print.evolMap <- function(x, ...) {
-  printTable(x$items,"Items")
+  printTable(x$markers,"Markers")
 }
 
 plot.evolMap <- function(x, directory = tempdir(), ...){

@@ -1,7 +1,7 @@
 window.onload = function(){
 
   var infoPanel = false;
-  if(data.itemnames.indexOf("info")!=-1){
+  if(data.markernames.indexOf("info")!=-1){
     infoPanel = new InfoPanel();
   }
 
@@ -34,10 +34,10 @@ window.onload = function(){
 
   var items = [];
 
-  for(var i = 0; i<data.items[0].length; i++){
+  for(var i = 0; i<data.markers[0].length; i++){
     var item = {};
-    data.itemnames.forEach(function(col,j){
-      item[col] = data.items[j][i];
+    data.markernames.forEach(function(col,j){
+      item[col] = data.markers[j][i];
     });
 
     item.marker = new L.Marker([item.y,item.x],{icon: iconDef});

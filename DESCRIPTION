@@ -3,7 +3,7 @@ Type: Package
 Version: 1.0.0
 Date: 2021-06-02
 Title: Evolutive Maps
-Description: Create dynamic and evolutive maps with 'leaflet'.
+Description: Dynamic and evolutive maps with R, powered by 'leaflet'.
 License: GPL-3
 Depends: R (>= 3.5.0)
 Imports: jsonlite, curl

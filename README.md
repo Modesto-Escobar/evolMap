@@ -1,6 +1,6 @@
 # evolMap
 
-Create dynamic and evolutive maps with 'leaflet'.
+Dynamic and evolutive maps with R, powered by 'leaflet'.
 
 # Install
 

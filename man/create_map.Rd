@@ -46,7 +46,7 @@ sociologists$picture <- system.file("extdata", sociologists$picture,
   package="evolMap")
 
 # create map
-map <- create_map(sociologists, locations,
+map <- create_map(locations, sociologists,
   label="label", image="picture",
   start = "birth", end = "death")
 

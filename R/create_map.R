@@ -1,5 +1,5 @@
-create_map <- function(markers, locations,
-  links = NULL, name = NULL, source = NULL, target = NULL,
+create_map <- function(locations, data = NULL,
+  links = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, info = NULL,
   start = NULL, end = NULL,
   geojson = NULL, markerCluster = TRUE, provider = "OpenStreetMap",
@@ -7,15 +7,25 @@ create_map <- function(markers, locations,
 
 options <- list()
 
+lat <- locations[,1]
+lon <- locations[,2]
+if(jitteredPoints){
+  lat <- jitter(lat, amount = 0.01)
+  lon <- jitter(lon, amount = 0.01)
+}
+
+if(is.data.frame(data)){
+  data$x <- lat
+  data$y <- lon
+}else{
+  data <- data.frame(x=lat,y=lon)
+}
+
 if(!is.null(name)){
-  markers$name <- as.character(markers[[name]])
-  if(is.null(source)){
-    source <- 1
+  data$name <- as.character(data[[name]])
+  if(!is.null(links)){
+    links <- data.frame(source=links[[1]], target=links[[2]])
   }
-  if(is.null(target)){
-    target <- 2
-  }
-  links <- data.frame(source=links[[source]], target=links[[target]])
 }else if(!is.null(links)){
   links <- NULL
   warning("You must provide 'name' in order to identify each link with his markers")
@@ -29,38 +39,38 @@ if(!is.null(provider)){
 }
 
 if(!is.null(label)){
-  markers$label <- markers[[label]]
+  data$label <- data[[label]]
 }
 if(!is.null(image)){
-  markers$image <- markers[[image]]
+  data$image <- data[[image]]
   if(!is.null(color)){
     color <- NULL
     warning("images and colors cannot be set at the same time")
   }
 }
 if(!is.null(color)){
-  markers$color <- categoryColors(markers[[color]])
+  data$color <- categoryColors(data[[color]])
 }
 if(!is.null(info)){
-  markers$info <- markers[[info]]
+  data$info <- data[[info]]
 }
 
 if(!is.null(start) || !is.null(end)){
     options$time <- "numeric"
     isPOSIXct <- TRUE
     if(!is.null(start)){
-      if(inherits(markers[[start]],"Date")){
-        markers[[start]] <- as.POSIXct(markers[[start]])
+      if(inherits(data[[start]],"Date")){
+        data[[start]] <- as.POSIXct(data[[start]])
       }
-      if(!inherits(markers[[start]],"POSIXct")){
+      if(!inherits(data[[start]],"POSIXct")){
         isPOSIXct <- FALSE
       }
     }
     if(!is.null(end)){
-      if(inherits(markers[[end]],"Date")){
-        markers[[end]] <- as.POSIXct(markers[[end]])
+      if(inherits(data[[end]],"Date")){
+        data[[end]] <- as.POSIXct(data[[end]])
       }
-      if(!inherits(markers[[end]],"POSIXct")){
+      if(!inherits(data[[end]],"POSIXct")){
         isPOSIXct <- FALSE
       }
     }
@@ -68,25 +78,18 @@ if(!is.null(start) || !is.null(end)){
       options$time <- "POSIXct"
     }
     if(!is.null(start)){
-      markers$start <- as.numeric(markers[[start]])
+      data$start <- as.numeric(data[[start]])
     }else{
-      markers$start <- min(as.numeric(markers[[end]]))
+      data$start <- min(as.numeric(data[[end]]))
     }
     if(!is.null(end)){
-      markers$end <- as.numeric(markers[[end]])
+      data$end <- as.numeric(data[[end]])
     }else{
-      markers$end <- max(as.numeric(markers[[start]]))
+      data$end <- max(as.numeric(data[[start]]))
     }
 }
 
-markers$x <- locations[,1]
-markers$y <- locations[,2]
-if(jitteredPoints){
-  markers$x <- jitter(markers$x, amount = 0.01)
-  markers$y <- jitter(markers$y, amount = 0.01)
-}
-
-keepmarkers <- markers[!is.na(locations[,1]) & !is.na(locations[,2]),intersect(c("name","label","image","color","info","start","end","x","y"),colnames(markers))]
+keepmarkers <- data[!is.na(locations[,1]) & !is.na(locations[,2]),intersect(c("name","label","image","color","info","start","end","x","y"),colnames(data))]
 
 if(!is.null(options$time)){
   options$time <- c(min(keepmarkers$start,na.rm=TRUE), max(keepmarkers$end,na.rm=TRUE), options$time)

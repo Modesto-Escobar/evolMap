@@ -5,7 +5,7 @@
 \code{list_providers} returns some place's latitude and longitude. 
 }
 \value{
-This function returns a list of possible providers to use in \code{\link{create_map}}.
+This function returns a list of available map providers for the \code{\link{create_map}} function.
 }
 
 \usage{

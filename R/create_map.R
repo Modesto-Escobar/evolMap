@@ -1,28 +1,30 @@
-create_map <- function(locations, data = NULL,
+create_map <- function(data, latitude = NULL, longitude = NULL,
   links = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, info = NULL,
   start = NULL, end = NULL,
   geojson = NULL, markerCluster = TRUE, provider = "OpenStreetMap",
-  jitteredPoints = FALSE, directory = NULL){
+  jitteredPoints = FALSE){
 
 options <- list()
 
-lat <- locations[,1]
-lon <- locations[,2]
-if(jitteredPoints){
-  lat <- jitter(lat, amount = 0.01)
-  lon <- jitter(lon, amount = 0.01)
+if(is.null(latitude)){
+ latitude <- colnames(data)[1]
 }
-
-if(is.data.frame(data)){
-  data$x <- lat
-  data$y <- lon
-}else{
-  data <- data.frame(x=lat,y=lon)
+options$latitude <- latitude
+if(is.null(longitude)){
+ longitude <- colnames(data)[2]
+}
+options$longitude <- longitude
+data[[latitude]] <- as.numeric(data[[latitude]])
+data[[longitude]] <- as.numeric(data[[longitude]])
+if(jitteredPoints){
+  data[[latitude]] <- jitter(data[[latitude]], amount = 0.01)
+  data[[longitude]] <- jitter(data[[longitude]], amount = 0.01)
 }
 
 if(!is.null(name)){
-  data$name <- as.character(data[[name]])
+  data[[name]] <- as.character(data[[name]])
+  options$name <- name
   if(!is.null(links)){
     links <- data.frame(source=links[[1]], target=links[[2]])
   }
@@ -39,20 +41,29 @@ if(!is.null(provider)){
 }
 
 if(!is.null(label)){
-  data$label <- data[[label]]
+  data[[label]] <- as.character(data[[label]])
+  options$label <- label
 }
 if(!is.null(image)){
-  data$image <- data[[image]]
+  data[[image]] <- as.character(data[[image]])
+  missing <- !file.exists(data[[image]])
+  if(sum(missing)!=0){
+    data[missing,image] <- NA
+    warning("Some images are missing!")
+  }
+  options$image <- image
   if(!is.null(color)){
     color <- NULL
     warning("images and colors cannot be set at the same time")
   }
 }
 if(!is.null(color)){
-  data$color <- categoryColors(data[[color]])
+  data[["_color_"]] <- categoryColors(data[[color]])
+  options$color <- "_color_"
 }
 if(!is.null(info)){
-  data$info <- data[[info]]
+  data[[info]] <- as.character(data[[info]])
+  options$info <- info
 }
 
 if(!is.null(start) || !is.null(end)){
@@ -78,26 +89,30 @@ if(!is.null(start) || !is.null(end)){
       options$time <- "POSIXct"
     }
     if(!is.null(start)){
-      data$start <- as.numeric(data[[start]])
+      data[[start]] <- as.numeric(data[[start]])
     }else{
-      data$start <- min(as.numeric(data[[end]]))
+      start <- "_start_"
+      data[[start]] <- min(as.numeric(data[[end]]))
     }
     if(!is.null(end)){
-      data$end <- as.numeric(data[[end]])
+      data[[end]] <- as.numeric(data[[end]])
     }else{
-      data$end <- max(as.numeric(data[[start]]))
+      end <- "_end_"
+      data[[end]] <- max(as.numeric(data[[start]]))
     }
+    options$start <- start
+    options$end <- end
 }
 
-keepmarkers <- data[!is.na(locations[,1]) & !is.na(locations[,2]),intersect(c("name","label","image","color","info","start","end","x","y"),colnames(data))]
+keepmarkers <- data[!is.na(data[[latitude]]) & !is.na(data[[longitude]]),]
 
 if(!is.null(options$time)){
-  options$time <- c(min(keepmarkers$start,na.rm=TRUE), max(keepmarkers$end,na.rm=TRUE), options$time)
+  options$time <- c(min(keepmarkers[[start]],na.rm=TRUE), max(keepmarkers[[end]],na.rm=TRUE), options$time)
 }
 
 objlist <- list(markers=keepmarkers, options=options)
 if(!is.null(links)){
-  links <- links[links$source %in% keepmarkers$name & links$target %in% keepmarkers$name,]
+  links <- links[links$source %in% keepmarkers[[name]] & links$target %in% keepmarkers[[name]],]
   if(nrow(links)){
     objlist$links <- links
   } 
@@ -116,10 +131,6 @@ if(!is.null(geojson)){
 }
 object <- structure(objlist, class="evolMap")
 
-if(!is.null(directory)){
-  map_html(object, directory)
-}
-
   return(object)
 }
 
@@ -134,21 +145,23 @@ map_html <- function(object, directory){
   unlink(directory,recursive=TRUE)
   dir.create(directory)
 
-  if("image" %in% colnames(object$markers)){
+  if(!is.null(object$options$image)){
     dir.create(paste0(directory,"/images"))
-    for(i in seq_along(object$markers$image)){
-      imagefile <- object$markers$image[i]
+    for(i in seq_along(object$markers[[object$options$image]])){
+      imagefile <- object$markers[i,object$options$image]
       file.copy(imagefile,paste0(directory,"/images/",basename(imagefile)))
+      object$markers[i,object$options$image] <- paste0("images/",basename(imagefile))
     }
   }
 
   #prepare data and parse to json
-  data <- list(markers=unname(as.list(object$markers)), markernames = colnames(object$markers), options=object$options)
+  data <- list(markers=unname(as.list(object$markers)), markercolnames = colnames(object$markers), options=object$options)
 
   #prepare links
   if(length(object$links)){
-    idx <- seq_along(object$markers$name)-1
-    names(idx) <- as.character(object$markers$name)
+    markersnames <- object$markers[[object$options$name]]
+    idx <- seq_along(markersnames)-1
+    names(idx) <- as.character(markersnames)
 
     source <- idx[as.character(object$links$source)]
     target <- idx[as.character(object$links$target)]

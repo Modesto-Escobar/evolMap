@@ -9,16 +9,17 @@ Object of class \code{evolMap}.
 }
 
 \usage{
-create_map(locations, data = NULL,
+create_map(data, latitude = NULL, longitude = NULL,
   links = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, info = NULL,
   start = NULL, end = NULL,
   geojson = NULL, markerCluster = TRUE, provider = "OpenStreetMap",
-  jitteredPoints = FALSE, directory = NULL)
+  jitteredPoints = FALSE)
 }
 \arguments{
-\item{locations}{a matrix with two columns with the latitude and longitude coordinates for each marker.}
-\item{data}{a data frame with the information to show in each location. Column names can be passed as parameter to the arguments.}
+\item{data}{a data frame with the locations and information to show in each one. Column names can be passed as parameter to the arguments.}
+\item{latitude}{name of the column with the latitude coordinates for each marker (first column by default).}
+\item{longitude}{name of the column with the longitude coordinates for each marker (second column by default).}
 \item{links}{a data frame with two columns with source and target markers names (specified with the name argument).}
 \item{name}{name of the column with names in the markers data frame.}
 \item{label}{name of the column with labels in the markers data frame. This information will be shown as a tool tip.}
@@ -31,7 +32,6 @@ create_map(locations, data = NULL,
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
 \item{provider}{character string with the map/provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available maps/providers.}
 \item{jitteredPoints}{Add a small amount of noise to markers to avoid overlapping.}
-\item{directory}{a character string representing the directory where the web files will be saved.}
 }
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
@@ -44,10 +44,15 @@ data(locations)
 # load pictures
 sociologists$picture <- system.file("extdata", sociologists$picture,
   package="evolMap")
+  
+# join locations
+sociologists$latitude <- locations[,1]
+sociologists$longitude <- locations[,2]
 
 # create map
-map <- create_map(locations, sociologists,
-  label="label", image="picture",
+map <- create_map(sociologists,
+  latitude = "latitude", longitude = "longitude",
+  label = "label", image = "picture",
   start = "birth", end = "death")
 
 \dontrun{

@@ -1,7 +1,7 @@
 window.onload = function(){
 
   var infoPanel = false;
-  if(data.markernames.indexOf("info")!=-1){
+  if(data.options.info){
     infoPanel = new InfoPanel();
   }
 
@@ -24,39 +24,33 @@ window.onload = function(){
   }
 
   // markers
-  var iconDef = L.icon({
-        iconUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAADgklEQVRYhcXYS2gUSRgA4B/RxQdkTXf1TAwaox4UVllBVJSFVfEgXkQwimaqOjMmQ07ZKD4OCkYvy3reXTzrIQq+D3rSQHwFraruTBKNrrqyZnSSCUZIfEx05t9DTETj1PRrnB/+6/9/XdX19wPAR5TX8WWGaR8mTFwnVPQSKkcIlSOEiQeEimsGFYfKd3cu9dPDU+jRzg2EyXs6FegkCZV39WjnhqLDtNqOMkLFBaewScnkOa22o6wouHlxvkinssczbgLJu6t2JRYGiqvcyYlGxRPfuImUz8KNj0PB6GrwByNi3QwON5YaFe0Q59N8+0J11v6gcZ+RVrMvXHWzNVtnYrBQo+V7urDldB+2tqextT2NR1r78OfmLidb/aps923NM1A3xQFVA4MJPH4+iZnRLGIu90VmRrP4x7kkEqZGhiJ8nx/gHVXxE1dTk2Bf519XUkqgEbFuesKFGx+HdCaz+QpvPvawIA5zOcxlc7jpaK9qNmYrd3LiGlge47+orvzsrUFHQMzl8MyNwQLb3LXWNVCjvEZV9N/UO8fApy/fqU8zk9tcAwm1GlRF+4cyjoH9QxklkFCrwTUwxOytqqL8n2HHwLuPhtXjJprY4ho49uzNX/TYmaRjYMvpPiWwotGqdg0EANCZ+C9f0fkNNiYHC2/z8/R7rGqwVMP6mSccAIAWEcdVV77u8ANMvx7NixsYyuCvh+6r5yCzf/cMrIx1LlbeO1Tg0qYEnmpL48jbjxOw4bcf8OT1AfypKaG+96hAPc6XeAYCAOhUdBRsQgXOiUpcfaAHV+3vxjlRWRg2tr23fOEAAIgp4s6auU/CeL1v4LqWtunElMnAcVS8mFtze4ZvIAAAqbP3Bg3UGP8tEBwAwIo4n0mo7A9u9azUijifGRgQAECP2AeDAvp6B8wX4X2pWYSKF76BTPYFvnrjodXZMb9AI8rNouAAAABxCmGCez4YVNqAOKV4QACoYHy9V2A4JjcWFTcehMrLrk+uKS99FxwAQHmcVxEqhx3jmHjzY33vgu8GBHD3QV+UsVIwWtqmEiZkQaApEoH84vASem33StWnqc5kNhRLrCkJbjyIaf2dd+ZR8WdJcQCffmp+422HMPGyutmaXWofAAAYUbFj8lDmNaV2fRE6lWc/rx6/WGrPpKiISoNQ2W9QkQ7Vd4VL7flmGKa93TDt7UHW/B87qiQ8BYAKXwAAAABJRU5ErkJggg==",
-
-        iconSize:     [40, 40], // size of the icon
-        iconAnchor:   [20, 40], // point of the icon which will correspond to marker's location
-        popupAnchor:  [0, -40] // point from which the popup should open relative to the iconAnchor
-      });
-
   var items = [];
 
   for(var i = 0; i<data.markers[0].length; i++){
     var item = {};
-    data.markernames.forEach(function(col,j){
+    data.markercolnames.forEach(function(col,j){
       item[col] = data.markers[j][i];
     });
 
-    item.marker = new L.Marker([item.y,item.x],{icon: iconDef});
+    item.marker = new L.Marker([item[data.options.longitude],item[data.options.latitude]],{icon: getIcon(data.options.color ? item[data.options.color] : "#2f7bee")});
 
-    if(item.hasOwnProperty("label")){
-      item.marker.bindPopup(item.label);
+    if(data.options.label){
+      item.marker.bindPopup(item[data.options.label]);
     }
 
     if(infoPanel){
       item.marker.itemIndex = i;
-      item.marker.on("click",function(e){
-        map.setView(e.target.getLatLng());
-        infoPanel.changeContent(items[e.target.itemIndex].info);
+      item.marker.on("click",function(event){
+        if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
+          map.setView(event.target.getLatLng());
+        }
+        infoPanel.changeContent(items[event.target.itemIndex][data.options.info]);
       });
     }
 
     items.push(item);
 
-    if(item.image){
+    if(data.options.image){
       var image = new Image();
       image.onload = function(){
         var item = items[this.itemIndex],
@@ -64,7 +58,7 @@ window.onload = function(){
             h = 40,
             w = 40*ratio;
         var icon = L.icon({
-          iconUrl: item.image,
+          iconUrl: item[data.options.image],
 
           iconSize:     [w, h], // size of the icon
           iconAnchor:   [w/2, h/2], // point of the icon which will correspond to marker's location
@@ -73,7 +67,7 @@ window.onload = function(){
         item.marker.setIcon(icon);
       }
       image.itemIndex = i;
-      image.src = item.image;
+      image.src = item[data.options.image];
     }
   }
 
@@ -85,8 +79,8 @@ window.onload = function(){
       link.source = items[data.links[0][i]];
       link.target = items[data.links[1][i]];
       var latlngs = [
-          [link.source.y, link.source.x],
-          [link.target.y, link.target.x]
+          [link.source[options.data.longitude], link.source[options.data.latitude]],
+          [link.target[options.data.longitude], link.target[options.data.latitude]]
         ];
       link.line = L.polyline(latlngs, {color: '#2f7bee'})
 
@@ -143,7 +137,7 @@ window.onload = function(){
         },
         goToCurrent = function(){
           items.forEach(function(item){
-            if(item.start<=current && (item.end>=current || item.end===null)){
+            if(item[data.options.start]<=current && (item[data.options.end]>=current || item[data.options.end]===null)){
               item.show = true;
               item.marker.addTo(markers);
             }else{
@@ -186,6 +180,9 @@ window.onload = function(){
     });
 
     var dateSpan = L.DomUtil.create('span','date-viewer');
+    var dateInput = L.DomUtil.create('input','date-input');
+    dateInput.type = "test";
+    dateInput.style.width = "100px";
 
     goTo(min);
 
@@ -296,6 +293,35 @@ window.onload = function(){
           }
           loadNextFrame();
         });
+
+        dateSpan.addEventListener("click",function(event){
+          event.preventDefault();
+          dateInput.value = "";
+          date.removeChild(dateSpan);
+          date.appendChild(dateInput);
+          dateInput.focus();
+        })
+
+        dateInput.addEventListener("keydown",function(event){
+          if(pressed_Enter(event)){
+            event.preventDefault();
+            var value = dateInput.value;
+            if(data.options.time[2]=="POSIXct"){
+              value = (new Date(value).getTime())/1000;
+            }else{
+              value = Number(dateInput.value);
+            }
+            goTo(value);
+            date.removeChild(dateInput);
+            date.appendChild(dateSpan);
+          }
+        })
+
+        dateInput.addEventListener("blur",function(event){
+          event.preventDefault();
+          date.removeChild(dateInput);
+          date.appendChild(dateSpan);
+        })
 
         function newInterval(){
           clearInterval(frameInterval);
@@ -446,4 +472,26 @@ function resizeInfopanel(panel) {
 
     contentDiv.style.display = null;
   }
+}
+
+function getIconMarkerURI(color){
+  return "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8"?>'+
+'<svg width="40" height="40" version="1.1" viewBox="0 0 10.583 10.583" xmlns="http://www.w3.org/2000/svg">'+
+'<path d="m8.599 3.3073c-1e-7 1.8266-3.3073 7.276-3.3073 7.276s-3.3073-5.4495-3.3073-7.276c0-1.8266 1.4807-3.3073 3.3073-3.3073 1.8266 5.5228e-8 3.3073 1.4807 3.3073 3.3073z" fill="'+color+'"/>'+
+'<path d="m7.276 3.3073a1.9844 1.9844 0 0 1-1.9844 1.9844 1.9844 1.9844 0 0 1-1.9844-1.9844 1.9844 1.9844 0 0 1 1.9844-1.9844 1.9844 1.9844 0 0 1 1.9844 1.9844z" fill="#ffffff"/>'+
+'</svg>');
+}
+
+function getIcon(color){
+  return L.icon({
+        iconUrl: getIconMarkerURI(color),
+
+        iconSize:     [40, 40], // size of the icon
+        iconAnchor:   [20, 40], // point of the icon which will correspond to marker's location
+        popupAnchor:  [0, -40] // point from which the popup should open relative to the iconAnchor
+      });
+}
+
+function pressed_Enter(event){
+  return event.key=="Enter" || event.keyCode == 13 || event.which==13;
 }

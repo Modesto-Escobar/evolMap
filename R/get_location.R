@@ -5,7 +5,7 @@ get_location <- function(x){
       locations[[place]] <- get_location(place)
     }
     layout <- sapply(x,function(x){ locations[[x]] })
-    layout <- cbind(layout[2,],layout[1,])
+    layout <- cbind(layout[1,],layout[2,])
     return(layout)
   }else{
     if(length(x) && !is.na(x) && x!=""){

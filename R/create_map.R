@@ -35,7 +35,7 @@ if(isColor(defaultColor)){
 
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
   name = NULL, label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL, markerCluster = TRUE, jitteredPoints = 0){
+  start = NULL, end = NULL, period = NULL, markerCluster = TRUE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -104,6 +104,12 @@ if(!is.null(info)){
   map$options$markerInfo <- info
 }
 
+map$options$markerPeriod <- NULL
+if(!is.null(period)){
+  data[[period]] <- as.character(data[[period]])
+  map$options$markerPeriod <- period
+}
+
   map$markers <- data
 
   map <- checkItemValue(map,"markers","markerColor",color,"color",isColor,applyCategoryColors,col2hex)
@@ -112,7 +118,7 @@ if(!is.null(info)){
   return(map)
 }
 
-add_links <- function(map, links, color = NULL, start = NULL, end = NULL){
+add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period = NULL){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -124,6 +130,12 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL){
 
   if(is.null(map$options$markerName)){
     stop("Markers must be provided with a 'name' in order to identify each link with his source and target")
+  }
+
+  map$options$linkPeriod <- NULL
+  if(!is.null(period)){
+    data[[period]] <- as.character(data[[period]])
+    map$options$linkPeriod <- period
   }
 
   source <- 1
@@ -143,7 +155,7 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL){
   return(map)
 }
 
-add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, start = NULL, end = NULL){
+add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, start = NULL, end = NULL, period = NULL){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -226,6 +238,12 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
       map$options$entityText <- text
     }
 
+    map$options$entityPeriod <- NULL
+    if(!is.null(period)){
+      data[[period]] <- as.character(data[[period]])
+      map$options$entityPeriod <- period
+    }
+
     map <- checkItemValue(map,"entities","entityColor",color,"color",isColor,applyCategoryColors,col2hex)
     map <- checkTime(map,"entities",start,end)
   }else{
@@ -235,7 +253,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
   return(map)
 }
 
-add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, latitude = NULL, longitude = NULL, zoom = NULL, description = NULL, duration = NULL, periodInItems = NULL, periodrep = TRUE){
+add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, latitude = NULL, longitude = NULL, zoom = NULL, description = NULL, duration = NULL, periodrep = TRUE){
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
   }
@@ -286,11 +304,6 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
   if(!is.null(duration)){
     periods[,duration] <- as.numeric(periods[,duration])
     map$options$periodDuration <- duration
-  }
-
-  map$options$periodInItems <- NULL
-  if(!is.null(periodInItems)){
-    map$options$periodInItems <- periodInItems
   }
 
   map$options$byperiod <- NULL

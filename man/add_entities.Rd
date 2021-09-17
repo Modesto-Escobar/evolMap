@@ -11,7 +11,7 @@ Object of class \code{evolMap}.
 \usage{
 add_entities(map, entities, attributes = NULL, name = NULL,
   label = NULL, color = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL)
+  start = NULL, end = NULL, period = NULL)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -24,6 +24,7 @@ add_entities(map, entities, attributes = NULL, name = NULL,
 \item{info}{name of the column with information to display in a panel in the data matrix.}
 \item{start}{name of the column with the start time of a period in the data matrix.}
 \item{end}{name of the column with the end time of a period in the data matrix.}
+\item{period}{name of the column with the period name in the data matrix.}
 }
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca.

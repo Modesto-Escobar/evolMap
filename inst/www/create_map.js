@@ -95,7 +95,7 @@ function renderMap(data){
       }
       if(geojson.type=="FeatureCollection"){
         geojson.features.forEach(function(feature){
-          var i = getValuesFromDF("entities","entityName").indexOf(feature.properties[data.options.entityName])
+          var i = getValuesFromDF("entities","entityName").indexOf(feature.properties[data.options.entityName]);
           data.entities.columns.forEach(function(k,j){
             feature.properties[k] = data.entities.data[j][i];
           });
@@ -184,9 +184,19 @@ function renderMap(data){
         var panelButtons = L.DomUtil.create('div', 'leaflet-bar buttons-panel panel-style');
         panelStopPropagation(panelButtons);
 
-        var tables = L.DomUtil.create('button','primary tables-button',panelButtons);
-        tables.textContent = "Tables";
-        tables.addEventListener("click",show_tables);
+        var tableButton = L.DomUtil.create('img','tables-button',panelButtons);
+        tableButton.setAttribute("src", b64Icons.table);
+        tableButton.setAttribute("alt", "table");
+        tableButton.style.cursor = "pointer";
+        tableButton.style.verticalAlign = "middle";
+        tableButton.addEventListener("click",show_tables);
+
+        //var freqButton = L.DomUtil.create('img','frequencies-button',panelButtons);
+        //freqButton.setAttribute("src", b64Icons.chart);
+        //freqButton.setAttribute("alt", "frequencies");
+        //freqButton.style.cursor = "pointer";
+        //freqButton.style.verticalAlign = "middle";
+        //freqButton.addEventListener("click",show_frequencies);
 
         var selectall = L.DomUtil.create('button','primary selectall-button',panelButtons);
         selectall.textContent = "Select all";
@@ -588,6 +598,7 @@ function renderMap(data){
           update_legends();
           update_buttons();
           show_tables();
+          show_frequencies();
 
           updateShowedDates(current);
           inputRange.value = current;
@@ -862,6 +873,7 @@ function renderMap(data){
       update_legends();
       update_buttons();
       show_tables();
+      show_frequencies();
     }
   }
 
@@ -985,20 +997,7 @@ function renderMap(data){
         return
       }
 
-      var types = [],
-          columns = data[items].columns.filter(function(d,i){
-              if(items=="markers" && d==data.options.image){
-                return false;
-              }
-              if(items=="markers" && d==data.options.markerInfo){
-                return false;
-              }
-              if(d.charAt(0)!="_"){
-                types.push(data[items].types[i]);
-                return true;
-              }
-              return false;
-          });
+      var columns = getItemsColumns(items);
 
       var tbody = container.querySelector(".table-wrapper."+items+"-table-wrapper > table > tbody");
       if(!tbody){
@@ -1050,7 +1049,7 @@ function renderMap(data){
           };
           var th = document.createElement("th");
           th.classList.add("sorting");
-          if(types[i]=="number"){
+          if(getDFcolumnType(items,col)=="number"){
             th.style.textAlign =  "right";
           }
           th.textContent = col;
@@ -1104,9 +1103,9 @@ function renderMap(data){
           }
           subitems.forEach(function(item,j){
             var tr = document.createElement("tr");
-            columns.forEach(function(col,i){
+            columns.forEach(function(col){
               var td = document.createElement("td");
-              if(types[i]=="number"){
+              if(getDFcolumnType(items,col)=="number"){
                 td.style.textAlign =  "right";
               }
               td.textContent = renderCell(item.properties[col]);
@@ -1190,6 +1189,302 @@ function renderMap(data){
     }
   }
 
+  function show_frequencies(event){
+    var freqContainer = document.querySelector(".frequencies-section > .frequencies-container");
+    if(!freqContainer && event){
+      var freqSection = document.createElement("div");
+      freqSection.classList.add("frequencies-section");
+
+      var freqSectionHeader = document.createElement("div");
+      freqSectionHeader.classList.add("frequencies-section-header");
+      freqSection.appendChild(freqSectionHeader);
+
+      var closeButton = document.createElement("div");
+      closeButton.classList.add("close-button");
+      closeButton.addEventListener("click", function(){
+        document.body.removeChild(freqSection);
+      });
+      freqSectionHeader.appendChild(closeButton);
+
+      if(!data.options.freqMode){
+        data.options.freqMode = "relative";
+      }
+      var modeSelectWrapper = document.createElement("div");
+      modeSelectWrapper.classList.add("select-wrapper");
+      var modeSelect = document.createElement("select");
+      ["relative","absolute"].forEach(function(d){
+        var option = document.createElement("option");
+        option.value = d;
+        option.textContent = d;
+        modeSelect.appendChild(option);
+      });
+      modeSelect.addEventListener("change",function(){
+        data.options.freqMode = this.value;
+        show_frequencies();
+      });
+      modeSelect.value = data.options.freqMode;
+      modeSelectWrapper.appendChild(modeSelect);
+      freqSectionHeader.appendChild(modeSelectWrapper);
+
+      freqContainer = document.createElement("div");
+      freqContainer.classList.add("frequencies-container");
+      freqSection.appendChild(freqContainer);
+      document.body.appendChild(freqSection);
+    }
+
+    if(freqContainer){
+      renderBars(freqContainer,"markers","markerColor","markerName");
+    }
+
+    function renderBars(container,items,itemColor,itemName){
+      var columns = getItemsColumns(items),
+          visibleItems = data.storeItems[items].filter(function(item){ return !item._hidden && !item._outoftime; }),
+          renderPercentage = data.options.freqMode=="relative" ? "%" : "";
+      columns.forEach(function(col){
+        if(col==data.options[itemName]){
+          return;
+        }
+        if(getDFcolumnType(items,col)=="number"){
+          var values = [],
+              selectedValues = [];
+
+          visibleItems.forEach(function(item){
+            if(item.properties[col]!==null){
+              values.push(+item.properties[col]);
+              if(item._selected){
+                selectedValues.push(+item.properties[col]);
+              }
+            }
+          });
+
+          var barplot = getBarPlot(col);
+
+          // set the dimensions and margins of the graph
+          var margin = {top: 10, right: 10, bottom: 30, left: 40},
+              w = (container.offsetWidth - 72) - margin.left - margin.right,
+              h = 200 - margin.top - margin.bottom;
+
+          // append the svg object
+          var namespace = "http://www.w3.org/2000/svg";
+          var svg = document.createElementNS(namespace, "svg");
+          svg.setAttributeNS(namespace,"width", w + margin.left + margin.right);
+          svg.setAttributeNS(namespace,"height", h + margin.top + margin.bottom);
+          var g = document.createElementNS(namespace,"g");
+          g.setAttributeNS(namespace,"transform", "translate(" + margin.left + "," + margin.top + ")");
+          svg.appendChild(g);
+          barplot.appendChild(svg);
+
+          //TODO: histogram
+        }else{
+          var values = {},
+              selectedValues = {},
+              maxvalue = -Infinity,
+              keyvalues = [];
+
+          visibleItems.forEach(function(item){
+            var val = String(item.properties[col]);
+            if(!values.hasOwnProperty(val)){
+              values[val] = 1;
+              keyvalues.push(val);
+            }else{
+              values[val] += 1;
+            }
+            if(values[val]>maxvalue){
+              maxvalue = values[val];
+            }
+            if(item._selected){
+              if(!selectedValues.hasOwnProperty(val)){
+                selectedValues[val] = 1;
+              }else{
+                selectedValues[val] += 1;
+              }
+            }
+          });
+
+          keyvalues.sort(function(a,b){
+                a = values[a];
+                b = values[b];
+                return a > b ? -1 : a < b ? 1 : a <= b ? 0 : NaN;
+              });
+
+          if(data.options.freqMode=="relative"){
+            var selectedlength = visibleItems.filter(function(item){ return item._selected; }).length;
+            keyvalues.forEach(function(val){
+              values[val] = values[val]/visibleItems.length*100;
+              if(values[val]>maxvalue){
+                maxvalue = values[val];
+              }
+              if(selectedValues.hasOwnProperty(val)){
+                selectedValues[val] = selectedValues[val]/selectedlength*100;
+                if(selectedValues[val]>maxvalue){
+                  maxvalue = selectedValues[val];
+                }
+              }
+            });
+          }
+
+          var barplot = getBarPlot(col);
+
+          var selectItems = function(event,v){
+            visibleItems.forEach(function(item){
+              if(!(event.ctrlKey || event.metaKey)){
+                delete item._selected;
+              }
+              if(String(item.properties[col])==v){
+                item._selected = true;
+              }
+            });
+            update_items();
+          };
+
+          keyvalues.forEach(function(v,i){
+            var percentage = values[v]/maxvalue*100,
+                percentage2 =  0;
+
+            if(selectedValues[v]){
+              percentage2 = selectedValues[v]/maxvalue*100;
+            }
+
+            var getValue = function(values,value){
+              return data.options.freqMode=="relative" ? formatter(values[value])+"%" : values[value];
+            }
+
+            var row = document.createElement("div");
+            row.classList.add("freq-bar");
+            row.style.display = i>9 ? "none" : null;
+            row.setAttribute("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""));
+            row.addEventListener("click",function(event){
+              selectItems(event,v);
+            })
+            barplot.appendChild(row);
+
+            var freq1 = document.createElement("div");
+            freq1.classList.add("freq1");
+            freq1.style.width = percentage+"%";
+            freq1.style.backgroundColor = data.options[itemColor]==col ? colorManagers[itemColor].getColor(v) : null;
+            freq1.innerHTML = "&nbsp;";
+            row.appendChild(freq1);
+
+            var freq2 = document.createElement("div");
+            freq2.classList.add("freq2");
+            freq2.style.width = percentage2+"%";
+            freq2.innerHTML = "&nbsp;";
+            row.appendChild(freq2);
+
+            var span = document.createElement("span");
+            span.textContent = v;
+            row.appendChild(span);
+          })
+
+          if(keyvalues.length>10){
+            var moreLessBars = document.createElement("div");
+            moreLessBars.classList.add("show-more-less-bars");
+            barplot.appendChild(moreLessBars);
+
+            var moreBars = document.createElement("span");
+            moreBars.classList.add("show-more-bars");
+            moreBars.style.cursor = "pointer";
+            moreBars.textContent = "Show " + Math.min(keyvalues.length-10,10) + " more";
+            moreBars.addEventListener("click",function(){
+              var count = 0;
+              barplot.querySelectorAll(".freq-bar").forEach(function(d){
+                  if(d.style.display == "none"){
+                    if(count>=10){
+                      d.style.display = "none";
+                    }else{
+                      d.style.display = null;
+                      count++;
+                    }
+                  }
+              });
+              if(count<10){
+                moreBars.style.visibility = "hidden";
+                moreBars.style.cursor = null;
+              }else{
+                count = 0;
+                barplot.querySelectorAll(".freq-bar").forEach(function(d){
+                  if(d.style.display == "none"){
+                    count++;
+                  }
+                });
+                moreBars.textContent = "Show " + Math.min(count,10) + " more";
+              }
+              lessBars.style.visibility = null;
+              lessBars.style.cursor = "pointer";
+            });
+            moreLessBars.appendChild(moreBars);
+
+            var lessBars = document.createElement("span");
+            lessBars.classList.add("show-less-bars");
+            lessBars.style.visibility = "hidden";
+            lessBars.textContent = "Show less";
+            lessBars.addEventListener("click",function(){
+              barplot.querySelectorAll(".freq-bar").forEach(function(d,i){
+                if(i>9){
+                  d.style.display = "none";
+                }else{
+                  d.style.display = null;
+                }
+              });
+              lessBars.style.visibility = "hidden";
+              lessBars.style.cursor = null;
+              moreBars.style.visibility = null;
+              moreBars.style.cursor = "pointer";
+              moreBars.textContent = "Show " + Math.min(keyvalues.length-10,10) + " more";
+            });
+            moreLessBars.appendChild(lessBars);
+          }
+
+          var axis = document.createElement("div");
+          axis.classList.add("freq-axis");
+          barplot.appendChild(axis);
+
+          var x = d3.scaleLinear()
+          .domain([0,maxvalue])
+
+          x.ticks(5).forEach(function(t){
+            var span = document.createElement("span");
+            span.style.left = (t/maxvalue*100)+"%";
+            span.textContent = t+renderPercentage;
+            axis.appendChild(span);
+          })
+        }
+      });
+
+      function getBarPlot(name){
+          var freqBarplots = container.childNodes;
+          if(container.childNodes.length){
+            freqBarplots = container.childNodes[0];
+          }else{
+            freqBarplots = document.createElement("div");
+            freqBarplots.classList.add("frequency-barplots");
+            container.appendChild(freqBarplots);
+          }
+          var barplot = false;
+          freqBarplots.childNodes.forEach(function(d){
+            if(d.variable==name){
+              barplot = d;
+            }
+          });
+          if(!barplot){
+            barplot = document.createElement("div");
+            barplot.classList.add("bar-plot");
+            barplot.variable = name;
+            freqBarplots.appendChild(barplot);
+
+            var header = document.createElement("h2");
+            header.textContent = name;
+            barplot.appendChild(header);
+          }else{
+            while(barplot.lastChild && barplot.childNodes.length>1){
+              barplot.removeChild(barplot.lastChild);
+            }
+          }
+        return barplot;
+      }
+    }
+  }
+
   function timeApplied(items){
     if(!items){
       items = Object.keys(data.storeItems);
@@ -1202,8 +1497,7 @@ function renderMap(data){
           && ((data.options.hasOwnProperty("time")
                 && data[items[i]].columns.indexOf(data.options.start)!=-1
                 && data[items[i]].columns.indexOf(data.options.end)!=-1)
-              || (data.periods && data.options.periodInItems
-                && data[items[i]].columns.indexOf(data.options.periodInItems)!=-1))){
+              || (data.periods && data.options[getItemOption(items[i],"Period")]))){
         return true;
       }
     }
@@ -1231,8 +1525,8 @@ function renderMap(data){
   function findAttributes(items,item,name,names,current){
     if(timeApplied(items)){
       item._outoftime = true;
-      if(data.options.periodInItems && data[items].columns.indexOf(data.options.periodInItems)!=-1){
-        var periods = getValuesFromDF(items,"periodInItems"),
+      if(data.periods && data.options[getItemOption(items,"Period")]){
+        var periods = getValuesFromDF(items,getItemOption(items,"Period")),
             period = getCurrentPeriod(current);
         loadAttributes(function(i){ return periods[i]==period; });
       }else{
@@ -1449,9 +1743,9 @@ function renderMap(data){
     function listLegend(container,items,itemVisual,title){
       if(data.storeItems[items] && data.options[itemVisual]){
         var column = data.options[itemVisual],
-            idx = data[items].columns.indexOf(column);
-        if(idx!=-1){
-          if(data[items].types[idx]=="number"){
+            type = getDFcolumnType(column);
+        if(type){
+          if(type=="number"){
             var domain = colorManagers[itemVisual].getDomain(),
                 range = colorManagers[itemVisual].getRange();
 
@@ -2102,11 +2396,7 @@ function addVisualSelector(sel,items,item,visual,update,colorManagers){
     var div = L.DomUtil.create('div','',wrapper);
     div.innerHTML = "<span>"+visual+"</span>";
 
-    var options = data[items].columns.filter(function(d){
-        return d.charAt(0)!="_";
-      }).map(function(d){
-        return [d,d];
-      })
+    var options = getItemsColumns(items).map(function(d){ return [d,d]; });
     options.unshift(["_none_","-none-"])
     displaySelectWrapper(wrapper,options,function(value){
       if(value=="_none_"){
@@ -2116,8 +2406,8 @@ function addVisualSelector(sel,items,item,visual,update,colorManagers){
       }
       update();
       if(visual=="Color"){
-        var idx = data[items].columns.indexOf(value);
-        if(idx!=-1 && data[items].types[idx]=="number"){
+        var type = getDFcolumnType(items,value);
+        if(type=="number"){
             displayScalePicker(item+visual,function(){
               colorManagers[item+visual].changeLevels(value);
               update();
@@ -2133,7 +2423,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
     var selectChangeFunction = function(value){
       valueSelector.innerHTML = "";
       var values = data.storeItems[items].filter(function(d){ return !d._hidden && !d._outoftime; }).map(function(d){ return d.properties[value]; }).filter(uniqueValues).sort(sortAsc);
-      if(data[items].types[data[items].columns.indexOf(value)]=="number"){
+      if(getDFcolumnType(items,value)=="number"){
         var extent = valuesExtent(values),
             mid = (extent[0]+extent[1])/2;
 
@@ -2175,7 +2465,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
       }
     }
 
-    var columns = data[items].columns.filter(function(d){ return d.charAt(0)!="_"; });
+    var columns = getItemsColumns(items);
     displaySelectWrapper(div,columns,selectChangeFunction,columns[0]);
     var valueSelector = L.DomUtil.create('div','value-selector',div);
 
@@ -2524,7 +2814,7 @@ function brushSlider(){
   return exports;
 }
 
-function dragElementX(element,handler,parent,callback) {
+function dragElementX(element,handler,parent,bounds,callback) {
   if(handler){
     handler.onmousedown = dragMouseDown;
   }else{
@@ -2663,13 +2953,49 @@ function downloadExcel(data,name){
 var b64Icons = {
   netcoin: "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBoZWlnaHQ9IjMwIiB3aWR0aD0iNDAiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDQwIDMwIj4KIDxnIHRyYW5zZm9ybT0ibWF0cml4KC4yNSAwIDAgLjI1IC0xOS4wNSAzNS44MjUpIj4KICA8ZyBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2U9IiNjMWMxYzEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSI+CiAgIDxsaW5lIHkxPSItMTA0LjkiIHgyPSIxMTYuMiIgeDE9IjEyNC4xIiB5Mj0iLTExMy40Ii8+CiAgIDxsaW5lIHkxPSItOTQuNiIgeDI9IjExMy45IiB4MT0iMTIzLjQiIHkyPSItODAuNCIvPgogICA8bGluZSB5MT0iLTc0LjgiIHgyPSIxMjAuOSIgeDE9IjE0OC45IiB5Mj0iLTcwLjgiLz4KICAgPGxpbmUgeTE9Ii04OC45IiB4Mj0iMTYxLjIiIHgxPSIxNjIuMyIgeTI9Ii0xMDcuNCIvPgogICA8bGluZSB5MT0iLTY4LjkiIHgyPSIyMTIuNCIgeDE9IjE3My4zIiB5Mj0iLTQyLjEiLz4KICAgPGxpbmUgeTE9Ii05OC42IiB4Mj0iMTYwIiB4MT0iMTI4LjQiIHkyPSItMTIyLjMiLz4KICA8L2c+CiAgPGNpcmNsZSBjeT0iLTEyMy44IiBjeD0iMTU4LjgiIHI9IjE2LjUiIGZpbGw9IiMzYjkwZGYiLz4KICA8Y2lyY2xlIGN5PSItMTE5LjgiIGN4PSIxMDguNyIgcj0iOS45IiBmaWxsPSIjNGZhNmY3Ii8+CiAgPGNpcmNsZSBjeT0iLTY3LjgiIGN4PSIxMDYuNyIgcj0iMTQuNSIgZmlsbD0iI2Y5MCIvPgogIDxjaXJjbGUgY3k9Ii05OS40IiBjeD0iMTI3LjgiIHI9IjYuNiIgZmlsbD0iI2ZmYjcyYiIvPgogIDxjaXJjbGUgY3k9Ii03NS43IiBjeD0iMTYyLjEiIHI9IjEzLjIiIGZpbGw9IiM0ZmE2ZjYiLz4KICA8Y2lyY2xlIGN5PSItMzYuMyIgY3g9IjIxOS4yIiByPSI5IiBmaWxsPSIjZmZhMjE3Ii8+CiA8L2c+Cjwvc3ZnPg==",
 
+  chart: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path fill="#2F7BEE" d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>'),
+
+  table: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path fill="#2F7BEE" d="M19,7H9C7.9,7,7,7.9,7,9v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,9v2H9V9H19z M13,15v-2h2v2H13z M15,17v2h-2v-2H15z M11,15H9v-2h2V15z M17,13h2v2h-2V13z M9,17h2v2H9V17z M17,19v-2h2v2H17z M6,17H5c-1.1,0-2-0.9-2-2V5 c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v1h-2V5H5v10h1V17z"/></svg>'),
+
   xlsx: "data:image/svg+xml;base64,PHN2ZyB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgaGVpZ2h0PSIxNCIgd2lkdGg9IjE0IiB2ZXJzaW9uPSIxLjEiIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgdmlld0JveD0iMCAwIDE0IDE0Ij4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAtMTAzOC40KSI+CjxnPgo8cmVjdCBoZWlnaHQ9IjEwLjQ3MiIgc3Ryb2tlPSIjMjA3MjQ1IiBzdHJva2Utd2lkdGg9Ii41MDIwMSIgZmlsbD0iI2ZmZiIgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIuNTM2OTYiIHdpZHRoPSI3Ljg2NDYiIHk9IjEwNDAiIHg9IjUuODc4OCIvPgo8ZyBmaWxsPSIjMjA3MjQ1Ij4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSI3LjI0NzgiLz4KPHBhdGggc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIGQ9Im0wIDEwMzkuNyA4LjIzMDEtMS4zN3YxNGwtOC4yMzAxLTEuNHoiLz4KPC9nPgo8L2c+CjxnIGZpbGw9IiNmZmYiIHRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuMzI1OCAuMDYyNSAtMzM5LjcyKSI+CjxwYXRoIGQ9Im00LjQwNiAxMDQ0LjZsMS4zNzUzIDIuMDU2OC0xLjA3MjUtMC4wNjEtMC44OTAzLTEuMzU2LTAuODQ1NjYgMS4yNTc4LTAuOTQxNTYtMC4wNTMgMS4yMTg3LTEuODU0NC0xLjE3My0xLjgwMDggMC45NDE0MS0wLjAzNSAwLjgwMDE0IDEuMjAxMSAwLjgzMDQzLTEuMjYyNiAxLjA3NzUtMC4wNDFzLTEuMzIwNSAxLjk0ODItMS4zMjA1IDEuOTQ4MiIgZmlsbD0iI2ZmZiIvPgo8L2c+CjwvZz4KPC9zdmc+Cg=="
 }
 
-function getValuesFromDF(items,col){
-  var idx = data[items].columns.indexOf(data.options[col]);
+function getValuesFromDF(items,opt){
+  var idx = data[items].columns.indexOf(data.options[opt]);
   if(idx!=-1){
     return data[items].data[idx];
   }
   return false;
+}
+
+function getDFcolumnType(items,col){
+  var idx = data[items].columns.indexOf(col);
+  if(idx!=-1){
+    return data[items].types[idx];
+  }
+  return false;
+}
+
+function getItemsColumns(items){
+  return data[items].columns.filter(function(d,i){
+              if(items=="markers" && d==data.options.image){
+                return false;
+              }
+              if(items=="markers" && d==data.options.markerInfo){
+                return false;
+              }
+              if(d.charAt(0)!="_"){
+                return true;
+              }
+              return false;
+          });
+}
+
+function getItemOption(items,opt){
+  var dict = {
+    "markers": "marker",
+    "links": "link",
+    "entities": "entity"
+  };
+  return dict[items]+opt;
 }

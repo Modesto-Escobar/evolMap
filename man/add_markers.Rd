@@ -11,7 +11,8 @@ Object of class \code{evolMap}.
 \usage{
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL, markerCluster = TRUE, jitteredPoints = 0)
+  start = NULL, end = NULL, period = NULL,
+  markerCluster = TRUE, jitteredPoints = 0)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -26,6 +27,7 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{info}{name of the column with information to display in a panel in the data matrix.}
 \item{start}{name of the column with the start time of a period in the data matrix.}
 \item{end}{name of the column with the end time of a period in the data matrix.}
+\item{period}{name of the column with the period name in the data matrix.}
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
 \item{jitteredPoints}{Write an amount of noise to markers to avoid overlapping.}
 }

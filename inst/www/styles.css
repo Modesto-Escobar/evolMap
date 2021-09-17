@@ -442,7 +442,7 @@ div.window-background {
   top: 0;
   left: 0;
   background: rgba(0,0,0,0.8);
-  z-index: 1003;
+  z-index: 1004;
 }
 div.window {
   position: relative;
@@ -795,6 +795,111 @@ tr.selected-row {
   margin-bottom: 10px;
 }
 
+/* frequencies section */
+.frequencies-section {
+  background-color: #ffffff;
+  width: 33%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1003;
+  display: flex;
+  flex-direction: column;
+}
+.frequencies-section > .frequencies-section-header {
+  position: relative;
+  margin: 20px;
+}
+.frequencies-section > .frequencies-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  height: 100%;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots {
+  padding: 0 20px;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > h2 {
+  margin: 12px 0 6px 0;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar {
+  position: relative;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar > div.freq1 {
+  background-color: #cbdefb;
+  height: 100%;
+  width: 100%;
+  padding: 4px 0;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar > div.freq2 {
+  background-color: #c6c6c6;
+  margin: 4px 0;
+  position: absolute;
+  display: inline-block;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar > span {
+  position: absolute;
+  display: inline-block;
+  padding: 4px;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars {
+  color: #2f7bee;
+  padding: 4px;
+  margin-bottom: 4px;
+  display: inline-block;
+  width: 100%;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > span {
+  display: inline-block;
+  width: 50%;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > .show-less-bars {
+  text-align: right;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > span:after {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 10px;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlMMTIgMTVMNiA5IiBzdHJva2U9IiMyRjdCRUUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4=);
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > .show-less-bars:after {
+    transform: rotate(180deg);
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis {
+  position: relative;
+  border-top: solid 1px #777777;
+  padding-bottom: 20px;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span {
+  position: absolute;
+  display: block;
+  width: 30px;
+  text-align: center;
+  margin-left: -15px;
+  margin-top: 4px;
+}
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span:after {
+  content: "";
+  border-left: solid 1px #777777;
+  height: 4px;
+  display: block;
+  position: absolute;
+  top: -4px;
+  left: 15px;
+}
+
 /* slider */
 .slider-tray {
   position: absolute;
@@ -901,6 +1006,7 @@ img.leaflet-marker-icon.table-selected-marker {
   text-align: center;
   z-index: 1000;
   font-size: 1em;
+  pointer-events: none;
 }
 .period-description > span {
   display: inline-block;

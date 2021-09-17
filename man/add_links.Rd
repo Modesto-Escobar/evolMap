@@ -9,7 +9,7 @@ Object of class \code{evolMap}.
 }
 
 \usage{
-add_links(map, links, color = NULL, start = NULL, end = NULL)
+add_links(map, links, color = NULL, start = NULL, end = NULL, period = NULL)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -17,6 +17,7 @@ add_links(map, links, color = NULL, start = NULL, end = NULL)
 \item{color}{name of the column with color variable in the links matrix.}
 \item{start}{name of the column with the start time of a period in the data matrix.}
 \item{end}{name of the column with the end time of a period in the data matrix.}
+\item{period}{name of the column with the period name in the data matrix.}
 }
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca.

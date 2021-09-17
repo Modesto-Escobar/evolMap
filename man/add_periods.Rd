@@ -11,8 +11,7 @@ Object of class \code{evolMap}.
 \usage{
 add_periods(map, periods, name = NULL, start = NULL, end = NULL,
   latitude = NULL, longitude = NULL, zoom = NULL,
-  description = NULL, duration = NULL,
-  periodInItems = NULL, periodrep = TRUE)
+  description = NULL, duration = NULL, periodrep = TRUE)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -25,7 +24,6 @@ add_periods(map, periods, name = NULL, start = NULL, end = NULL,
 \item{zoom}{name of the column with the zoom to display each period.}
 \item{description}{name of the column with a description of each period.}
 \item{duration}{name of the column with a period duration in seconds.}
-\item{periodInItems}{name of the column with the period of each item (markers, entities and links). By default, period is calculated by the item date.}
 \item{periodrep}{Should time run by period? If false, time will run by year, the period only will be shown in header.}
 }
 \author{
@@ -49,14 +47,14 @@ map <- add_markers(map, sociologists,
   latitude = "latitude", longitude = "longitude",
   label = "label", image = "picture",
   start = "birth", end = "death",
-  markerCluster = FALSE)
+  period = "generation", markerCluster = FALSE)
 
 periods <- data.frame(
 name = c("1775-1799","1800-1824","1825-1850","1851-1874"),
 start = c(1775,1800,1825,1851),
 end = c(1799,1824,1850,1874)
 )
-map <- add_periods(map, periods, periodInItems = "generation")
+map <- add_periods(map, periods)
 
 \dontrun{
 # plot map

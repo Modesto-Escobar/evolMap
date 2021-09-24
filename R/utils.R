@@ -236,3 +236,6 @@ getRawName <- function(filepath){
   return(paste(paste0(as.character(charToRaw(filename)),collapse=""),ext,sep="."))
 }
 
+cleanNames <- function(names){
+  return(gsub("|","_",as.character(names),fixed=TRUE))
+}

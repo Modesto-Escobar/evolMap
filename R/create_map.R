@@ -63,7 +63,7 @@ if(is.numeric(jitteredPoints) && jitteredPoints>0){
 }
 
 if(!is.null(name)){
-  data[[name]] <- as.character(data[[name]])
+  data[[name]] <- cleanNames(data[[name]])
 }else{
   name <- "_name_"
   data[[name]] <- paste0("marker_",seq_len(nrow(data)))
@@ -132,16 +132,19 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
     stop("Markers must be provided with a 'name' in order to identify each link with his source and target")
   }
 
-  map$options$linkPeriod <- NULL
-  if(!is.null(period)){
-    data[[period]] <- as.character(data[[period]])
-    map$options$linkPeriod <- period
-  }
-
   source <- 1
   links[[source]] <- as.character(links[[source]])
   target <- 2
   links[[target]] <- as.character(links[[target]])
+
+  map$options$linkName <- "_name_"
+  links[[map$options$linkName]] <- paste0(links[[source]],"_",links[[target]])
+
+  map$options$linkPeriod <- NULL
+  if(!is.null(period)){
+    links[[period]] <- as.character(links[[period]])
+    map$options$linkPeriod <- period
+  }
 
   links <- links[links[[source]] %in% map$markers[[map$options$markerName]] & links[[target]] %in% map$markers[[map$options$markerName]],]
   map$links <- NULL
@@ -171,7 +174,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
     sf::st_geometry(attr) <- NULL
     entities <- sf::st_geometry(entities)
     if(!is.null(name)){
-      geonames <- attr[[name]]
+      geonames <- cleanNames(attr[[name]])
     }
   }
   if(inherits(entities,"sfc")){
@@ -261,7 +264,7 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
   if(is.null(name)){
     name <- colnames(periods)[1]
   }
-  periods[,name] <- as.character(periods[,name])
+  periods[,name] <- cleanNames(periods[,name])
   map$options$periodName <- name
 
   if(is.null(start)){

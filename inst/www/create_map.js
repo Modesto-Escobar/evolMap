@@ -2,6 +2,7 @@ window.onload = function(){
   if(!data.options.hasOwnProperty("entityOpacity")){
     data.options.entityOpacity = 0.2;
   }
+  data = loadMultiVariables(data);
   renderMap(data);
 }
 
@@ -153,7 +154,7 @@ function renderMap(data){
 
       link.source = data.links.data[0][i];
       link.target = data.links.data[1][i];
-      var linkname = link.source+"_"+link.target;
+      var linkname = data.links.data[data.links.columns.indexOf(data.options.linkName)][i];
 
       if(!linksidx.hasOwnProperty(linkname)){
         link.properties = attributes;
@@ -191,12 +192,12 @@ function renderMap(data){
         tableButton.style.verticalAlign = "middle";
         tableButton.addEventListener("click",show_tables);
 
-        //var freqButton = L.DomUtil.create('img','frequencies-button',panelButtons);
-        //freqButton.setAttribute("src", b64Icons.chart);
-        //freqButton.setAttribute("alt", "frequencies");
-        //freqButton.style.cursor = "pointer";
-        //freqButton.style.verticalAlign = "middle";
-        //freqButton.addEventListener("click",show_frequencies);
+        var freqButton = L.DomUtil.create('img','frequencies-button',panelButtons);
+        freqButton.setAttribute("src", b64Icons.chart);
+        freqButton.setAttribute("alt", "frequencies");
+        freqButton.style.cursor = "pointer";
+        freqButton.style.verticalAlign = "middle";
+        freqButton.addEventListener("click",show_frequencies);
 
         var selectall = L.DomUtil.create('button','primary selectall-button',panelButtons);
         selectall.textContent = "Select all";
@@ -280,16 +281,7 @@ function renderMap(data){
   }
 
   // tools panel
-  var tabnames = [];
-  if(data.storeItems.markers){
-    tabnames.push("markers");
-  }
-  if(data.storeItems.links){
-    tabnames.push("links");
-  }
-  if(data.storeItems.entities){
-    tabnames.push("entities");
-  }
+  var tabnames = Object.keys(data.storeItems);
   if(tabnames.length){
     L.Control.toolsPanel = L.Control.extend({
       onAdd: function(map) {
@@ -297,44 +289,51 @@ function renderMap(data){
 
         var toolsPanel = createNewPanel("tools","Tools",toolsPanelWrapper);
 
-        var nav = L.DomUtil.create('div','items-nav',toolsPanel);
-        var ul = L.DomUtil.create('ul','',nav);
+        displayItemNav(toolsPanel,tabnames,function(){
+          var name = toolsPanel.querySelector(".items-nav > ul > li.active").item;
+          tabs.childNodes.forEach(function(tab){
+            tab.style.display = (tab.getAttribute("tabname")==name) ? "block" : "none";
+          });
+          update_valueSelectors();
+        });
+
         var tabs = L.DomUtil.create('div','tools-tabs',toolsPanel);
 
-        if(tabnames.indexOf("markers")!=-1){
+        tabnames.forEach(function(tabname){
+        if(tabname=="markers"){
           var tabMarkers = L.DomUtil.create('div','tools-tab tab-markers',tabs);
           tabMarkers.style.display = "none";
           tabMarkers.setAttribute("tabname","markers");
 
           var markersChange = L.DomUtil.create('div','items-change markers-change',tabMarkers);
           ["Label","Color"].forEach(function(d){
-            addVisualSelector(markersChange,"markers","marker",d,update_items,colorManagers);
+            addVisualSelector(markersChange,"markers",d,applyVisual);
           })
 
           var markersFilter = L.DomUtil.create('div','items-filter markers-filter',tabMarkers);
           displayItemFilter(markersFilter,"markers",filter_selected_markers,remove_markers_filters,update_items);
         }
 
-        if(tabnames.indexOf("links")!=-1){
+        if(tabname=="links"){
           var tabLinks = L.DomUtil.create('div','tools-tab tab-links',tabs);
           tabLinks.style.display = "none";
           tabLinks.setAttribute("tabname","links");
 
           var linksChange = L.DomUtil.create('div','items-change links-change',tabLinks);
-          addVisualSelector(linksChange,"links","link","Color",update_items,colorManagers);
+          addVisualSelector(linksChange,"links","Color",applyVisual);
 
           var linkFilter = L.DomUtil.create('div','items-filter links-filter',tabLinks);
           displayItemFilter(linkFilter,"links",filter_selected_links,remove_links_filters,update_items);
         }
 
-        if(tabnames.indexOf("entities")!=-1){
+        if(tabname=="entities"){
           var tabEntities = L.DomUtil.create('div','tools-tab tab-entities',tabs);
           tabEntities.style.display = "none";
           tabEntities.setAttribute("tabname","entities");
 
           var entitiesChange = L.DomUtil.create('div','items-change entities-change',tabEntities);
           ["Label","Color"].forEach(function(d){
-            addVisualSelector(entitiesChange,"entities","entity",d,update_items,colorManagers);
+            addVisualSelector(entitiesChange,"entities",d,applyVisual);
           });
 
           var entitiesOpacity = L.DomUtil.create('div','items-opacity entities-opacity',tabEntities);
@@ -353,24 +352,9 @@ function renderMap(data){
           var entitiesFilter = L.DomUtil.create('div','items-filter entities-filter',tabEntities);
           displayItemFilter(entitiesFilter,"entities",filter_selected_geometries,remove_geometries_filters,update_items);
         }
-
-        tabnames.forEach(function(name){
-            var li = L.DomUtil.create('li','',ul);
-            li.addEventListener("click",function(){
-              ul.childNodes.forEach(function(li){
-                li.classList.remove("active");
-              })
-              li.classList.add("active");
-              tabs.childNodes.forEach(function(tab){
-                tab.style.display = (tab.getAttribute("tabname")==name) ? "block" : "none";
-              });
-              update_valueSelectors();
-            });
-            li.textContent = name;
-        })
+        });
 
         tabs.childNodes[0].style.display = "block";
-        ul.childNodes[0].classList.add("active");
 
         return toolsPanelWrapper;
       },
@@ -536,7 +520,7 @@ function renderMap(data){
             entities_layer.clearLayers();
             data.storeItems.entities.forEach(function(feature){
               if(!feature._hidden){
-                findEntityAttr(feature,current);
+                findAttributes("entities",feature,current);
                 if(!feature._outoftime){
                   entities_layer.addData(feature);
                   if(timeApplied("entities")){
@@ -549,7 +533,7 @@ function renderMap(data){
           if(data.storeItems.markers){
             data.storeItems.markers.forEach(function(item){
               if(!item._hidden){
-                findMarkerAttr(item,current);
+                findAttributes("markers",item,current);
                 if(!item._outoftime){
                   updateMarker(item);
                   item.marker.addTo(markers_layer);
@@ -574,7 +558,7 @@ function renderMap(data){
               delete link._outoftime;
               if(!link._hidden){
                 if(!data.storeItems.markers[nodes[link.source]]._outoftime && !data.storeItems.markers[nodes[link.target]]._outoftime){
-                  findLinkAttr(link,current);
+                  findAttributes("links",link,current);
                   if(!link._outoftime){
                     updateLine(link);
                     link.line.addTo(links_layer);
@@ -905,6 +889,25 @@ function renderMap(data){
 
   update_items();
 
+  function applyVisual(items,visual,value){
+      var itemVisual = getItemOption(items,visual);
+      if(value=="_none_"){
+        delete data.options[itemVisual];
+      }else{
+        data.options[itemVisual] = value;
+      }
+      update_items();
+
+      if(visual=="Color"){
+        if(getDFcolumnType(items,value)=="number"){
+            displayScalePicker(itemVisual,function(){
+              colorManagers[itemVisual].changeLevels(value);
+              update_items();
+            });
+        }
+      }
+  }
+
   function show_tables(event){
     var itemsList = Object.keys(data.storeItems);
 
@@ -948,27 +951,7 @@ function renderMap(data){
       onlySelected.appendChild(onlyselectedCheck);
       tablesSectionHeader.appendChild(onlySelected);
 
-      var itemsNav = document.createElement("div");
-      itemsNav.classList.add("items-nav");
-      tablesSectionHeader.appendChild(itemsNav);
-      var ul = document.createElement("ul");
-      itemsNav.appendChild(ul);
-      itemsList.forEach(function(itemsname){
-          var li = document.createElement("li");
-          li.textContent = itemsname;
-          li.item = itemsname;
-          li.addEventListener("click",function(){
-            if(!this.classList.contains("active")){
-              ul.childNodes.forEach(function(li){
-                li.classList.remove("active");
-              });
-              this.classList.add("active");
-            }
-            show_tables();
-          });
-          ul.appendChild(li);
-      })
-      ul.childNodes[0].classList.add("active");
+      displayItemNav(tablesSectionHeader,itemsList,show_tables);
 
       tablesContainer = document.createElement("div");
       tablesContainer.classList.add("tables-container");
@@ -977,18 +960,9 @@ function renderMap(data){
     }
 
     if(tablesContainer){
-      var ul = tablesContainer.parentNode.querySelector(".tables-section-header > .items-nav > ul");
-      if(ul){
-        ul.childNodes.forEach(function(d){
-          if(d.classList.contains("active")){
-            renderTable(tablesContainer,d.item);
-          }else{
-            var tab = tablesContainer.getElementsByClassName(d.item+"-table-wrapper")[0];
-            if(tab){
-              tablesContainer.removeChild(tab);
-            }
-          }
-        });
+      var active = tablesContainer.parentNode.querySelector(".tables-section-header > .items-nav > ul > li.active");
+      if(active){
+        renderTable(tablesContainer,active.item);
       }
     }
 
@@ -1001,6 +975,8 @@ function renderMap(data){
 
       var tbody = container.querySelector(".table-wrapper."+items+"-table-wrapper > table > tbody");
       if(!tbody){
+        container.innerHTML = "";
+
         var div = document.createElement("div");
         div.classList.add(items+"-table-wrapper");
         div.classList.add("table-wrapper");
@@ -1108,7 +1084,7 @@ function renderMap(data){
               if(getDFcolumnType(items,col)=="number"){
                 td.style.textAlign =  "right";
               }
-              td.textContent = renderCell(item.properties[col]);
+              td.textContent = prepareText(item.properties[col]);
               td.addEventListener("mousedown",function(event){
                 event.preventDefault();
               })
@@ -1157,7 +1133,7 @@ function renderMap(data){
       function table2xlsx(){
         var nodes = [columns];
         getItemsTable().forEach(function(item){
-          nodes.push(columns.map(function(col){ return renderCell(item.properties[col]); }));
+          nodes.push(columns.map(function(col){ return prepareText(item.properties[col]); }));
         })
 
         var itemsdata = {};
@@ -1174,22 +1150,10 @@ function renderMap(data){
         }
       }
     }
-
-    function renderCell(txt){
-      if(txt == null){
-        return "";
-      }
-      if(typeof txt == 'object'){
-          return txt.join("; ");
-      }
-      if(typeof txt == 'number'){
-        return formatter(txt);
-      }
-      return String(txt);
-    }
   }
 
   function show_frequencies(event){
+    var itemsList = Object.keys(data.storeItems);
     var freqContainer = document.querySelector(".frequencies-section > .frequencies-container");
     if(!freqContainer && event){
       var freqSection = document.createElement("div");
@@ -1211,6 +1175,9 @@ function renderMap(data){
       }
       var modeSelectWrapper = document.createElement("div");
       modeSelectWrapper.classList.add("select-wrapper");
+      modeSelectWrapper.style.position = "absolute";
+      modeSelectWrapper.style.top = "0";
+      modeSelectWrapper.style.right = "30px";
       var modeSelect = document.createElement("select");
       ["relative","absolute"].forEach(function(d){
         var option = document.createElement("option");
@@ -1226,6 +1193,8 @@ function renderMap(data){
       modeSelectWrapper.appendChild(modeSelect);
       freqSectionHeader.appendChild(modeSelectWrapper);
 
+      displayItemNav(freqSectionHeader,itemsList,show_frequencies);
+
       freqContainer = document.createElement("div");
       freqContainer.classList.add("frequencies-container");
       freqSection.appendChild(freqContainer);
@@ -1233,18 +1202,42 @@ function renderMap(data){
     }
 
     if(freqContainer){
-      renderBars(freqContainer,"markers","markerColor","markerName");
+      var active = freqContainer.parentNode.querySelector(".frequencies-section-header > .items-nav > ul > li.active");
+      if(active){
+        renderBars(freqContainer,active.item);
+      }
     }
 
-    function renderBars(container,items,itemColor,itemName){
+    function renderBars(container,items){
+      var itemName = getItemOption(items,"Name"),
+          itemColor = getItemOption(items,"Color");
       var columns = getItemsColumns(items),
           visibleItems = data.storeItems[items].filter(function(item){ return !item._hidden && !item._outoftime; }),
           renderPercentage = data.options.freqMode=="relative" ? "%" : "";
+
+      var freqBarplots = container.getElementsByClassName(items+"-frequency-wrapper");
+      if(freqBarplots.length){
+            freqBarplots = freqBarplots[0];
+      }else{
+            container.innerHTML = "";
+            freqBarplots = document.createElement("div");
+            freqBarplots.classList.add("frequency-barplots");
+            freqBarplots.classList.add(items+"-frequency-wrapper");
+            container.appendChild(freqBarplots);
+      }
+      if(!visibleItems.length){
+        var text = document.createElement("p");
+        text.textContent = "No "+items+" in the map";
+        freqBarplots.appendChild(text);
+        return;
+      }
+
       columns.forEach(function(col){
         if(col==data.options[itemName]){
           return;
         }
-        if(getDFcolumnType(items,col)=="number"){
+        var type = getDFcolumnType(items,col);
+        if(type=="number"){
           var values = [],
               selectedValues = [];
 
@@ -1257,49 +1250,198 @@ function renderMap(data){
             }
           });
 
-          var barplot = getBarPlot(col);
+          var barplot = getBarPlot(freqBarplots,col);
 
           // set the dimensions and margins of the graph
-          var margin = {top: 10, right: 10, bottom: 30, left: 40},
+          var margin = {top: 10, right: 10, bottom: 30, left: 50},
               w = (container.offsetWidth - 72) - margin.left - margin.right,
               h = 200 - margin.top - margin.bottom;
 
-          // append the svg object
-          var namespace = "http://www.w3.org/2000/svg";
-          var svg = document.createElementNS(namespace, "svg");
-          svg.setAttributeNS(namespace,"width", w + margin.left + margin.right);
-          svg.setAttributeNS(namespace,"height", h + margin.top + margin.bottom);
-          var g = document.createElementNS(namespace,"g");
-          g.setAttributeNS(namespace,"transform", "translate(" + margin.left + "," + margin.top + ")");
-          svg.appendChild(g);
-          barplot.appendChild(svg);
+          // append the histogram div
+          var div = document.createElement("div");
+          div.classList.add("histo-graph");
+          div.style.overflow = "hidden";
+          div.style.position = "relative";
+          div.style.width = (w + margin.left + margin.right) + "px";
+          div.style.height = (h + margin.top + margin.bottom) + "px";
+          var g = document.createElement("div");
+          g.style.position = "absolute";
+          g.style.top = margin.top+"px";
+          g.style.left = margin.left+"px";
+          div.appendChild(g);
+          barplot.appendChild(div);
 
-          //TODO: histogram
+          // X axis: scale and draw
+          var domain = valuesExtent(values);
+          // prepare domain for the histogram
+          if(domain[0]==domain[1]){
+            domain = [domain[0]-1,domain[1]+1];
+          }else{
+            domain[1] = domain[1] + ((domain[1]-domain[0])/10);
+          }
+          var x = d3.scaleLinear()
+          .domain(domain)
+          .range([0, w]);
+
+          var gBottomAxis = document.createElement("div");
+          gBottomAxis.classList.add("bottom-axis");
+          gBottomAxis.style.position = "absolute";
+          gBottomAxis.style.top = h + "px";
+          gBottomAxis.style.left = 0;
+          gBottomAxis.style.width = w + "px";
+          g.appendChild(gBottomAxis);
+
+          var nticks = Math.floor(w/80);
+
+          x.ticks(nticks).forEach(function(t){
+            var span = document.createElement("span");
+            span.style.left = x(t)+"px";
+            span.textContent = formatter(t);
+            gBottomAxis.appendChild(span);
+          })
+
+          // set the parameters for the histogram
+          var histogram = d3.histogram()
+          .value(function(d) { return d; })
+          .domain(x.domain())
+          .thresholds(x.ticks(nticks));
+
+          // And apply this function to data to get the bins
+          var bins = histogram(values),
+              bins2 = selectedValues.length ? histogram(selectedValues) : [];
+
+          var selectedValues2 = [];
+          for(var i = 0; i<bins2.length; i++){
+            if(bins2[i].length==bins[i].length){
+              visibleItems.forEach(function(d){
+                var val = Number(d[col]);
+                if(selectedValues2.indexOf(val)==-1 && (val >= bins2[i].x0 && val < bins2[i].x1)){
+                  selectedValues2.push(val);
+                }
+              })
+            }
+          }
+
+          var yMax = -Infinity;
+          for(var i = 0; i<bins.length; i++){
+            bins[i].y = data.options.freqMode=="relative" ? bins[i].length/visibleItems.length*100 : bins[i].length;
+            if(selectedValues.length){
+              bins[i].y2 = data.options.freqMode=="relative" ? bins2[i].length/selectedValues.length*100 : bins2[i].length;
+            }
+            if(bins[i].y>yMax){
+              yMax = bins[i].y;
+            }
+          }
+
+          // Y axis: scale and draw
+          var y = d3.scaleLinear()
+          .range([h, 0])
+          .domain([0, yMax]);
+
+          var leftAxisOffset = 100;
+          var gLeftAxis = document.createElement("div");
+          gLeftAxis.classList.add("left-axis");
+          gLeftAxis.style.position = "absolute";
+          gLeftAxis.style.top = 0;
+          gLeftAxis.style.left = -leftAxisOffset + "px";
+          gLeftAxis.style.height = h + "px";
+          gLeftAxis.style.width = leftAxisOffset + "px";
+          g.appendChild(gLeftAxis);
+
+          y.ticks(3).forEach(function(t){
+            var span = document.createElement("span");
+            span.style.top = y(t)+"px";
+            span.style.width = (leftAxisOffset - 10) + "px";
+            span.textContent = t + renderPercentage;
+            gLeftAxis.appendChild(span);
+          })
+
+          // append the bar rectangles to the graph
+          var getValue = function(v){
+            return formatter(v) + (data.options.freqMode=="relative" ? "%" : "");
+          }
+          bins.forEach(function(d){
+              var freqBar = document.createElement("div");
+              freqBar.classList.add("freq-bar");
+              freqBar.style.position = "absolute";
+              freqBar.style.left = x(d.x0)+"px";
+              freqBar.style.top = 0;
+              freqBar.style.cursor = "pointer";
+              freqBar.addEventListener("click",function(event){
+                visibleItems.forEach(function(item){
+                  if(!(event.ctrlKey || event.metaKey)){
+                    delete item._selected;
+                  }
+                  if(item.properties[col]>=d.x0 && item.properties[col]<d.x1){
+                    item._selected = true;
+                  }
+                });
+                update_items();
+              });
+
+              freqBar.setAttribute("title","[" + d.x0 + "," + d.x1 + ")" + ": " + getValue(d.y) + (d.y2 ? "\nSelection: " + getValue(d.y2) : ""));
+
+              var freq1 = document.createElement("div");
+              freq1.classList.add("freq1");
+              freq1.style.position = "absolute";
+              freq1.style.left = 1+"px";
+              freq1.style.top = y(d.y)+"px";
+              freq1.style.width = (x(d.x1) - x(d.x0) -1)+"px";
+              freq1.style.height = (h - y(d.y))+"px";
+              freq1.style.backgroundColor = data.options[itemColor]==col ? colorManagers[itemColor].getColor((d.x0+d.x1)/2) : "#cbdefb";
+              freqBar.appendChild(freq1);
+
+              if(selectedValues.length){
+                var freq2 = document.createElement("div");
+                freq2.classList.add("freq2");
+                freq2.style.position = "absolute";
+                freq2.style.left = 5+"px";
+                freq2.style.top = y(d.y2)+"px";
+                freq2.style.width = (x(d.x1) - x(d.x0) -9)+"px";
+                freq2.style.height = (h - y(d.y2))+"px";
+                freq2.style.backgroundColor = "#c6c6c6";
+                freqBar.appendChild(freq2);
+              }
+
+              g.appendChild(freqBar);
+          });
         }else{
           var values = {},
               selectedValues = {},
               maxvalue = -Infinity,
               keyvalues = [];
 
-          visibleItems.forEach(function(item){
-            var val = String(item.properties[col]);
-            if(!values.hasOwnProperty(val)){
-              values[val] = 1;
-              keyvalues.push(val);
-            }else{
-              values[val] += 1;
-            }
-            if(values[val]>maxvalue){
-              maxvalue = values[val];
-            }
-            if(item._selected){
-              if(!selectedValues.hasOwnProperty(val)){
-                selectedValues[val] = 1;
+          var loadValue = function(val,selected){
+              var val = String(val);
+              if(!values.hasOwnProperty(val)){
+                values[val] = 1;
+                keyvalues.push(val);
               }else{
-                selectedValues[val] += 1;
+                values[val] += 1;
               }
-            }
-          });
+              if(values[val]>maxvalue){
+                maxvalue = values[val];
+              }
+              if(selected){
+                if(!selectedValues.hasOwnProperty(val)){
+                  selectedValues[val] = 1;
+                }else{
+                  selectedValues[val] += 1;
+                }
+              }
+          };
+
+          if(type=="object"){
+            visibleItems.forEach(function(item){
+              item.properties[col].forEach(function(val){
+                loadValue(val,item._selected);
+              });
+            });
+          }else{
+            visibleItems.forEach(function(item){
+              loadValue(item.properties[col],item._selected);
+            });
+          }
 
           keyvalues.sort(function(a,b){
                 a = values[a];
@@ -1323,19 +1465,7 @@ function renderMap(data){
             });
           }
 
-          var barplot = getBarPlot(col);
-
-          var selectItems = function(event,v){
-            visibleItems.forEach(function(item){
-              if(!(event.ctrlKey || event.metaKey)){
-                delete item._selected;
-              }
-              if(String(item.properties[col])==v){
-                item._selected = true;
-              }
-            });
-            update_items();
-          };
+          var barplot = getBarPlot(freqBarplots,col);
 
           keyvalues.forEach(function(v,i){
             var percentage = values[v]/maxvalue*100,
@@ -1354,8 +1484,16 @@ function renderMap(data){
             row.style.display = i>9 ? "none" : null;
             row.setAttribute("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""));
             row.addEventListener("click",function(event){
-              selectItems(event,v);
-            })
+              visibleItems.forEach(function(item){
+                if(!(event.ctrlKey || event.metaKey)){
+                  delete item._selected;
+                }
+                if(isItemSelected(items,item,col,v)){
+                  item._selected = true;
+                }
+              });
+              update_items();
+            });
             barplot.appendChild(row);
 
             var freq1 = document.createElement("div");
@@ -1451,17 +1589,9 @@ function renderMap(data){
         }
       });
 
-      function getBarPlot(name){
-          var freqBarplots = container.childNodes;
-          if(container.childNodes.length){
-            freqBarplots = container.childNodes[0];
-          }else{
-            freqBarplots = document.createElement("div");
-            freqBarplots.classList.add("frequency-barplots");
-            container.appendChild(freqBarplots);
-          }
+      function getBarPlot(sel,name){
           var barplot = false;
-          freqBarplots.childNodes.forEach(function(d){
+          sel.childNodes.forEach(function(d){
             if(d.variable==name){
               barplot = d;
             }
@@ -1470,19 +1600,55 @@ function renderMap(data){
             barplot = document.createElement("div");
             barplot.classList.add("bar-plot");
             barplot.variable = name;
-            freqBarplots.appendChild(barplot);
+            sel.appendChild(barplot);
 
             var header = document.createElement("h2");
             header.textContent = name;
             barplot.appendChild(header);
+
+            if(true){
+              var img = document.createElement("img");
+              img.setAttribute("title","color");
+              img.setAttribute("src",b64Icons.drop);
+              img.style.cursor = "pointer";
+              img.style.float = "right";
+              img.addEventListener("click",function(){
+                applyVisual(items,"Color",name);
+              });
+              header.appendChild(img);
+            }
           }else{
             while(barplot.lastChild && barplot.childNodes.length>1){
               barplot.removeChild(barplot.lastChild);
             }
           }
-        return barplot;
+          return barplot;
       }
     }
+  }
+
+  function displayItemNav(parent,list,callback){
+      var itemsNav = document.createElement("div");
+      itemsNav.classList.add("items-nav");
+      parent.appendChild(itemsNav);
+      var ul = document.createElement("ul");
+      itemsNav.appendChild(ul);
+      list.forEach(function(itemsname){
+          var li = document.createElement("li");
+          li.textContent = itemsname;
+          li.item = itemsname;
+          li.addEventListener("click",function(){
+            if(!this.classList.contains("active")){
+              ul.childNodes.forEach(function(li){
+                li.classList.remove("active");
+              });
+              this.classList.add("active");
+              callback();
+            }
+          });
+          ul.appendChild(li);
+      })
+      ul.childNodes[0].classList.add("active");
   }
 
   function timeApplied(items){
@@ -1504,36 +1670,27 @@ function renderMap(data){
     return false;
   }
 
-  function findEntityAttr(item,current){
-    var name = item.properties[data.options.entityName],
-        names = getValuesFromDF("entities","entityName");
-    findAttributes("entities",item,name,names,current);
-  }
-
-  function findMarkerAttr(item,current){
-    var name = item.properties[data.options.markerName],
-        names = getValuesFromDF("markers","markerName");
-    findAttributes("markers",item,name,names,current);
-  }
-
-  function findLinkAttr(item,current){
-    var name = item.source+"_"+item.target,
-        names = data.links.data[0].map(function(d,i){ return d+"_"+data.links.data[1][i]; });
-    findAttributes("links",item,name,names,current);
-  }
-
-  function findAttributes(items,item,name,names,current){
+  function findAttributes(items,item,current){
+    var itemName = getItemOption(items,"Name"),
+        name = item.properties[data.options[itemName]],
+        names = getValuesFromDF(items,itemName);
     if(timeApplied(items)){
       item._outoftime = true;
+      var callback;
       if(data.periods && data.options[getItemOption(items,"Period")]){
         var periods = getValuesFromDF(items,getItemOption(items,"Period")),
             period = getCurrentPeriod(current);
-        loadAttributes(function(i){ return periods[i]==period; });
+        if(getDFcolumnType(items,data.options[getItemOption(items,"Period")])=="object"){
+          callback = function(i){ return periods[i].indexOf(period)!=-1; };
+        }else{
+          callback = function(i){ return periods[i]==period; };
+        }
       }else{
         var starts = getValuesFromDF(items,"start"),
             ends = getValuesFromDF(items,"end");
-        loadAttributes(function(i){ return inTime(starts[i],ends[i],current); });
+        callback = function(i){ return inTime(starts[i],ends[i],current); };
       }
+      loadAttributes(callback);
     }
     function loadAttributes(condition){
         for(var i=names.length-1; i>=0; i--){
@@ -1611,7 +1768,7 @@ function renderMap(data){
         item.marker.unbindPopup();
         if(data.options.markerText){
           if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-            item.marker.bindPopup(attr[data.options.markerText]).openPopup();
+            item.marker.bindPopup(prepareText(attr[data.options.markerText])).openPopup();
           }
         }
         if(item.info){
@@ -1683,20 +1840,24 @@ function renderMap(data){
     }
 
     if(data.options.markerLabel){
-          var str = String(attr[data.options.markerLabel]);
+          var str = prepareText(attr[data.options.markerLabel]);
           if(item.label != str){
             item.label = str;
-            item.marker.unbindTooltip();
-            item.marker.bindTooltip(str,{
-              permanent: true,
-              direction: "center",
-              className: item.image ? "image-label" : "marker-label"
-            }).openTooltip();
+            if(str){
+              item.marker.unbindTooltip();
+              item.marker.bindTooltip(str,{
+                permanent: true,
+                direction: "center",
+                className: item.image ? "image-label" : "marker-label"
+              }).openTooltip();
+            }else{
+              item.marker.unbindTooltip();
+              delete item.label;
+            }
           }
     }else{
-          item.marker.unbindTooltip();
-          delete item.label;
-          delete item.text;
+      item.marker.unbindTooltip();
+      delete item.label;
     }
 
     function setImageColor(item){
@@ -1719,9 +1880,9 @@ function renderMap(data){
 
       var legendsContent = legendsPanel.getElementsByClassName("legends-content")[0];
       legendsContent.innerHTML = "";
-      listLegend(legendsContent,"markers","markerColor","Marker color");
-      listLegend(legendsContent,"entities","entityColor","Entity color");
-      listLegend(legendsContent,"links","linkColor","Link color");
+      Object.keys(data.storeItems).forEach(function(items){
+        listLegend(legendsContent,items);
+      })
 
       var bottom = legendsPanel.getElementsByClassName("legend-bottom-controls")[0];
       if(!legendsContent.getElementsByClassName("legend-check-box").length){
@@ -1740,10 +1901,12 @@ function renderMap(data){
       legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? "block" : "none";
     }
 
-    function listLegend(container,items,itemVisual,title){
+    function listLegend(container,items){
+      var itemVisual = getItemOption(items,"Color"),
+          title = items+" color";
       if(data.storeItems[items] && data.options[itemVisual]){
         var column = data.options[itemVisual],
-            type = getDFcolumnType(column);
+            type = getDFcolumnType(items,column);
         if(type){
           if(type=="number"){
             var domain = colorManagers[itemVisual].getDomain(),
@@ -1765,7 +1928,13 @@ function renderMap(data){
               return !item._hidden && !item._outoftime;
             }).map(function(item){
               return item.properties[column];
-            }).filter(uniqueValues).sort(sortAsc);
+            });
+
+            if(type=="object"){
+              values = multiVariableUniqueValues(values).sort(sortAsc);
+            }else{
+              values = values.filter(uniqueValues).sort(sortAsc);
+            }
 
             if(values.length){
               var legend = L.DomUtil.create('div','legend',container);
@@ -1781,14 +1950,14 @@ function renderMap(data){
                 legendItem.addEventListener("click",function(){
                   var checked = checkbox.classList.contains("checked");
                   data.storeItems[items].forEach(function(item){
-                    if(String(item.properties[column]) == d){
+                    if(isItemSelected(items,item,column,d)){
                       item._selected = !checked;
                     }
                   })
                   update_items();
                 });
 
-                if(allItemsSelectedByValue(data.storeItems[items],column,d)){
+                if(allItemsSelectedByValue(items,column,d)){
                   checkbox.classList.add("checked");
                 }
               })
@@ -1820,7 +1989,10 @@ function renderMap(data){
         layer.setStyle({ weight: 1, color: "#777777", fillColor: fillColor, fillOpacity: data.options.entityOpacity });
 
         if(data.options.entityLabel){
-          layer.bindTooltip(String(layer.feature.properties[data.options.entityLabel]),{ sticky: true });
+          var str = prepareText(layer.feature.properties[data.options.entityLabel]);
+          if(str){
+            layer.bindTooltip(str,{ sticky: true });
+          }
         }
       });
     }
@@ -1829,9 +2001,16 @@ function renderMap(data){
   function update_valueSelectors(){
     var panel = document.querySelector(".tools-panel-wrapper:not(.collapse-panel) > .tools-panel");
     if(panel){
-      ["markers","links","entities"].forEach(function(d){
-        var tab = panel.getElementsByClassName("tools-tabs")[0].getElementsByClassName("tab-"+d)[0];
+      Object.keys(data.storeItems).forEach(function(items){
+        var tab = panel.getElementsByClassName("tools-tabs")[0].getElementsByClassName("tab-"+items)[0];
         if(tab && tab.style.display!="none"){
+          tab.querySelectorAll(".items-change."+items+"-change > .visual-selector > .select-wrapper > select").forEach(function(select){
+            var val = data.options[getItemOption(items,select.parentNode.parentNode.visual)];
+            if(!val){
+              val = "_none_";
+            }
+            select.value = val;
+          });
           var element = tab.getElementsByClassName("items-filter")[0];
           if(element){
             if(!element.querySelector(".items-filter > .value-selector > .slider-wrapper > .slider")){
@@ -1849,21 +2028,13 @@ function renderMap(data){
   }
 
   function select_none(){
-    if(data.storeItems.markers){
-      data.storeItems.markers.forEach(function(item){
-        delete item._selected;
-      });
-    }
-    if(data.storeItems.entities){
-      data.storeItems.entities.forEach(function(f){
-        delete f._selected;
-      });
-    }
-    if(data.storeItems.links){
-      data.storeItems.links.forEach(function(item){
-        delete item._selected;
-      });
-    }
+    Object.keys(data.storeItems).forEach(function(items){
+      if(data.storeItems[items]){
+        data.storeItems[items].forEach(function(item){
+          delete item._selected;
+        });
+      }
+    });
     update_items();
   }
 
@@ -1934,40 +2105,24 @@ function renderMap(data){
   }
 
   function remove_filters(){
-    if(data.storeItems.markers){
-      data.storeItems.markers.forEach(function(item){
-        delete item._hidden;
-      });
-    }
-    if(data.storeItems.entities){
-      data.storeItems.entities.forEach(function(feature){
-        delete feature._hidden;
-      });
-    }
-    if(data.storeItems.links){
-      data.storeItems.links.forEach(function(item){
-        delete item._hidden;
-      });
-    }
+    Object.keys(data.storeItems).forEach(function(items){
+      if(data.storeItems[items]){
+        data.storeItems[items].forEach(function(item){
+          delete item._hidden;
+        });
+      }
+    });
     update_items();
   }
 
   function select_all(){
-    if(data.storeItems.markers){
-      data.storeItems.markers.forEach(function(item){
+    Object.keys(data.storeItems).forEach(function(items){
+      if(data.storeItems[items]){
+        data.storeItems[items].forEach(function(item){
           item._selected = true;
-      });
-    }
-    if(data.storeItems.entities){
-      data.storeItems.entities.forEach(function(feature){
-         feature._selected = true;
-      });
-    }
-    if(data.storeItems.links){
-      data.storeItems.links.forEach(function(item){
-        item._selected = true;
-      });
-    }
+        });
+      }
+    });
     update_items();
   }
 
@@ -2044,6 +2199,7 @@ function colorMgmt(items,itemProp){
   this._itemProp = itemProp;
   this._itemCol;
   this._scale;
+  this.changeLevels(data.options[this._itemProp]);
 }
 
 colorMgmt.prototype = {
@@ -2057,6 +2213,9 @@ colorMgmt.prototype = {
   getColor: function(value){
     var color = data.options.defaultColor;
     if(this._scale){
+      if(value !== null && typeof value == "object" && value.length){
+        value = value[0];
+      }
       color = this._scale(value);
       if(!color){
         color = "#777777";
@@ -2376,10 +2535,11 @@ function getKey(event){
 
 function allItemsSelectedByValue(items,column,value){
         var checked = false;
-        for(var i=0; i<items.length; i++){
-          if(!items[i]._hidden && !items[i]._outoftime){
-            if(String(items[i].properties[column]) == value){
-              if(items[i]._selected){
+        var storeItems = data.storeItems[items];
+        for(var i=0; i<storeItems.length; i++){
+          if(!storeItems[i]._hidden && !storeItems[i]._outoftime){
+            if(isItemSelected(items,storeItems[i],column,value)){
+              if(storeItems[i]._selected){
                 checked = true;
               }else{
                 checked = false;
@@ -2391,30 +2551,34 @@ function allItemsSelectedByValue(items,column,value){
         return checked;
 }
 
-function addVisualSelector(sel,items,item,visual,update,colorManagers){
+function isItemSelected(items,item,column,value){
+  var itemValue = item.properties[column];
+  if(getDFcolumnType(items,column)=="object"){
+    if(typeof value == "object"){
+      return intersection(value,itemValue).length;
+    }else{
+      return itemValue.indexOf(String(value))!=-1;
+    }
+  }else{
+    if(typeof value == "object"){
+      return value.indexOf(itemValue)!=-1;
+    }else{
+      return String(value)==String(itemValue);
+    }
+  }
+}
+
+function addVisualSelector(sel,items,visual,applyVisual){
     var wrapper = L.DomUtil.create('div','visual-selector',sel);
+    wrapper.visual = visual;
     var div = L.DomUtil.create('div','',wrapper);
     div.innerHTML = "<span>"+visual+"</span>";
 
     var options = getItemsColumns(items).map(function(d){ return [d,d]; });
     options.unshift(["_none_","-none-"])
     displaySelectWrapper(wrapper,options,function(value){
-      if(value=="_none_"){
-        delete data.options[item+visual];
-      }else{
-        data.options[item+visual] = value;
-      }
-      update();
-      if(visual=="Color"){
-        var type = getDFcolumnType(items,value);
-        if(type=="number"){
-            displayScalePicker(item+visual,function(){
-              colorManagers[item+visual].changeLevels(value);
-              update();
-            });
-        }
-      }
-    },data.options[item+visual]);
+      applyVisual(items,visual,value);
+    },data.options[getItemOption(items,visual)]);
 }
 
 function displayItemFilter(div,items,filter_selected,remove_filters,update_items){
@@ -2422,8 +2586,9 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
 
     var selectChangeFunction = function(value){
       valueSelector.innerHTML = "";
-      var values = data.storeItems[items].filter(function(d){ return !d._hidden && !d._outoftime; }).map(function(d){ return d.properties[value]; }).filter(uniqueValues).sort(sortAsc);
-      if(getDFcolumnType(items,value)=="number"){
+      var values = data.storeItems[items].filter(function(d){ return !d._hidden && !d._outoftime; }).map(function(d){ return d.properties[value]; });
+      var type = getDFcolumnType(items,value);
+      if(type=="number"){
         var extent = valuesExtent(values),
             mid = (extent[0]+extent[1])/2;
 
@@ -2441,6 +2606,11 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
           })
         slider(valueSelector);
       }else{
+        if(type=="object"){
+          values = multiVariableUniqueValues(values).sort(sortAsc);
+        }else{
+          values = values.filter(uniqueValues).sort(sortAsc);
+        }
         var select = L.DomUtil.create('select','',valueSelector);
         select.setAttribute("multiple","multiple");
         select.setAttribute("size",8);
@@ -2448,7 +2618,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
           var opt = L.DomUtil.create('option','',select);
           opt.innerHTML = v;
           opt.value = v;
-          if(allItemsSelectedByValue(data.storeItems[items],value,v)){
+          if(allItemsSelectedByValue(items,value,v)){
             opt.selected = true;
           }
         })
@@ -2456,7 +2626,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
           var values = getSelectValues(this);
           data.storeItems[items].forEach(function(item){
             delete item._selected;
-            if(values.indexOf(item.properties[value])!=-1){
+            if(isItemSelected(items,item,value,values)){
               item._selected = true;
             }
           });
@@ -2676,7 +2846,7 @@ function formatter(d){
     else
       d = (d % 1 === 0)?d:d.toFixed(2);
   }
-  return d;
+  return String(d);
 }
 
 // Return an array of the selected opion values
@@ -2957,6 +3127,8 @@ var b64Icons = {
 
   table: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path fill="#2F7BEE" d="M19,7H9C7.9,7,7,7.9,7,9v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,9v2H9V9H19z M13,15v-2h2v2H13z M15,17v2h-2v-2H15z M11,15H9v-2h2V15z M17,13h2v2h-2V13z M9,17h2v2H9V17z M17,19v-2h2v2H17z M6,17H5c-1.1,0-2-0.9-2-2V5 c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v1h-2V5H5v10h1V17z"/></svg>'),
 
+  drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path fill="#2F7BEE" d="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z M12,20c-3.35,0-6-2.57-6-6.2 c0-2.34,1.95-5.44,6-9.14c4.05,3.7,6,6.79,6,9.14C18,17.43,15.35,20,12,20z M7.83,14c0.37,0,0.67,0.26,0.74,0.62 c0.41,2.22,2.28,2.98,3.64,2.87c0.43-0.02,0.79,0.32,0.79,0.75c0,0.4-0.32,0.73-0.72,0.75c-2.13,0.13-4.62-1.09-5.19-4.12 C7.01,14.42,7.37,14,7.83,14z"/></svg>'),
+
   xlsx: "data:image/svg+xml;base64,PHN2ZyB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgaGVpZ2h0PSIxNCIgd2lkdGg9IjE0IiB2ZXJzaW9uPSIxLjEiIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgdmlld0JveD0iMCAwIDE0IDE0Ij4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAtMTAzOC40KSI+CjxnPgo8cmVjdCBoZWlnaHQ9IjEwLjQ3MiIgc3Ryb2tlPSIjMjA3MjQ1IiBzdHJva2Utd2lkdGg9Ii41MDIwMSIgZmlsbD0iI2ZmZiIgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIuNTM2OTYiIHdpZHRoPSI3Ljg2NDYiIHk9IjEwNDAiIHg9IjUuODc4OCIvPgo8ZyBmaWxsPSIjMjA3MjQ1Ij4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSI3LjI0NzgiLz4KPHBhdGggc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIGQ9Im0wIDEwMzkuNyA4LjIzMDEtMS4zN3YxNGwtOC4yMzAxLTEuNHoiLz4KPC9nPgo8L2c+CjxnIGZpbGw9IiNmZmYiIHRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuMzI1OCAuMDYyNSAtMzM5LjcyKSI+CjxwYXRoIGQ9Im00LjQwNiAxMDQ0LjZsMS4zNzUzIDIuMDU2OC0xLjA3MjUtMC4wNjEtMC44OTAzLTEuMzU2LTAuODQ1NjYgMS4yNTc4LTAuOTQxNTYtMC4wNTMgMS4yMTg3LTEuODU0NC0xLjE3My0xLjgwMDggMC45NDE0MS0wLjAzNSAwLjgwMDE0IDEuMjAxMSAwLjgzMDQzLTEuMjYyNiAxLjA3NzUtMC4wNDFzLTEuMzIwNSAxLjk0ODItMS4zMjA1IDEuOTQ4MiIgZmlsbD0iI2ZmZiIvPgo8L2c+CjwvZz4KPC9zdmc+Cg=="
 }
 
@@ -2998,4 +3170,65 @@ function getItemOption(items,opt){
     "entities": "entity"
   };
   return dict[items]+opt;
+}
+
+function loadMultiVariables(data){
+  for(var key in data){
+    // check if is a data frame
+    if(data[key].data && data[key].columns && data[key].types){
+      data[key].types.forEach(function(type,i){
+        if(type=="object"){
+          data[key].data[i] = data[key].data[i].map(function(d){
+            if(d){
+              d = d.split("|");
+            }else{
+              d = [];
+            }
+            return d;
+          });
+        }
+      });
+    }
+  }
+  return data;
+}
+
+function multiVariableUniqueValues(values){
+  var aux = [];
+  values.forEach(function(val){
+    val.forEach(function(v){
+      aux.push(v);
+    });
+  });
+  return aux.filter(uniqueValues);
+}
+
+function intersection(a, b){
+    var ai=0, bi=0;
+    var result = [];
+
+    while( ai < a.length && bi < b.length ){
+       if      (a[ai] < b[bi] ){ ai++; }
+       else if (a[ai] > b[bi] ){ bi++; }
+       else{
+         result.push(a[ai]);
+         ai++;
+         bi++;
+       }
+    }
+
+    return result;
+}
+
+function prepareText(txt){
+      if(txt == null){
+        return "";
+      }
+      if(typeof txt == 'object'){
+        return txt.join("; ");
+      }
+      if(typeof txt == 'number'){
+        return formatter(txt);
+      }
+      return String(txt);
 }

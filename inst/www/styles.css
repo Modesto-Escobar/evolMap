@@ -826,6 +826,7 @@ tr.selected-row {
   position: relative;
   margin-bottom: 4px;
   cursor: pointer;
+  font-size: 0.8em;
 }
 .frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar > div.freq1 {
   background-color: #cbdefb;
@@ -877,27 +878,53 @@ tr.selected-row {
 .frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > .show-less-bars:after {
     transform: rotate(180deg);
 }
-.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis {
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis,
+.bottom-axis {
   position: relative;
   border-top: solid 1px #777777;
   padding-bottom: 20px;
 }
-.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span {
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span,
+.bottom-axis > span {
   position: absolute;
   display: block;
-  width: 30px;
+  width: 100px;
   text-align: center;
-  margin-left: -15px;
+  margin-left: -50px;
   margin-top: 4px;
+  font-size: 0.8em;
 }
-.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span:after {
+.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-axis > span:after,
+.bottom-axis > span:after {
   content: "";
   border-left: solid 1px #777777;
   height: 4px;
   display: block;
   position: absolute;
   top: -4px;
-  left: 15px;
+  left: 50px;
+}
+.left-axis {
+  position: relative;
+  border-right: solid 1px #777777;
+}
+.left-axis > span {
+  position: absolute;
+  display: block;
+  width: 30px;
+  text-align: right;
+  margin-top: -10px;
+  margin-right: 4px;
+  font-size: 0.8em;
+}
+.left-axis > span:after {
+  content: "";
+  border-top: solid 1px #777777;
+  width: 4px;
+  display: block;
+  position: absolute;
+  right: -10px;
+  top: 10px;
 }
 
 /* slider */

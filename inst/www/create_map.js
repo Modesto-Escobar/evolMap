@@ -1,13 +1,13 @@
 window.onload = function(){
-  if(!data.options.hasOwnProperty("entityOpacity")){
-    data.options.entityOpacity = 0.2;
-  }
   data = loadMultiVariables(data);
+  data = controlsVisibility(data);
+
   renderMap(data);
 }
 
 function renderMap(data){
-  var zoomstep = 0.25;
+  var zoomstep = 0.25,
+      panstep = 25;
 
   document.body.innerHTML = '<div id="mapid"></div>';
   document.body.addEventListener("keydown",shortcuts);
@@ -18,6 +18,25 @@ function renderMap(data){
   }
 
   var colorManagers = {};
+
+  // create a box selector from box zoom
+  L.Map.BoxZoom.prototype._onMouseUp = function(e){
+      if ((e.which !== 1) && (e.button !== 1)) { return; }
+
+      this._finish();
+
+      if (!this._moved) { return; }
+      // Postpone to next JS tick so internal click event handling
+      // still see it as "moved".
+      this._clearDeferredResetState();
+      this._resetStateTimeout = setTimeout(L.bind(this._resetState, this), 0);
+
+      var bounds = L.latLngBounds(
+              this._map.containerPointToLatLng(this._startPoint),
+              this._map.containerPointToLatLng(this._point));
+
+      this._map.fire('boxzoomend', {boxZoomBounds: bounds});
+  };
 
   var map = L.map("mapid",{
     zoomSnap: zoomstep,
@@ -37,7 +56,7 @@ function renderMap(data){
         zoomin.addEventListener("click",function(){ map.setZoom(map.getZoom()+zoomstep); });
 
         var zoomreset = L.DomUtil.create('button','zoomreset',zoomButtons);
-        zoomreset.addEventListener("click",function(){ map.setZoom(data.options.zoom); });
+        zoomreset.addEventListener("click",function(){ resetView(map); });
 
         var zoomout = L.DomUtil.create('button','zoomout',zoomButtons);
         zoomout.addEventListener("click",function(){ map.setZoom(map.getZoom()-zoomstep); });
@@ -50,12 +69,54 @@ function renderMap(data){
       }
   });
 
-  L.control.zoomButtons = function(opts) {
-      return new L.Control.zoomButtons(opts);
-  }
-
   // providers
   L.tileLayer.provider(data.options.provider).addTo(map);
+
+  map.on("boxzoomend",function(e){
+      var bounds = e.boxZoomBounds;
+      if(data.storeItems){
+        if(data.storeItems["markers"]){
+          data.storeItems["markers"].forEach(function(item){
+            delete item._selected;
+            if(!item._hidden && !item._outoftime){
+              var pt = item.marker ? item.marker.getLatLng() : false;
+              if(pt && (bounds.contains(pt) == true)){
+                item._selected = true;
+              }
+            }
+          });
+        }
+
+        if(data.storeItems["links"]){
+          data.storeItems["links"].forEach(function(item){
+            delete item._selected;
+            if(!item._hidden && !item._outoftime){
+              var pt = item.line ? item.line.getLatLngs() : false;
+              if(pt && bounds.contains(pt[0]) && bounds.contains(pt[1])){
+                item._selected = true;
+              }
+            }
+          });
+        }
+
+        if(data.storeItems["entities"]){
+          entities_layer.eachLayer(function(layer){
+            var item = layer.feature;
+            delete item._selected;
+            if(!item._hidden && !item._outoftime){
+              var entityBounds = layer.getBounds();
+              if(entityBounds
+                   && bounds.contains(entityBounds.getNorthEast())
+                   && bounds.contains(entityBounds.getSouthWest())){
+                item._selected = true;
+              }
+            }
+          });
+        }
+
+        update_items();
+      }
+  });
 
   map.on("click",select_none);
 
@@ -200,15 +261,15 @@ function renderMap(data){
         freqButton.addEventListener("click",show_frequencies);
 
         var selectall = L.DomUtil.create('button','primary selectall-button',panelButtons);
-        selectall.textContent = "Select all";
+        selectall.textContent = texts["selectall"];
         selectall.addEventListener("click",select_all);
 
         var filter = L.DomUtil.create('button','primary filter-button',panelButtons);
-        filter.innerHTML = "Filter";
+        filter.textContent = texts["filter"];
         filter.addEventListener("click",filter_selected);
 
         var clear = L.DomUtil.create('button','primary-outline clear resetfilter-button',panelButtons);
-        clear.innerHTML = "Clear";
+        clear.textContent = texts["clear"];
         clear.addEventListener("click",remove_filters);
 
         return panelButtons;
@@ -218,10 +279,6 @@ function renderMap(data){
         // Nothing to do here
       }
     });
-
-    L.control.buttonsPanel = function(opts) {
-      return new L.Control.buttonsPanel(opts);
-    }
   }
 
   // search
@@ -237,36 +294,43 @@ function renderMap(data){
 
         var searchIcon = L.DomUtil.create('button','search-icon disabled',searchWrapper);
         searchIcon.appendChild(getSVG("search"));
+        searchIcon.addEventListener("click",function(){
+          filter_selected();
+          searchInput.value = "";
+          searchIcon.classList.add("disabled");
+        });
 
-        var input = L.DomUtil.create('input','',searchBox);
-        input.type = "text";
-        input.placeholder = "Search an entity...";
-        input.addEventListener("keydown",function(event){
+        var searchInput = L.DomUtil.create('input','',searchBox);
+        searchInput.type = "text";
+        searchInput.placeholder = texts['searchsomething'];
+        searchInput.addEventListener("keydown",function(event){
           L.DomEvent.stopPropagation(event);
         });
-        input.addEventListener("keyup",function(event){
+        searchInput.addEventListener("keyup",function(event){
           var txt = this.value;
+          var found = false;
           if(txt.length>1){
             txt = new RegExp(txt,'i');
             searchItem("entities",txt);
             searchItem("markers",txt);
             update_items();
           }
-        })
+          searchIcon.classList[found ? "remove" : "add"]("disabled");
 
-        function searchItem(items,txt){
-          if(data.storeItems[items]){
-            data.storeItems[items].forEach(function(item){
-              delete item._selected;
-              var i = 0;
-              while(!item._selected && i<data[items].columns.length){
+          function searchItem(items,txt){
+            if(data.storeItems[items]){
+              data.storeItems[items].forEach(function(item){
+                delete item._selected;
+                var i = 0;
+                while(!item._selected && i<data[items].columns.length){
                   if(String(item.properties[data[items].columns[i++]]).match(txt)){
-                    item._selected = true;
+                    item._selected = found = true;
                   }
-              }
-            });
+                }
+              });
+            }
           }
-        }
+        })
 
         return searchPanel;
       },
@@ -276,10 +340,6 @@ function renderMap(data){
       }
     });
 
-  L.control.searchPanel = function(opts) {
-      return new L.Control.searchPanel(opts);
-  }
-
   // tools panel
   var tabnames = Object.keys(data.storeItems);
   if(tabnames.length){
@@ -287,14 +347,14 @@ function renderMap(data){
       onAdd: function(map) {
         var toolsPanelWrapper = L.DomUtil.create('div', 'tools-panel-wrapper');
 
-        var toolsPanel = createNewPanel("tools","Tools",toolsPanelWrapper);
+        var toolsPanel = createNewPanel("tools",data.options.controls,update_tools,toolsPanelWrapper);
 
         displayItemNav(toolsPanel,tabnames,function(){
           var name = toolsPanel.querySelector(".items-nav > ul > li.active").item;
           tabs.childNodes.forEach(function(tab){
             tab.style.display = (tab.getAttribute("tabname")==name) ? "block" : "none";
           });
-          update_valueSelectors();
+          update_tools();
         });
 
         var tabs = L.DomUtil.create('div','tools-tabs',toolsPanel);
@@ -311,7 +371,7 @@ function renderMap(data){
           })
 
           var markersFilter = L.DomUtil.create('div','items-filter markers-filter',tabMarkers);
-          displayItemFilter(markersFilter,"markers",filter_selected_markers,remove_markers_filters,update_items);
+          displayItemFilter(markersFilter,"markers",filter_selected,remove_items_filters,update_items);
         }
 
         if(tabname=="links"){
@@ -323,7 +383,7 @@ function renderMap(data){
           addVisualSelector(linksChange,"links","Color",applyVisual);
 
           var linkFilter = L.DomUtil.create('div','items-filter links-filter',tabLinks);
-          displayItemFilter(linkFilter,"links",filter_selected_links,remove_links_filters,update_items);
+          displayItemFilter(linkFilter,"links",filter_selected,remove_items_filters,update_items);
         }
 
         if(tabname=="entities"){
@@ -337,7 +397,7 @@ function renderMap(data){
           });
 
           var entitiesOpacity = L.DomUtil.create('div','items-opacity entities-opacity',tabEntities);
-          L.DomUtil.create('h4','',entitiesOpacity).innerHTML = "Opacity";
+          L.DomUtil.create('h4','',entitiesOpacity).textContent = texts["opacity"];
           var inputRange = L.DomUtil.create('input','slider',entitiesOpacity);
           inputRange.type = "range";
           inputRange.min = 0;
@@ -350,7 +410,7 @@ function renderMap(data){
           });
 
           var entitiesFilter = L.DomUtil.create('div','items-filter entities-filter',tabEntities);
-          displayItemFilter(entitiesFilter,"entities",filter_selected_geometries,remove_geometries_filters,update_items);
+          displayItemFilter(entitiesFilter,"entities",filter_selected,remove_items_filters,update_items);
         }
         });
 
@@ -363,10 +423,6 @@ function renderMap(data){
         // Nothing to do here
       }
     });
-
-    L.control.toolsPanel = function(opts) {
-      return new L.Control.toolsPanel(opts);
-    }
   }
 
   // legends panel
@@ -374,17 +430,18 @@ function renderMap(data){
       onAdd: function(map) {
         var legendsPanelWrapper = L.DomUtil.create('div','legends-panel-wrapper');
 
-        var legendsPanel = createNewPanel("legends","Legends",legendsPanelWrapper);
+        var legendsPanel = createNewPanel("legends",data.options.controls,update_legends,legendsPanelWrapper);
  
         var goBack = L.DomUtil.create('div','goback',legendsPanel);
         goBack.addEventListener("click",remove_filters);
  
         var legendsContent = L.DomUtil.create('div','legends-content',legendsPanel);
+        legendsContent.style.maxHeight = (document.body.clientHeight-300) + "px";
 
         var bottomControls = L.DomUtil.create('div','legend-bottom-controls',legendsPanel);
         var legendSelectAll = L.DomUtil.create('div','legend-selectall',bottomControls);
         var selectAllCheck = L.DomUtil.create('div','legend-check-box',legendSelectAll);
-        L.DomUtil.create('span', '',legendSelectAll).textContent = "Select all";
+        L.DomUtil.create('span', '',legendSelectAll).textContent = texts["selectall"];
         legendSelectAll.style.cursor = "pointer";
         legendSelectAll.addEventListener("click",function(){
           if(selectAllCheck.classList.contains("checked")){
@@ -394,7 +451,7 @@ function renderMap(data){
           }
         });
         var filterButton = L.DomUtil.create('button','legend-bottom-button primary',bottomControls);
-        filterButton.textContent = "Filter";
+        filterButton.textContent = texts["filter"];
         filterButton.addEventListener("click",filter_selected);
 
         return legendsPanelWrapper;
@@ -405,10 +462,6 @@ function renderMap(data){
       }
   });
 
-  L.control.legendsPanel = function(opts) {
-      return new L.Control.legendsPanel(opts);
-  }
-
   // marker Cluster
   if(data.storeItems.markers){
     if(L.hasOwnProperty("markerClusterGroup")){
@@ -417,8 +470,6 @@ function renderMap(data){
       var markers_layer = L.layerGroup();
     }
   }
-
-  var update_items = function(){};
 
   if(timeApplied()){
     // manage time
@@ -468,15 +519,18 @@ function renderMap(data){
         loadNextFrame = function(){
           nextFrame();
           update_items();
+          periodView(map);
         },
         loadPrevFrame = function(){
           prevFrame();
           update_items();
+          periodView(map);
         },
         goTo = function(value){
           if(value>=min && value<=max){
             current = value;
             update_items();
+            periodView(map);
           }
         };
 
@@ -516,6 +570,7 @@ function renderMap(data){
 
     update_items = function(){
           visibleItems = 0;
+
           if(data.storeItems.entities){
             entities_layer.clearLayers();
             data.storeItems.entities.forEach(function(feature){
@@ -530,6 +585,7 @@ function renderMap(data){
               }
             });
           }
+
           if(data.storeItems.markers){
             data.storeItems.markers.forEach(function(item){
               if(!item._hidden){
@@ -553,11 +609,15 @@ function renderMap(data){
               }
             }
           }
+
           if(data.storeItems.links){
             data.storeItems.links.forEach(function(link){
               delete link._outoftime;
               if(!link._hidden){
-                if(!data.storeItems.markers[nodes[link.source]]._outoftime && !data.storeItems.markers[nodes[link.target]]._outoftime){
+                if(!data.storeItems.markers[nodes[link.source]]._outoftime
+                   && !data.storeItems.markers[nodes[link.source]]._hidden
+                   && !data.storeItems.markers[nodes[link.target]]._outoftime
+                   && !data.storeItems.markers[nodes[link.target]]._hidden){
                   findAttributes("links",link,current);
                   if(!link._outoftime){
                     updateLine(link);
@@ -566,19 +626,25 @@ function renderMap(data){
                       visibleItems++;
                     }
                   }else{
-                    link.line.removeFrom(links_layer);
+                    removeLink(link);
                   }
                 }else{
                   link._outoftime = true;
-                  link.line.removeFrom(links_layer);
+                  removeLink(link);
                 }
               }else{
-                link.line.removeFrom(links_layer);
+                removeLink(link);
               }
             });
+            function removeLink(link){
+              if(link.line){
+                link.line.removeFrom(links_layer);
+              }
+            }
           }
+
           update_entities_style();
-          update_valueSelectors();
+          update_tools();
           update_legends();
           update_buttons();
           show_tables();
@@ -586,18 +652,6 @@ function renderMap(data){
 
           updateShowedDates(current);
           inputRange.value = current;
-
-          if((data.periods && data.options.byperiod) && ((data.options.periodLatitude && data.options.periodLongitude) || data.options.periodZoom)){
-            var center = map.getCenter(),
-                zoom  = map.getZoom();
-            if(data.options.periodZoom){
-              zoom = getValuesFromDF("periods","periodZoom")[current];
-            }
-            if(data.options.periodLatitude && data.options.periodLongitude){
-              center = [getValuesFromDF("periods","periodLatitude")[current],getValuesFromDF("periods","periodLongitude")[current]];
-            }
-            map.setView(center, zoom);
-          }
     };
 
     var inputRange = L.DomUtil.create('input','slider');
@@ -763,7 +817,7 @@ function renderMap(data){
             }
           });
           var speedSpan = L.DomUtil.create('span','',speedSelectionDiv);
-          speedSpan.innerHTML = "&nbsp;speed";
+          speedSpan.textContent = " " + texts["speed"];
         }
 
         if(data.periods && data.options.time){
@@ -772,7 +826,7 @@ function renderMap(data){
           if(data.options.byperiod){
             periodCheck.classList.add("checked");
           }
-          L.DomUtil.create('span','',periodDiv).textContent = "period";
+          L.DomUtil.create('span','',periodDiv).textContent = texts["period"];
           periodDiv.style.cursor = "pointer";
           periodDiv.addEventListener("click",function(event){
             data.options.byperiod = !data.options.byperiod;
@@ -819,10 +873,6 @@ function renderMap(data){
         // Nothing to do here
       }
     });
-
-    L.control.timeControl = function(opts) {
-      return new L.Control.timeControl(opts);
-    }
   }else{
     // timeless map
     update_items = function(){
@@ -834,26 +884,35 @@ function renderMap(data){
           }
         });
       }
-      if(data.storeItems.links){
-        links_layer.clearLayers();
-        data.storeItems.links.forEach(function(link){
-          updateLine(link);
-          if(!link._hidden){
-            link.line.addTo(links_layer);
-          }
-        });
-      }
+
       if(data.storeItems.markers){
-        markers_layer.clearLayers();
         data.storeItems.markers.forEach(function(item){
           updateMarker(item);
-          if(!item._hidden){
-            item.marker.addTo(markers_layer);
+          if(item.marker){
+            if(!item._hidden){
+              item.marker.addTo(markers_layer);
+            }else{
+              item.marker.removeFrom(markers_layer);
+            }
           }
         });
       }
+
+      if(data.storeItems.links){
+        data.storeItems.links.forEach(function(link){
+          updateLine(link);
+          if(link.line){
+            if(!link._hidden){
+              link.line.addTo(links_layer);
+            }else{
+              link.line.removeFrom(links_layer);
+            }
+          }
+        });
+      }
+
       update_entities_style();
-      update_valueSelectors();
+      update_tools();
       update_legends();
       update_buttons();
       show_tables();
@@ -872,22 +931,25 @@ function renderMap(data){
   }
 
   // display controls
-  L.control.searchPanel({ position: 'topleft' }).addTo(map);
-  if(L.control.hasOwnProperty("toolsPanel")){
-    L.control.toolsPanel({ position: 'topleft' }).addTo(map);
+  (new L.Control.searchPanel({ position: 'topleft' })).addTo(map);
+  if(data.options.controls.tools !== undefined && L.Control.hasOwnProperty("toolsPanel")){
+    (new L.Control.toolsPanel({ position: 'topleft' })).addTo(map);
   }
-  L.control.zoomButtons({ position: 'bottomright' }).addTo(map);
-  if(L.control.hasOwnProperty("timeControl")){
-    L.control.timeControl({ position: 'bottomleft' }).addTo(map);
+  (new L.Control.zoomButtons({ position: 'bottomright' })).addTo(map);
+  if(L.Control.hasOwnProperty("timeControl")){
+    (new L.Control.timeControl({ position: 'bottomleft' })).addTo(map);
   }
-  if(L.control.hasOwnProperty("buttonsPanel")){
-    L.control.buttonsPanel({ position: 'bottomleft' }).addTo(map);
+  if(data.options.controls.buttons && L.Control.hasOwnProperty("buttonsPanel")){
+    (new L.Control.buttonsPanel({ position: 'bottomleft' })).addTo(map);
   }
-  if(L.control.hasOwnProperty("legendsPanel")){
-    L.control.legendsPanel({ position: 'topright' }).addTo(map);
+  if(data.options.controls.legends !== undefined && L.Control.hasOwnProperty("legendsPanel")){
+    (new L.Control.legendsPanel({ position: 'topright' })).addTo(map);
   }
 
   update_items();
+  periodView(map);
+
+  function update_items(){}
 
   function applyVisual(items,visual,value){
       var itemVisual = getItemOption(items,visual);
@@ -940,7 +1002,7 @@ function renderMap(data){
 
       var onlySelected = document.createElement("div");
       onlySelected.classList.add("only-selected-data");
-      onlySelected.textContent = "Show only selected items ";
+      onlySelected.textContent = texts["showonlyselecteditems"] + " ";
       var onlyselectedCheck = document.createElement("div");
       onlyselectedCheck.classList.add("legend-check-box");
       onlyselectedCheck.classList.add("checked");
@@ -971,11 +1033,12 @@ function renderMap(data){
         return
       }
 
+      var tbody = container.querySelector(".table-wrapper."+items+"-table-wrapper > table > tbody");
+
       var columns = getItemsColumns(items);
 
-      var tbody = container.querySelector(".table-wrapper."+items+"-table-wrapper > table > tbody");
       if(!tbody){
-        container.innerHTML = "";
+        L.DomUtil.empty(container);
 
         var div = document.createElement("div");
         div.classList.add(items+"-table-wrapper");
@@ -983,7 +1046,9 @@ function renderMap(data){
 
         var title = document.createElement("div");
         title.classList.add("table-title");
-        title.innerHTML = "<span>" + items + "</span>";
+        var span = document.createElement("span");
+        span.textContent = texts[items];
+        title.appendChild(span);
         div.appendChild(title);
 
         var xlsxButton = document.createElement("img");
@@ -991,12 +1056,40 @@ function renderMap(data){
         xlsxButton.setAttribute("alt", "xlsx");
         xlsxButton.style.cursor = "pointer";
         xlsxButton.style.marginLeft = "14px";
-        xlsxButton.addEventListener("click",table2xlsx);
+        xlsxButton.addEventListener("click",function(){
+          table2xlsx(items,tbody.data,columns);
+        });
         title.appendChild(xlsxButton);
 
+        var searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = texts["searchsomething"];
+        searchInput.style.marginLeft = "14px";
+        searchInput.addEventListener("keydown",function(event){
+          event.stopPropagation();
+        });
+        searchInput.addEventListener("keyup",function(event){
+          var txt = this.value;
+          if(txt.length>0){
+            txt = new RegExp(txt,'i');
+            tbody.data.forEach(function(item){
+              item._table_selection = false;
+              var i = 0;
+              while(!item._table_selection && i<columns.length){
+                if(String(item.properties[columns[i++]]).match(txt)){
+                  item._table_selection = true;
+                }
+              }
+            });
+          }
+          update_items();
+        })
+        title.appendChild(searchInput);
+
         var matchedButton = document.createElement("button");
+        matchedButton.classList.add("table-select");
         matchedButton.classList.add("primary");
-        matchedButton.textContent = "Matched in table";
+        matchedButton.textContent = texts["matchedintable"];
         matchedButton.style.marginLeft = "14px";
         matchedButton.addEventListener("click",function(){
           data.storeItems[items].forEach(function(item){
@@ -1009,6 +1102,35 @@ function renderMap(data){
           update_items();
         });
         title.appendChild(matchedButton);
+
+        var filterButton = document.createElement("button");
+        filterButton.classList.add("table-filter");
+        filterButton.classList.add("primary");
+        filterButton.textContent = texts["filter"];
+        filterButton.style.marginLeft = "14px";
+        filterButton.addEventListener("click",function(){
+          data.storeItems[items].forEach(function(item){
+            if(item._table_selection){
+              delete item._table_selection;
+            }else{
+              delete item._selected;
+              item._hidden = true;
+            }
+          });
+          update_items();
+        });
+        title.appendChild(filterButton);
+
+        var resetButton = document.createElement("button");
+        resetButton.classList.add("table-resetfilter");
+        resetButton.classList.add("primary-outline");
+        resetButton.classList.add("clear");
+        resetButton.textContent = texts["clear"];
+        resetButton.style.marginLeft = "14px";
+        resetButton.addEventListener("click",function(){
+          remove_filters(items);
+        });
+        title.appendChild(resetButton);
 
         var table = document.createElement("table");
 
@@ -1030,7 +1152,7 @@ function renderMap(data){
           }
           th.textContent = col;
           th.addEventListener("click",function(){
-            renderTableBody(tbody,sort1);
+            renderTableBody(tbody,items,tbody.data,columns,sort1);
             var desci = desc[i];
             desc = desc0.slice();
             desc[i] = !desci;
@@ -1054,23 +1176,25 @@ function renderMap(data){
         container.appendChild(div);
       }
 
-      renderTableBody(tbody);
+      var onlySelectedItems = container.parentNode.querySelector(".only-selected-data > .legend-check-box.checked") ? true : false;
+      tbody.data = data.storeItems[items].filter(function(item){
+        return (!onlySelectedItems || item._selected || item._table_selection) && !item._hidden && !item._outoftime;
+      });
+      renderTableBody(tbody,items,tbody.data,columns);
 
-      function getItemsTable(){
-        var onlySelectedItems = container.parentNode.querySelector(".only-selected-data > .legend-check-box.checked") ? true : false;
-        return data.storeItems[items].filter(function(item){
-          return (!onlySelectedItems || item._selected || item._table_selection) && !item._hidden && !item._outoftime;
-        });
-      }
+      ["select","filter"].forEach(function(d){
+        container.querySelector("button.table-"+d).classList[tbody.data.filter(function(item){ return item._table_selection; }).length ? "remove" : "add"]("disabled");
+      })
+      container.querySelector("button.table-resetfilter").classList[data.storeItems[items].filter(function(item){ return (!onlySelectedItems || item._selected || item._table_selection) && item._hidden && !item._outoftime; }).length ? "remove" : "add"]("disabled");
 
-      function renderTableBody(tbody,order){
-        tbody.innerHTML = "";
-        var subitems = getItemsTable();
+      function renderTableBody(tbody,items,subitems,columns,order){
+        L.DomUtil.empty(tbody);
+        var textSearched = tbody.parentNode.parentNode.querySelector(".table-title > input").value.length>0;
         if(!subitems.length){
           var tr = document.createElement("tr");
           var td = document.createElement("td");
           td.setAttribute("colspan", columns.length);
-          td.textContent = "Select some items in the map to see its attributes";
+          td.textContent = texts["selectsomeitems"];
           tr.appendChild(td);
           tbody.appendChild(tr);
         }else{
@@ -1078,6 +1202,9 @@ function renderMap(data){
             subitems.sort(order);
           }
           subitems.forEach(function(item,j){
+            if(textSearched && !item._table_selection){
+              return;
+            }
             var tr = document.createElement("tr");
             columns.forEach(function(col){
               var td = document.createElement("td");
@@ -1130,9 +1257,9 @@ function renderMap(data){
         }
       }
 
-      function table2xlsx(){
+      function table2xlsx(items,subitems,columns){
         var nodes = [columns];
-        getItemsTable().forEach(function(item){
+        subitems.forEach(function(item){
           nodes.push(columns.map(function(col){ return prepareText(item.properties[col]); }));
         })
 
@@ -1143,7 +1270,7 @@ function renderMap(data){
           var win = displayWindow()
           var p = document.createElement("p");
           p.classList.add("window-message");
-          p.textContent = "No "+items;
+          p.textContent = texts["noitems"]+" "+texts[items];
           win.appendChild(p);
         }else{
           downloadExcel(itemsdata, document.querySelector("head>title").textContent);
@@ -1182,7 +1309,7 @@ function renderMap(data){
       ["relative","absolute"].forEach(function(d){
         var option = document.createElement("option");
         option.value = d;
-        option.textContent = d;
+        option.textContent = texts[d];
         modeSelect.appendChild(option);
       });
       modeSelect.addEventListener("change",function(){
@@ -1219,15 +1346,16 @@ function renderMap(data){
       if(freqBarplots.length){
             freqBarplots = freqBarplots[0];
       }else{
-            container.innerHTML = "";
+            L.DomUtil.empty(container);
             freqBarplots = document.createElement("div");
             freqBarplots.classList.add("frequency-barplots");
             freqBarplots.classList.add(items+"-frequency-wrapper");
+            freqBarplots.wordclouds = new Set();
             container.appendChild(freqBarplots);
       }
       if(!visibleItems.length){
         var text = document.createElement("p");
-        text.textContent = "No "+items+" in the map";
+        text.textContent = texts["noitems"]+" "+texts[items]+" "+texts["inthemap"];
         freqBarplots.appendChild(text);
         return;
       }
@@ -1465,7 +1593,58 @@ function renderMap(data){
             });
           }
 
-          var barplot = getBarPlot(freqBarplots,col);
+          var barplot = getBarPlot(freqBarplots,col,true);
+
+          // display wordcloud
+          if(freqBarplots.wordclouds.has(col)){
+
+        // set the dimensions and margins of the graph
+        var w = container.offsetWidth - 72,
+            h = 300,
+            namespace = "http://www.w3.org/2000/svg";
+        // append the svg object
+        var svg = document.createElementNS(namespace,"svg");
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        var g = document.createElementNS(namespace,"g");
+        g.setAttribute("transform", "translate(" + (w/2) + "," + (h/2) + ")");
+        svg.appendChild(g);
+        barplot.appendChild(svg);
+
+        var font = "sans-serif",
+            xScale = d3.scaleLinear()
+           .domain([0, maxvalue])
+           .range([8,50]);
+
+        var layout = d3.layout.cloud()
+        .size([w, h])
+        .words(keyvalues.map(function(k){ return {text: k, count: values[k]}; }))
+        .padding(2)
+        .random(function(){ return 0.5; })
+        .rotate(function(d,i){ return (i%2) * 90; })
+        .font(font)
+        .fontSize(function(d){ return xScale(d.count); })
+        .on("end", function(words){
+          L.DomUtil.empty(g);
+          words.forEach(function(word){
+            var text = document.createElementNS(namespace, "text");
+            text.textContent = word.text;
+            text.setAttribute("text-anchor", "middle");
+            text.style.fontSize = word.size + "px";
+            text.style.fontFamily = font;
+            text.style.fill = data.options[itemColor]==col ? colorManagers[itemColor].getColor(word.text) : "#777777";
+            text.setAttribute("transform", "translate(" + [word.x, word.y] + ")rotate(" + word.rotate + ")");
+            text.style.cursor = "pointer";
+            text.addEventListener("click",function(){
+              
+            });
+            g.appendChild(text);
+          });
+        });
+
+        layout.start();
+
+          }else{
 
           keyvalues.forEach(function(v,i){
             var percentage = values[v]/maxvalue*100,
@@ -1522,7 +1701,7 @@ function renderMap(data){
             var moreBars = document.createElement("span");
             moreBars.classList.add("show-more-bars");
             moreBars.style.cursor = "pointer";
-            moreBars.textContent = "Show " + Math.min(keyvalues.length-10,10) + " more";
+            moreBars.textContent = texts["show"] + " " + Math.min(keyvalues.length-10,10) + " " + texts["more"];
             moreBars.addEventListener("click",function(){
               var count = 0;
               barplot.querySelectorAll(".freq-bar").forEach(function(d){
@@ -1545,7 +1724,7 @@ function renderMap(data){
                     count++;
                   }
                 });
-                moreBars.textContent = "Show " + Math.min(count,10) + " more";
+                moreBars.textContent = texts["show"] + " " + Math.min(count,10) + " " + texts["more"];
               }
               lessBars.style.visibility = null;
               lessBars.style.cursor = "pointer";
@@ -1555,7 +1734,7 @@ function renderMap(data){
             var lessBars = document.createElement("span");
             lessBars.classList.add("show-less-bars");
             lessBars.style.visibility = "hidden";
-            lessBars.textContent = "Show less";
+            lessBars.textContent = texts["show"] + " " + texts["less"];
             lessBars.addEventListener("click",function(){
               barplot.querySelectorAll(".freq-bar").forEach(function(d,i){
                 if(i>9){
@@ -1568,7 +1747,7 @@ function renderMap(data){
               lessBars.style.cursor = null;
               moreBars.style.visibility = null;
               moreBars.style.cursor = "pointer";
-              moreBars.textContent = "Show " + Math.min(keyvalues.length-10,10) + " more";
+              moreBars.textContent = texts["show"] + " " + Math.min(keyvalues.length-10,10) + " " + texts["more"];
             });
             moreLessBars.appendChild(lessBars);
           }
@@ -1586,10 +1765,12 @@ function renderMap(data){
             span.textContent = t+renderPercentage;
             axis.appendChild(span);
           })
+
+          }
         }
       });
 
-      function getBarPlot(sel,name){
+      function getBarPlot(sel,name,wordcloud){
           var barplot = false;
           sel.childNodes.forEach(function(d){
             if(d.variable==name){
@@ -1606,19 +1787,35 @@ function renderMap(data){
             header.textContent = name;
             barplot.appendChild(header);
 
-            if(true){
+            if(wordcloud && d3.hasOwnProperty("layout") && d3.layout.hasOwnProperty("cloud")){
               var img = document.createElement("img");
-              img.setAttribute("title","color");
-              img.setAttribute("src",b64Icons.drop);
+              img.setAttribute("title","wordcloud");
+              img.setAttribute("src",b64Icons.wordcloud);
               img.style.cursor = "pointer";
               img.style.float = "right";
               img.addEventListener("click",function(){
-                applyVisual(items,"Color",name);
+                if(sel.wordclouds.has(name)){
+                  sel.wordclouds.delete(name);
+                  show_frequencies();
+                }else{
+                  sel.wordclouds.add(name);
+                  applyVisual(items,"Color",name);
+                }
               });
               header.appendChild(img);
             }
+
+            var img = document.createElement("img");
+            img.setAttribute("title","color");
+            img.setAttribute("src",b64Icons.drop);
+            img.style.cursor = "pointer";
+            img.style.float = "right";
+            img.addEventListener("click",function(){
+              applyVisual(items,"Color",name);
+            });
+            header.appendChild(img);
           }else{
-            while(barplot.lastChild && barplot.childNodes.length>1){
+            while(barplot.childNodes.length>1){
               barplot.removeChild(barplot.lastChild);
             }
           }
@@ -1633,10 +1830,10 @@ function renderMap(data){
       parent.appendChild(itemsNav);
       var ul = document.createElement("ul");
       itemsNav.appendChild(ul);
-      list.forEach(function(itemsname){
+      list.forEach(function(items){
           var li = document.createElement("li");
-          li.textContent = itemsname;
-          li.item = itemsname;
+          li.textContent = texts[items];
+          li.item = items;
           li.addEventListener("click",function(){
             if(!this.classList.contains("active")){
               ul.childNodes.forEach(function(li){
@@ -1652,11 +1849,10 @@ function renderMap(data){
   }
 
   function timeApplied(items){
-    if(!items){
-      items = Object.keys(data.storeItems);
-    }
     if(typeof items == "string"){
       items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
     }
     for(var i=0; i<items.length; i++){
       if(data.hasOwnProperty(items[i])
@@ -1786,6 +1982,7 @@ function renderMap(data){
           item._selected = true;
         }
         update_items();
+        L.DomEvent.stopPropagation(event);
       });
     }
 
@@ -1879,7 +2076,7 @@ function renderMap(data){
       goback.classList[some_filtered() ? "remove" : "add"]("disabled");
 
       var legendsContent = legendsPanel.getElementsByClassName("legends-content")[0];
-      legendsContent.innerHTML = "";
+      L.DomUtil.empty(legendsContent);
       Object.keys(data.storeItems).forEach(function(items){
         listLegend(legendsContent,items);
       })
@@ -1902,8 +2099,8 @@ function renderMap(data){
     }
 
     function listLegend(container,items){
-      var itemVisual = getItemOption(items,"Color"),
-          title = items+" color";
+      var visual = "Color",
+          itemVisual = getItemOption(items,visual);
       if(data.storeItems[items] && data.options[itemVisual]){
         var column = data.options[itemVisual],
             type = getDFcolumnType(items,column);
@@ -1912,10 +2109,7 @@ function renderMap(data){
             var domain = colorManagers[itemVisual].getDomain(),
                 range = colorManagers[itemVisual].getRange();
 
-            var legend = L.DomUtil.create('div','legend',container);
-            L.DomUtil.create('div','legend-title',legend).textContent = title+" / "+column;
-            L.DomUtil.create('div','legend-separator',legend);
-
+            var legend = displayLegendHeader(container,items,visual,column);
             var scaleLinear = L.DomUtil.create('div','legend-scale-gradient',legend);
             scaleLinear.style.height = "10px";
             scaleLinear.style.width = "100%";
@@ -1937,13 +2131,23 @@ function renderMap(data){
             }
 
             if(values.length){
-              var legend = L.DomUtil.create('div','legend',container);
-              L.DomUtil.create('div','legend-title',legend).textContent = title+" / "+column;
-              L.DomUtil.create('div','legend-separator',legend);
+              var legend = displayLegendHeader(container,items,visual,column);
               values.forEach(function(d){
                 var legendItem = L.DomUtil.create('div','legend-item',legend);
                 var checkbox = L.DomUtil.create('div','legend-check-box',legendItem);
-                L.DomUtil.create('div','legend-bullet',legendItem).style.backgroundColor = colorManagers[itemVisual].getColor(d);
+                var bullet = L.DomUtil.create('div','legend-bullet',legendItem);
+                var color = colorManagers[itemVisual].getColor(d);
+                bullet.style.backgroundColor = color;
+                bullet.addEventListener("click",function(event){
+                  displayColorPicker(d,color,function(val){
+                    var range = colorManagers[itemVisual].getRange(),
+                        domain = colorManagers[itemVisual].getDomain();
+                    range[domain.indexOf(d)] = val;
+                    colorManagers[itemVisual]._scale.range(range);
+                    update_items();
+                  });
+                  event.stopPropagation();
+                })
                 L.DomUtil.create('span','',legendItem).textContent = d;
 
                 legendItem.style.cursor = "pointer";
@@ -1964,6 +2168,47 @@ function renderMap(data){
             }
           }
         }
+      }
+
+      function displayLegendHeader(container,items,visual,column){
+            var legend = L.DomUtil.create('div','legend',container);
+            var legendTitle = L.DomUtil.create('div','legend-title',legend);
+            legendTitle.textContent = texts[visual]+" / "+column+" ("+texts[items]+")";
+            legendTitle.style.cursor = "pointer";
+            legendTitle.addEventListener("click",function(){
+              var win = displayWindow(400);
+              var h2 = document.createElement("h2");
+              h2.textContent = texts.selectattribute+texts[visual];
+              win.appendChild(h2)
+
+              var ul = document.createElement("ul");
+              ul.classList.add("visual-selector");
+              win.appendChild(ul)
+
+              var options = getItemsColumns(items).map(function(d){ return [d,d]; });
+              options.unshift(["_none_","-"+texts.none+"-"])
+              options.forEach(function(d){
+                var value = d[0],
+                    text = d[1];
+                var li = document.createElement("li");
+                li.textContent = text;
+                li.value = value;
+                if(value==column){
+                  li.classList.add("active");
+                }
+                li.addEventListener("click",function(){
+                  ul.childNodes.forEach(function(node){
+                    node.classList.remove("active");
+                  })
+                  this.classList.add("active");
+                  applyVisual(items,visual,value);
+                  document.body.removeChild(win.parentNode.parentNode);
+                });
+                ul.appendChild(li);
+              });
+            });
+            L.DomUtil.create('div','legend-separator',legend);
+            return legend;
       }
     }
   }
@@ -1998,7 +2243,7 @@ function renderMap(data){
     }
   }
 
-  function update_valueSelectors(){
+  function update_tools(){
     var panel = document.querySelector(".tools-panel-wrapper:not(.collapse-panel) > .tools-panel");
     if(panel){
       Object.keys(data.storeItems).forEach(function(items){
@@ -2018,9 +2263,9 @@ function renderMap(data){
               select.dispatchEvent(new Event('change'));
             }
             var filterButton = element.getElementsByClassName("filter-button")[0];
-            filterButton.classList[some_selected() ? "remove" : "add"]("disabled");
+            filterButton.classList[some_selected(items) ? "remove" : "add"]("disabled");
             var resetfilterButton = element.getElementsByClassName("resetfilter-button")[0];
-            resetfilterButton.classList[some_filtered() ? "remove" : "add"]("disabled");
+            resetfilterButton.classList[some_filtered(items) ? "remove" : "add"]("disabled");
           }
         }
       });
@@ -2038,70 +2283,31 @@ function renderMap(data){
     update_items();
   }
 
-  function filter_selected(){
-    filter_selected_markers();
-    filter_selected_geometries();
-    update_items();
-  }
-
-  function filter_selected_markers(){
-    if(data.storeItems.markers){
-      data.storeItems.markers.forEach(function(item){
-        if(!item._selected){
-          item._hidden = true;
-        }
-      });
+  function filter_selected(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(some_selected(items[i])){
+        data.storeItems[items[i]].forEach(function(item){
+          if(!item._selected){
+            item._hidden = true;
+          }
+        });
+      }
     }
     update_items();
   }
 
-  function filter_selected_links(){
-    if(data.storeItems.links){
-      data.storeItems.links.forEach(function(item){
-        if(!item._selected){
-          item._hidden = true;
-        }
-      });
-    }
-    update_items();
-  }
-
-  function filter_selected_geometries(){
-    if(data.storeItems.entities){
-      data.storeItems.entities.forEach(function(feature){
-        if(!feature._selected){
-         feature._hidden = true;
-        }
-      });
-    }
-    update_items();
-  }
-
-  function remove_markers_filters(){
-    if(data.storeItems.markers){
-      data.storeItems.markers.forEach(function(item){
+  function remove_items_filters(items){
+    if(data.storeItems[items]){
+      data.storeItems[items].forEach(function(item){
         delete item._hidden;
       });
+      update_items();
     }
-    update_items();
-  }
-
-  function remove_links_filters(){
-    if(data.storeItems.links){
-      data.storeItems.links.forEach(function(item){
-        delete item._hidden;
-      });
-    }
-    update_items();
-  }
-  
-  function remove_geometries_filters(){
-    if(data.storeItems.entities){
-      data.storeItems.entities.forEach(function(feature){
-        delete feature._hidden;
-      });
-    }
-    update_items();
   }
 
   function remove_filters(){
@@ -2130,6 +2336,30 @@ function renderMap(data){
     var key = getKey(event);
     if(event.ctrlKey || event.metaKey){
       switch(key){
+        case "ArrowLeft":
+          event.preventDefault();
+          var center = map.getCenter();
+          center.lng = center.lng - panstep;
+          map.panTo(center);
+          return;
+        case "ArrowUp":
+          event.preventDefault();
+          var center = map.getCenter();
+          center.lat = center.lat + panstep;
+          map.panTo(center);
+          return;
+        case "ArrowRight":
+          event.preventDefault();
+          var center = map.getCenter();
+          center.lng = center.lng + panstep;
+          map.panTo(center);
+          return;
+        case "ArrowDown":
+          event.preventDefault();
+          var center = map.getCenter();
+          center.lat = center.lat - panstep;
+          map.panTo(center);
+          return;
         case "+":
           event.preventDefault();
           map.setZoom(map.getZoom()+zoomstep);
@@ -2140,7 +2370,7 @@ function renderMap(data){
           return;
         case "0":
           event.preventDefault();
-          map.setZoom(data.options.zoom);
+          resetView(map);
           return;
         case "f":
           event.preventDefault();
@@ -2174,22 +2404,72 @@ function renderMap(data){
     }
   }
 
-  function some_selected(){
-    var a = data.storeItems.markers ? data.storeItems.markers.filter(function(item){ return item._selected; }).length : false,
-        b = data.storeItems.entities ? data.storeItems.entities.filter(function(feature){ return feature._selected; }).length : false;
-    return a || b;
+  function resetView(map){
+    checkPeriodView(map,function(){
+      map.setView(data.options.center, data.options.zoom);
+    });
   }
 
-  function all_selected(){
-    var a = data.storeItems.markers ? data.storeItems.markers.filter(function(item){ return !item._selected; }).length : false,
-        b = data.storeItems.entities ? data.storeItems.entities.filter(function(feature){ return !feature._selected; }).length : false;
-    return !a && !b;
+  function periodView(map){
+    checkPeriodView(map);
   }
 
-  function some_filtered(){
-    var a = data.storeItems.markers ? data.storeItems.markers.filter(function(item){ return item._hidden; }).length : false,
-        b = data.storeItems.entities ? data.storeItems.entities.filter(function(feature){ return feature._hidden; }).length : false;
-    return a || b;
+  function checkPeriodView(map,callback){
+      if((data.periods && data.options.byperiod) && ((data.options.periodLatitude && data.options.periodLongitude) || data.options.periodZoom)){
+          var center = map.getCenter(),
+              zoom  = map.getZoom();
+          if(data.options.periodZoom){
+            zoom = getValuesFromDF("periods","periodZoom")[current];
+          }
+          if(data.options.periodLatitude && data.options.periodLongitude){
+            center = [getValuesFromDF("periods","periodLatitude")[current],getValuesFromDF("periods","periodLongitude")[current]];
+          }
+          map.setView(center,zoom);
+      }else if(callback){
+        callback();
+      }
+  }
+
+  function some_selected(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return item._selected; }).length){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function all_selected(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return !item._selected; }).length){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function some_filtered(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return item._hidden; }).length){
+        return true;
+      }
+    }
+    return false;
   }
 } // end function onload
 
@@ -2342,7 +2622,7 @@ function InfoPanel(){
   this.closeButton.classList.add("close-button");
   this.panelContent = document.createElement("div");
   this.panelContent.classList.add("panel-content");
-  this.panelContentDiv = document.createElement("div");
+  var contentDiv = this.panelContentDiv = document.createElement("div");
 
   this.panel.appendChild(this.dragbar);
   this.panel.appendChild(this.closeButton);
@@ -2350,7 +2630,19 @@ function InfoPanel(){
   this.panelContent.appendChild(this.panelContentDiv);
   document.body.appendChild(this.panel);
 
-  resizeInfopanel(panel);
+  dragElementX(this.dragbar,function(pos){
+    // panel margin and dragbar width offset
+    pos = pos - 15;
+    // check some bounds
+    if((pos > document.body.clientWidth*0.5) && (pos < document.body.clientWidth*0.85)){
+      // set panel left position
+      panel.style.left = pos + "px";
+    }
+  },function(){
+    contentDiv.style.display = "none";
+  },function(){
+    contentDiv.style.display = null;
+  });
 
   this.closeButton.onclick = closePanel;
 
@@ -2363,41 +2655,6 @@ InfoPanel.prototype = {
   changeContent: function(content){
     this.panelContentDiv.innerHTML = content;
     this.panel.style.display = "block";
-  }
-}
-
-function resizeInfopanel(panel) {
-  panel.querySelector(".infopanel > .drag").onmousedown = dragMouseDown;
-  var contentDiv = panel.querySelector(".infopanel > .panel-content > div");
-
-  function dragMouseDown(e) {
-    e = e || window.event;
-    e.preventDefault();
-
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-
-    contentDiv.style.display = "none";
-  }
-
-  function elementDrag(e) {
-    e = e || window.event;
-    e.preventDefault();
-
-    // set the element's new position:
-    var pos = (e.clientX - 10);
-    if((e.clientX > panel.parentNode.clientWidth*0.5) && (e.clientX < panel.parentNode.clientWidth*0.85)){
-      panel.style.left = pos + "px";
-    }
-  }
-
-  function closeDragElement() {
-    /* stop moving when mouse button is released:*/
-    document.onmouseup = null;
-    document.onmousemove = null;
-
-    contentDiv.style.display = null;
   }
 }
 
@@ -2572,20 +2829,20 @@ function addVisualSelector(sel,items,visual,applyVisual){
     var wrapper = L.DomUtil.create('div','visual-selector',sel);
     wrapper.visual = visual;
     var div = L.DomUtil.create('div','',wrapper);
-    div.innerHTML = "<span>"+visual+"</span>";
+    L.DomUtil.create('span','',div).textContent = texts[visual];
 
     var options = getItemsColumns(items).map(function(d){ return [d,d]; });
-    options.unshift(["_none_","-none-"])
+    options.unshift(["_none_","-"+texts.none+"-"])
     displaySelectWrapper(wrapper,options,function(value){
       applyVisual(items,visual,value);
     },data.options[getItemOption(items,visual)]);
 }
 
 function displayItemFilter(div,items,filter_selected,remove_filters,update_items){
-    L.DomUtil.create('h4','',div).innerHTML = "Filter";
+    L.DomUtil.create('h4','',div).textContent = texts["filter"];
 
     var selectChangeFunction = function(value){
-      valueSelector.innerHTML = "";
+      L.DomUtil.empty(valueSelector);
       var values = data.storeItems[items].filter(function(d){ return !d._hidden && !d._outoftime; }).map(function(d){ return d.properties[value]; });
       var type = getDFcolumnType(items,value);
       if(type=="number"){
@@ -2616,7 +2873,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
         select.setAttribute("size",8);
         values.forEach(function(v){
           var opt = L.DomUtil.create('option','',select);
-          opt.innerHTML = v;
+          opt.textContent = v;
           opt.value = v;
           if(allItemsSelectedByValue(items,value,v)){
             opt.selected = true;
@@ -2640,12 +2897,16 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
     var valueSelector = L.DomUtil.create('div','value-selector',div);
 
     var filter = L.DomUtil.create('button','primary filter-button',div);
-    filter.innerHTML = "Filter";
-    filter.addEventListener("click",filter_selected);
+    filter.textContent = texts["filter"];
+    filter.addEventListener("click",function(){
+      filter_selected(items);
+    });
 
     var clear = L.DomUtil.create('button','primary-outline clear resetfilter-button',div);
-    clear.innerHTML = "Clear";
-    clear.addEventListener("click",remove_filters);
+    clear.textContent = texts["clear"];
+    clear.addEventListener("click",function(){
+      remove_filters(items);
+    });
 }
 
 function displaySelectWrapper(element,options,callback,def){
@@ -2655,7 +2916,7 @@ function displaySelectWrapper(element,options,callback,def){
       var opt = L.DomUtil.create('option','',select);
       var text = typeof d == 'object' ? d[1] : d,
           val = typeof d == 'object' ? d[0] : d;
-      opt.innerHTML = text;
+      opt.textContent = text;
       opt.value = val;
     });
     select.addEventListener("change",function(){ callback(this.value); });
@@ -2673,7 +2934,7 @@ function displayScalePicker(option,callback){
         win = displayWindow((r*2+12)*itemsPerRow);
 
     var title = document.createElement("h2");
-    title.innerHTML = "Select a color scale for \""+attr+"\"";
+    title.textContent = texts["selectacolorscalefor"] + " \""+attr+"\"";
     win.appendChild(title);
 
     var picker = document.createElement("div");
@@ -2726,7 +2987,7 @@ function displayScalePicker(option,callback){
     var center = document.createElement("center");
     var button = document.createElement("button");
     button.classList.add("primary");
-    button.textContent = "Select";
+    button.textContent = texts["select"];
     button.addEventListener("click",function(){
           data.options["colorScale"+option] = picker.getElementsByClassName("active")[0].val;
           callback();
@@ -2735,6 +2996,94 @@ function displayScalePicker(option,callback){
     })
     center.appendChild(button);
     win.appendChild(center);
+}
+
+function displayColorPicker(value, active, callback){
+    var r = 14,
+        itemsPerRow = 10,
+        row,
+        win = displayWindow((r*2+12)*itemsPerRow),
+        colorPicker = false;
+
+    var title = document.createElement("h2");
+    title.textContent = texts["selectacolorfor"] + " \""+value+"\"";
+    win.appendChild(title);
+
+    var picker = document.createElement("div");
+    picker.classList.add("picker");
+    win.appendChild(picker);
+
+    data.colors.categoryColors.forEach(function(d){
+      if(!row || row.getElementsByTagName("span").length>=itemsPerRow){
+        row = document.createElement("div");
+        row.classList.add("row");
+        picker.appendChild(row);
+      }
+
+      var rowSpan = document.createElement("span");
+      rowSpan.style.width = (r*2+1)+"px";
+      rowSpan.style.height = (r*2+1)+"px";
+      rowSpan.val = d;
+      rowSpan.classList[active==d ? "add" : "remove"]("active")
+      rowSpan.addEventListener("click",function(){
+          deactiveSpans(picker);
+          this.classList.add("active");
+          active = d;
+          if(colorPicker){
+            colorPicker.color.hexString = active;
+          }
+      })
+      rowSpan.style.backgroundColor = d;
+      row.appendChild(rowSpan);
+    });
+
+    if(window.iro){
+      var iroContainer;
+
+      var center = document.createElement("center");
+      var button = document.createElement("button");
+      button.classList.add("custom-color");
+      button.textContent = texts["selectcustomcolor"];
+      button.addEventListener("click",function(){
+        iroContainer.style.display = iroContainer.style.display == "block" ? "none" : "block";
+      });
+      center.appendChild(button);
+      win.appendChild(center);
+
+      var iroContainer = document.createElement("center");
+      iroContainer.setAttribute("id","iro-picker");
+      iroContainer.style.display = "none";
+      win.appendChild(iroContainer);
+
+      colorPicker = new window.iro.ColorPicker('#iro-picker', {
+        width: 200,
+        color: active
+      });
+
+      colorPicker.on('input:change', function(color) {
+          deactiveSpans(picker);
+          active = color.hexString;
+      });
+    }
+
+    var center = document.createElement("center");
+    var button = document.createElement("button");
+    button.classList.add("primary");
+    button.textContent = texts["select"];
+    button.addEventListener("click",function(){
+          callback(active);
+          var bg = win.parentNode.parentNode;
+          bg.parentNode.removeChild(bg);
+    })
+    center.appendChild(button);
+    win.appendChild(center);
+
+    function deactiveSpans(picker){
+        var spans = picker.getElementsByTagName("span");
+        for(var i=0; i<spans.length; i++){
+          spans[i].classList.remove("active");
+        }
+    }
 }
 
 function displayWindow(w,h){
@@ -2753,7 +3102,7 @@ function displayWindow(w,h){
 
   var closeButton = document.createElement("div");
   closeButton.classList.add("close-button")
-  closeButton.addEventListener("click", function(){ bg.parentNode.removeChild(bg); });
+  closeButton.addEventListener("click", function(){ document.body.removeChild(bg); });
   win.appendChild(closeButton);
 
   winContent = document.createElement("div");
@@ -2770,44 +3119,55 @@ function displayWindow(w,h){
 }
 
 // create panel functions
-function createNewPanel(name,title,parent){
+function createNewPanel(name,controls,update,parent){
     var panel = L.DomUtil.create('div', 'leaflet-bar '+name+'-panel panel-style',parent);
     panel.style.width = "240px";
 
     panelStopPropagation(panel);
-    if(title){
-        createPanelHeader(panel,title);
+    if(controls){
+        var header = L.DomUtil.create('div','highlight-header',panel);
+        header.textContent = texts[name];
+        var closeButton = L.DomUtil.create('div','close-button',header);
+        closeButton.addEventListener("click",function(event){
+          controls[name] = false;
+          parentVisibility();
+        });
+
+        panel.parentNode.appendChild(createShowPanelButton(function(){
+          controls[name] = true;
+          parentVisibility();
+          update();
+        }));
+
+        parentVisibility();
+
+        function parentVisibility(){
+          if(panel.parentNode){
+            if(controls[name]){
+              panel.parentNode.classList.remove("collapse-panel");
+            }else{
+              panel.parentNode.classList.add("collapse-panel");
+            }
+          }
+        }
     }
 
     return panel;
 }
 
 function panelStopPropagation(panel){
-        ["click","wheel","mousedown","pointerdown","dblclick"].forEach(function(d){
-          panel.addEventListener(d,function(event){
-            L.DomEvent.stopPropagation(event);
-          });
-        });
-}
-
-function createPanelHeader(panel,text){
-        var header = L.DomUtil.create('div','highlight-header',panel);
-        header.textContent = text;
-        var closeButton = L.DomUtil.create('div','close-button',header);
-        closeButton.addEventListener("click",function(event){
-          panel.parentNode.classList.add("collapse-panel");
-        });
-
-        panel.parentNode.appendChild(createShowPanelButton(function(){
-          panel.parentNode.classList.remove("collapse-panel");
-        }));
+    L.DomEvent.on(panel, "click dblclick wheel mousedown pointerdown", function(event){
+        L.DomEvent.stopPropagation(event);
+    })
 }
 
 function createShowPanelButton(callback){
     var showPanelButton = document.createElement("div");
     showPanelButton.classList.add("show-panel-button");
     showPanelButton.addEventListener("click",callback);
-    showPanelButton.innerHTML = "<span></span><span></span><span></span>";
+    for(var i=0; i<3; i++){
+      showPanelButton.appendChild(document.createElement("span"));
+    }
     return showPanelButton;
 }
 
@@ -2942,7 +3302,16 @@ function brushSlider(){
       slider.appendChild(sliderHandle);
       sliderHandlers.push(sliderHandle);
 
-      dragElementX(sliderHandle,icon,slider,function(pos){
+      var rect = slider.getBoundingClientRect();
+      dragElementX(icon,function(pos){
+        pos = pos - rect.left;
+        if(pos<0){
+          pos = 0;
+        }
+        if(pos>rect.width){
+          pos = rect.width;
+        }
+        sliderHandle.style.left = pos + "px";
         current[i] = x.invert(pos);
         text.textContent = formatter(current[i]);
         updateExtent();
@@ -2984,19 +3353,8 @@ function brushSlider(){
   return exports;
 }
 
-function dragElementX(element,handler,parent,bounds,callback) {
-  if(handler){
-    handler.onmousedown = dragMouseDown;
-  }else{
-    element.onmousedown = dragMouseDown;
-  }
-
-  var rect;
-  if(parent){
-    rect = parent.getBoundingClientRect();
-  }else{
-    rect = document.body.getBoundingClientRect();
-  }
+function dragElementX(handler,drag,start,end) {
+  handler.onmousedown = dragMouseDown;
 
   function dragMouseDown(e) {
     e = e || window.event;
@@ -3005,6 +3363,10 @@ function dragElementX(element,handler,parent,bounds,callback) {
     document.onmouseup = closeDragElement;
     // call a function whenever the cursor moves:
     document.onmousemove = elementDrag;
+
+    if(typeof start == "function"){
+      start();
+    }
   }
 
   function elementDrag(e) {
@@ -3012,17 +3374,17 @@ function dragElementX(element,handler,parent,bounds,callback) {
     e.preventDefault();
 
     // set the element's new position:
-    var pos = e.clientX - rect.left;
-    if(pos>=0 && pos<=rect.width){
-      element.style.left = pos + "px";
-      callback(pos);
-    }
+    drag(e.clientX);
   }
 
   function closeDragElement() {
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+
+    if(typeof end == "function"){
+      end();
+    }
   }
 }
 
@@ -3129,6 +3491,8 @@ var b64Icons = {
 
   drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path fill="#2F7BEE" d="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z M12,20c-3.35,0-6-2.57-6-6.2 c0-2.34,1.95-5.44,6-9.14c4.05,3.7,6,6.79,6,9.14C18,17.43,15.35,20,12,20z M7.83,14c0.37,0,0.67,0.26,0.74,0.62 c0.41,2.22,2.28,2.98,3.64,2.87c0.43-0.02,0.79,0.32,0.79,0.75c0,0.4-0.32,0.73-0.72,0.75c-2.13,0.13-4.62-1.09-5.19-4.12 C7.01,14.42,7.37,14,7.83,14z"/></svg>'),
 
+  wordcloud: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#2F7BEE"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6m0-2C9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96C18.67 6.59 15.64 4 12 4z"/><path d="m7.2385 10.065h1.6467l1.1513 4.8418 1.1424-4.8418h1.6556l1.1424 4.8418 1.1513-4.8418h1.6333l-1.5708 6.6625h-1.9814l-1.2093-5.065-1.196 5.065h-1.9814z"/></svg>'),
+
   xlsx: "data:image/svg+xml;base64,PHN2ZyB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgaGVpZ2h0PSIxNCIgd2lkdGg9IjE0IiB2ZXJzaW9uPSIxLjEiIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgdmlld0JveD0iMCAwIDE0IDE0Ij4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAtMTAzOC40KSI+CjxnPgo8cmVjdCBoZWlnaHQ9IjEwLjQ3MiIgc3Ryb2tlPSIjMjA3MjQ1IiBzdHJva2Utd2lkdGg9Ii41MDIwMSIgZmlsbD0iI2ZmZiIgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIuNTM2OTYiIHdpZHRoPSI3Ljg2NDYiIHk9IjEwNDAiIHg9IjUuODc4OCIvPgo8ZyBmaWxsPSIjMjA3MjQ1Ij4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSI3LjI0NzgiLz4KPHBhdGggc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIGQ9Im0wIDEwMzkuNyA4LjIzMDEtMS4zN3YxNGwtOC4yMzAxLTEuNHoiLz4KPC9nPgo8L2c+CjxnIGZpbGw9IiNmZmYiIHRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuMzI1OCAuMDYyNSAtMzM5LjcyKSI+CjxwYXRoIGQ9Im00LjQwNiAxMDQ0LjZsMS4zNzUzIDIuMDU2OC0xLjA3MjUtMC4wNjEtMC44OTAzLTEuMzU2LTAuODQ1NjYgMS4yNTc4LTAuOTQxNTYtMC4wNTMgMS4yMTg3LTEuODU0NC0xLjE3My0xLjgwMDggMC45NDE0MS0wLjAzNSAwLjgwMDE0IDEuMjAxMSAwLjgzMDQzLTEuMjYyNiAxLjA3NzUtMC4wNDFzLTEuMzIwNSAxLjk0ODItMS4zMjA1IDEuOTQ4MiIgZmlsbD0iI2ZmZiIvPgo8L2c+CjwvZz4KPC9zdmc+Cg=="
 }
 
@@ -3231,4 +3595,34 @@ function prepareText(txt){
         return formatter(txt);
       }
       return String(txt);
+}
+
+function controlsVisibility(data){
+  var controls = {};
+
+  controls.tools = showControls(data.options,1);
+  controls.buttons = showControls(data.options,2);
+  controls.legends = showControls(data.options,3);
+
+  data.options.controls = controls;
+
+  return data;
+
+  function showControls(options,n){
+    if(options.hasOwnProperty("controls")){
+        if(options.controls===0)
+          return undefined;
+        if(options.controls==-n)
+          return undefined;
+        if(options.controls==n)
+          return true;
+        if(Array.isArray(options.controls)){
+          if(options.controls.indexOf(-n)!=-1)
+            return undefined;
+          if(options.controls.indexOf(n)!=-1)
+            return true;
+        }
+    }
+    return false;
+  }
 }

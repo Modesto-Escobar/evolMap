@@ -411,17 +411,31 @@ div.infopanel > .panel-content > div {
 }
 
 /* visual selectors */
-.visual-selector > div {
+div.visual-selector > div {
   display: inline-block;
   white-space: nowrap;
   width: 60%;
 }
-.visual-selector > div:first-child {
+div.visual-selector > div:first-child {
   width: 40%;
 }
-.visual-selector > div:first-child > span {
+div.visual-selector > div:first-child > span {
   display: inline-block;
   margin: 6px 0;
+}
+
+ul.visual-selector {
+  margin: 2em;
+}
+ul.visual-selector > li {
+  font-size: 1.4em;
+  padding: 0.2em;
+  text-align: center;
+  cursor: pointer;
+}
+ul.visual-selector > li:hover,
+ul.visual-selector > li.active {
+  font-weight: bold;
 }
 
 /* items filter */
@@ -508,6 +522,14 @@ p.window-message {
 .picker div.row > span.active,
 .picker div.row > span:hover {
   border-color: rgba(0,0,0, 0.25);
+}
+button.custom-color {
+  color: #777777;
+  width: 100%;
+  margin-bottom: 2em;
+}
+#iro-picker {
+  margin-bottom: 2em;
 }
 
 /* search panel */
@@ -1019,10 +1041,11 @@ img.leaflet-marker-icon.table-selected-marker {
   left: 0;
   width: 100%;
   text-align: center;
-  z-index: 1000;
+  z-index: 999;
   font-size: 2em;
   text-shadow: 1px 1px 2px #000000;
   color: #ffffff;
+  pointer-events: none;
 }
 .period-description {
   position: absolute;

@@ -1,6 +1,12 @@
 DFcolumnTypes <- function(df){
+  types <- rep("string",ncol(df))
   isnum <- vapply(df,is.numeric,logical(1))
-  return(c("string","number")[as.numeric(isnum)+1])
+  types[isnum] <- "number"
+  isobject <- vapply(df,function(x){
+    return(is.character(x) && !all(sapply(strsplit(x,"|",fixed=TRUE),function(x){ return(!length(x)>1) })))
+  },logical(1))
+  types[isobject] <- "object"
+  return(types)
 }
 
 DFdecompose <- function(df){
@@ -238,4 +244,17 @@ getRawName <- function(filepath){
 
 cleanNames <- function(names){
   return(gsub("|","_",as.character(names),fixed=TRUE))
+}
+
+checkLanguage <- function(language){
+  if(!length(language)){
+    language <- "en"
+  }else{
+    language <- language[1]
+    if(!(language %in% c("en","es","ca"))){
+      warning(paste0("language: '",language,"' is not supported"))
+      language <- "en"
+    }
+  }
+  return(language)
 }

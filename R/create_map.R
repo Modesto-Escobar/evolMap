@@ -1,4 +1,4 @@
-create_map <- function(center = c(0,0), zoom = 3, provider = "OpenStreetMap", defaultColor = "#2f7bee"){
+create_map <- function(center = c(0,0), zoom = 3, provider = "OpenStreetMap", defaultColor = "#2f7bee", controls = 1:3, language = c("en","es","ca")){
 
   object <- list(options=list())
 
@@ -29,6 +29,12 @@ if(isColor(defaultColor)){
   warning("defaultColor: invalid color")
   object$options$defaultColor <- formals(create_map)$defaultColor
 }
+
+  if(!is.null(controls)){
+    object$options[["controls"]] <- as.numeric(controls)
+  }
+
+  object$options$language <- checkLanguage(language)
 
   return(structure(object, class="evolMap"))
 }
@@ -158,7 +164,7 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
   return(map)
 }
 
-add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, start = NULL, end = NULL, period = NULL){
+add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, start = NULL, end = NULL, period = NULL, opacity = 0.2){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -169,15 +175,17 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
   }
   attr <- NULL
   geonames <- NULL
-  if(inherits(entities,"sf")){
-    attr <- entities
-    sf::st_geometry(attr) <- NULL
-    entities <- sf::st_geometry(entities)
-    if(!is.null(name)){
-      geonames <- cleanNames(attr[[name]])
+  if(inherits(entities,"sf") || inherits(entities,"sfc")){
+    entities <- entities[!sf::st_is_empty(entities),]
+
+    if(inherits(entities,"sf")){
+      attr <- entities
+      sf::st_geometry(attr) <- NULL
+      entities <- sf::st_geometry(entities)
+      if(!is.null(name)){
+        geonames <- cleanNames(attr[[name]])
+      }
     }
-  }
-  if(inherits(entities,"sfc")){
 
     if(!identical(sf::st_is_longlat(entities),TRUE)){
       stop("entities: coordinates must be longlat degrees")
@@ -245,6 +253,13 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
     if(!is.null(period)){
       data[[period]] <- as.character(data[[period]])
       map$options$entityPeriod <- period
+    }
+
+    map$options$entityOpacity <- NULL
+    if(is.numeric(opacity) && opacity<=1 && opacity>=0){
+      map$options$entityOpacity <- opacity
+    }else{
+      warning("opacity: must be numeric between 0 and 1")
     }
 
     map <- checkItemValue(map,"entities","entityColor",color,"color",isColor,applyCategoryColors,col2hex)
@@ -320,14 +335,17 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
 }
 
 map_html <- function(object, directory){
+  language <- checkLanguage(object$options$language)
+  language <- paste0(language,".js")
+
   styles <- "leaflet.css"
-  scripts <- c("d3.min.js", "leaflet.js", "leaflet-providers.js")
+  scripts <- c("d3.min.js", "d3.layout.cloud.js", "leaflet.js", "leaflet-providers.js")
   if(!is.null(object$options$markerCluster) && object$options$markerCluster){
     styles <- c(styles, "MarkerCluster.css", "MarkerCluster.Default.css")
     scripts <- c(scripts, "leaflet.markercluster.js")
   }
   styles <- c(styles, "styles.css")
-  scripts <- c(scripts, "jszip.min.js", "create_map.js")
+  scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")
 
   unlink(directory,recursive=TRUE)
   dir.create(directory)

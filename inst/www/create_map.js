@@ -298,6 +298,7 @@ function renderMap(data){
           filter_selected();
           searchInput.value = "";
           searchIcon.classList.add("disabled");
+          L.DomUtil.empty(ul);
         });
 
         var searchInput = L.DomUtil.create('input','',searchBox);
@@ -314,23 +315,82 @@ function renderMap(data){
             searchItem("entities",txt);
             searchItem("markers",txt);
             update_items();
+          }else{
+            select_none();
           }
           searchIcon.classList[found ? "remove" : "add"]("disabled");
+          show_suggestions();
+
+          function visibleItems(d){
+            return !d._hidden && !d._outoftime;
+          }
 
           function searchItem(items,txt){
             if(data.storeItems[items]){
               data.storeItems[items].forEach(function(item){
-                delete item._selected;
-                var i = 0;
-                while(!item._selected && i<data[items].columns.length){
-                  if(String(item.properties[data[items].columns[i++]]).match(txt)){
+                if(visibleItems(item)){
+                  delete item._selected;
+                  if(String(item.properties[searchingColumn(items)]).match(txt)){
                     item._selected = found = true;
                   }
                 }
               });
             }
           }
+
+          function searchingColumn(items){
+            var col = data.options[getItemOption(items,"Label")];
+            if(!col){
+              col = data.options[getItemOption(items,"Name")];
+            }
+            return col;
+          }
+
+          function show_suggestions(){
+            var suggestions = [];
+            var itemsIcon = {markers: "location", entities: "hexagon"};
+            ["markers","entities"].forEach(function(items){
+              if(data.storeItems[items]){
+                data.storeItems[items].forEach(function(item,i){
+                  if(visibleItems(item)){
+                    if(item._selected){
+                      suggestions.push([items,i,item.properties[searchingColumn(items)]]);
+                    }
+                  }
+                });
+              }
+            });
+            L.DomUtil.empty(ul);
+            if(suggestions.length){
+              suggestions.forEach(function(d){
+                var li = document.createElement("li");
+                li.itemsName = d[0];
+                li.itemIndex = d[1];
+                var img = document.createElement("img");
+                img.setAttribute("src",b64Icons[itemsIcon[d[0]]]);
+                img.style.verticalAlign = "middle";
+                img.style.marginRight = "5px";
+                li.appendChild(img);
+                var span = document.createElement("span");
+                span.textContent = d[2];
+                li.appendChild(span);
+                li.addEventListener("click",function(){
+                  searchInput.value = "";
+                  searchIcon.classList.add("disabled");
+                  L.DomUtil.empty(ul);
+                  select_none();
+                  data.storeItems[d[0]][d[1]]._selected = true;
+                  update_items();
+                });
+                ul.appendChild(li);
+              })
+            }
+          }
         })
+
+        var ul = document.createElement("ul");
+        ul.classList.add("suggestions-list");
+        searchWrapper.appendChild(ul);
 
         return searchPanel;
       },
@@ -2281,6 +2341,10 @@ function renderMap(data){
       }
     });
     update_items();
+
+    if(infoPanel){
+      infoPanel.close();
+    }
   }
 
   function filter_selected(items){
@@ -2655,6 +2719,9 @@ InfoPanel.prototype = {
   changeContent: function(content){
     this.panelContentDiv.innerHTML = content;
     this.panel.style.display = "block";
+  },
+  close: function(){
+    this.closeButton.click();
   }
 }
 
@@ -3490,6 +3557,12 @@ var b64Icons = {
   table: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path fill="#2F7BEE" d="M19,7H9C7.9,7,7,7.9,7,9v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,9v2H9V9H19z M13,15v-2h2v2H13z M15,17v2h-2v-2H15z M11,15H9v-2h2V15z M17,13h2v2h-2V13z M9,17h2v2H9V17z M17,19v-2h2v2H17z M6,17H5c-1.1,0-2-0.9-2-2V5 c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v1h-2V5H5v10h1V17z"/></svg>'),
 
   drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path fill="#2F7BEE" d="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z M12,20c-3.35,0-6-2.57-6-6.2 c0-2.34,1.95-5.44,6-9.14c4.05,3.7,6,6.79,6,9.14C18,17.43,15.35,20,12,20z M7.83,14c0.37,0,0.67,0.26,0.74,0.62 c0.41,2.22,2.28,2.98,3.64,2.87c0.43-0.02,0.79,0.32,0.79,0.75c0,0.4-0.32,0.73-0.72,0.75c-2.13,0.13-4.62-1.09-5.19-4.12 C7.01,14.42,7.37,14,7.83,14z"/></svg>'),
+
+  location: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.88-2.88 7.19-5 9.88C9.92 16.21 7 11.85 7 9z"/><circle cx="12" cy="9" r="2.5"/></svg>'),
+
+  pentagon: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M19.63,9.78L16.56,19H7.44L4.37,9.78L12,4.44L19.63,9.78z M2,9l4,12h12l4-12L12,2L2,9z"/></svg>'),
+
+  hexagon: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M17.2,3H6.8l-5.2,9l5.2,9h10.4l5.2-9L17.2,3z M16.05,19H7.95l-4.04-7l4.04-7h8.09l4.04,7L16.05,19z"/></svg>'),
 
   wordcloud: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#2F7BEE"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6m0-2C9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96C18.67 6.59 15.64 4 12 4z"/><path d="m7.2385 10.065h1.6467l1.1513 4.8418 1.1424-4.8418h1.6556l1.1424 4.8418 1.1513-4.8418h1.6333l-1.5708 6.6625h-1.9814l-1.2093-5.065-1.196 5.065h-1.9814z"/></svg>'),
 

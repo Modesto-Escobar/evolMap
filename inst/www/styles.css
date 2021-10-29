@@ -237,7 +237,7 @@ input.slider {
   background-repeat: no-repeat;
   background-size: 14px 14px;
 }
-.maximize > .size-button:after {
+.maximize-table > .tables-section > .size-button:after {
  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==);
 }
 
@@ -274,7 +274,7 @@ div.infopanel {
   left: 75%;
   background: #ffffff;
   margin: 20px 10px;
-  z-index: 1001;
+  z-index: 1000;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.07);
   border: solid 1px #f5f5f5;
   border-radius: 5px;
@@ -619,14 +619,24 @@ button.custom-color {
 .legends-panel > .legends-content > .legend:last-child {
   margin-bottom: 0;
 }
-.legends-panel > .legends-content > .legend > .domain1,
-.legends-panel > .legends-content > .legend > .domain2 {
+.legends-panel > .legends-content > .legend > .legend-scale-wrapper > .domain1,
+.legends-panel > .legends-content > .legend > .legend-scale-wrapper > .domain2 {
   display: inline-block;
   width: 50%;
   font-size: 1.2em;
 }
-.legends-panel > .legends-content > .legend > .domain2 {
+.legends-panel > .legends-content > .legend > .legend-scale-wrapper > .domain2 {
   text-align: right;
+}
+.legends-panel > .legends-content > .legend > .legend-scale-wrapper {
+  display: inline-block;
+  width: calc(100% - 30px);
+}
+.legends-panel > .legends-content > .legend > .edit-legend-scale {
+  display: inline-block;
+  width: 24px;
+  margin-left: 6px;
+  cursor: pointer;
 }
 .legends-panel > .legend-bottom-controls {
   border-top: 1px solid #c6c6c6;
@@ -785,11 +795,11 @@ tr.selected-row {
   position: absolute;
   bottom: 0;
   left: 0;
-  z-index: 1002;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
 }
-.tables-section.maximize {
+.maximize-table > .tables-section {
   height: 100%;
 }
 .tables-section > .tables-section-header {
@@ -1021,18 +1031,11 @@ tr.selected-row {
 
 /* labels */
 .leaflet-tooltip.entity-label,
-.leaflet-tooltip.marker-label,
-.leaflet-tooltip.image-label {
-  top: 20px;
+.leaflet-tooltip.marker-label {
   border-radius: 5px;
 }
-.leaflet-tooltip.image-label {
-  top: 40px;
-}
 
-img.leaflet-marker-icon.image-marker,
-img.leaflet-marker-icon.selected-marker,
-img.leaflet-marker-icon.table-selected-marker {
+img.leaflet-marker-icon {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -1048,6 +1051,9 @@ img.leaflet-marker-icon.table-selected-marker {
   border-width: 3px !important;
   border-color: #ff0000 !important;
 }
+img.leaflet-marker-icon.low-opacity {
+  opacity: 0.5;
+}
 
 .main-date-viewer {
   position: absolute;
@@ -1055,11 +1061,15 @@ img.leaflet-marker-icon.table-selected-marker {
   left: 0;
   width: 100%;
   text-align: center;
-  z-index: 999;
+  z-index: 1002;
   font-size: 2em;
   text-shadow: 1px 1px 2px #000000;
   color: #ffffff;
   pointer-events: none;
+}
+.maximize-table > .main-date-viewer {
+  text-shadow: none;
+  color: #000000;
 }
 .period-description {
   position: absolute;
@@ -1068,7 +1078,7 @@ img.leaflet-marker-icon.table-selected-marker {
   width: 100%;
   margin-bottom: 50px;
   text-align: center;
-  z-index: 1000;
+  z-index: 999;
   font-size: 1em;
   pointer-events: none;
 }

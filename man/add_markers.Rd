@@ -12,7 +12,7 @@ Object of class \code{evolMap}.
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
   start = NULL, end = NULL, period = NULL,
-  markerCluster = TRUE, jitteredPoints = 0)
+  markerCluster = FALSE, jitteredPoints = 0)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}

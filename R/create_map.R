@@ -41,7 +41,7 @@ if(isColor(defaultColor)){
 
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
   name = NULL, label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL, period = NULL, markerCluster = TRUE, jitteredPoints = 0){
+  start = NULL, end = NULL, period = NULL, markerCluster = FALSE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")

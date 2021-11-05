@@ -170,7 +170,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
     stop("map: must be an object of class 'evolMap'")
   }
 
-  if(inherits(entities,"SpatialPolygonsDataFrame")){
+  if(inherits(entities,"SpatialPolygonsDataFrame") || inherits(entities,"SpatialPolygons")){
     entities <- sf::st_as_sf(entities)
   }
   attr <- NULL
@@ -343,6 +343,9 @@ map_html <- function(object, directory){
   if(!is.null(object$options$markerCluster) && object$options$markerCluster){
     styles <- c(styles, "MarkerCluster.css", "MarkerCluster.Default.css")
     scripts <- c(scripts, "leaflet.markercluster.js")
+  }
+  if(length(object$links)){
+    scripts <- c(scripts, "leaflet.curve.js")
   }
   styles <- c(styles, "styles.css")
   scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")

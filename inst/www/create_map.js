@@ -263,7 +263,7 @@ function renderMap(data){
       if(!linksidx.hasOwnProperty(linkname)){
         link.properties = attributes;
 
-        link.line = L.polyline([]);
+        link.line = L.hasOwnProperty("curve") ? L.curve([]) : L.polyline([]);
 
         linksidx[linkname] = data.storeItems.links.length;
         data.storeItems.links.push(link);
@@ -271,11 +271,17 @@ function renderMap(data){
     }
 
     function updateLine(link,someselected){
-      var latlngs = [
-          data.storeItems.markers[nodes[link.source]].marker.getLatLng(),
-          data.storeItems.markers[nodes[link.target]].marker.getLatLng()
-        ];
-      link.line.setLatLngs(latlngs);
+      var source = data.storeItems.markers[nodes[link.source]],
+          target = data.storeItems.markers[nodes[link.target]];
+
+      if(link.line.setPath){
+        link.line.setPath(['M',[source.latitude,source.longitude],
+                         'Q',quadraticPoint(source.latitude,source.longitude,target.latitude,target.longitude),
+                         [target.latitude,target.longitude]]);
+      }else{
+        link.line.setLatLngs([source.marker.getLatLng(),target.marker.getLatLng()]);
+      }
+
       link.line.setStyle({color: colorManagers.linkColor.getItemColor(link.properties), opacity: (someselected && !link._selected ? 0.5 : 1) });
     }
 
@@ -2072,12 +2078,7 @@ function renderMap(data){
     if(!item.marker){
       item.marker = new L.Marker();
       item.marker.on("click",function(event){
-        item.marker.unbindPopup();
-        if(data.options.markerText){
-          if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-            item.marker.bindPopup(prepareText(attr[data.options.markerText])).openPopup();
-          }
-        }
+        item.marker.openPopup();
         if(data.options.markerInfo){
           if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
             map.setView(event.target.getLatLng());
@@ -2095,6 +2096,12 @@ function renderMap(data){
         update_items();
         L.DomEvent.stopPropagation(event);
       });
+      item.marker.on("mouseover",function(event){
+        item.marker.openPopup();
+      });
+      item.marker.on("mouseout",function(event){
+        item.marker.closePopup();
+      });
     }
 
     // update position
@@ -2102,6 +2109,11 @@ function renderMap(data){
       item.latitude = attr[data.options.markerLatitude];
       item.longitude = attr[data.options.markerLongitude];
       item.marker.setLatLng([item.latitude,item.longitude]);
+    }
+
+    item.marker.unbindPopup();
+    if(data.options.markerText){
+      item.marker.bindPopup(prepareText(attr[data.options.markerText]));
     }
 
     // magane label
@@ -3863,4 +3875,31 @@ function getCentroid(arr) {
     }
     var sixSignedArea = 3 * twoTimesSignedArea;
     return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];        
+}
+
+function quadraticPoint(sx,sy,tx,ty){
+      var offSetX,
+          offSetY;
+
+      if(sx==tx && sy==ty){
+        return [sx,sy];
+      }
+
+      var dx = tx - sx,
+          dy = ty - sy;
+
+      var dr = Math.sqrt((dx * dx) + (dy * dy));
+
+      var offset = dr/10;
+
+      var midpoint_x = (sx + tx) / 2,
+          midpoint_y = (sy + ty) / 2;
+
+      var offSetX = offset*(dy/dr),
+          offSetY = offset*(dx/dr);
+
+      offSetX = midpoint_x + offSetX;
+      offSetY = midpoint_y - offSetY;
+
+      return [offSetX,offSetY];
 }

@@ -40,7 +40,7 @@ if(isColor(defaultColor)){
 }
 
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
-  name = NULL, label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
+  name = NULL, label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL, info = NULL,
   start = NULL, end = NULL, period = NULL, markerCluster = FALSE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
@@ -119,6 +119,11 @@ if(!is.null(period)){
   map$markers <- data
 
   map <- checkItemValue(map,"markers","markerColor",color,"color",isColor,applyCategoryColors,col2hex)
+  if(identical(shape,"_none_")){
+    map$options[["markerShape"]] <- "_none_"
+  }else{
+    map <- checkItemValue(map,"markers","markerShape",shape,"shape",isShape,getShapes,capitalize)
+  }
   map <- checkTime(map,"markers",start,end)
 
   return(map)
@@ -366,7 +371,7 @@ map_html <- function(object, directory){
   }
 
   #prepare data and parse to json
-  data <- list(colors = list(categoryColors = categoryColors, colorScales = colorScales), options = object$options)
+  data <- list(colors = list(categoryColors = categoryColors, colorScales = colorScales), shapes = symbolTypes(), options = object$options)
 
   #markers
   if(length(object$markers)){

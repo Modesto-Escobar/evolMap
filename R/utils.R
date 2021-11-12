@@ -13,6 +13,41 @@ DFdecompose <- function(df){
   return(list(columns = colnames(df), data = unname(as.list(df)), types = DFcolumnTypes(df)))
 }
 
+capitalize <- function(word){
+  return(paste0(toupper(substr(word,1,1)),tolower(substr(word,2,nchar(word)))))
+}
+
+symbolTypes <- function(){
+  return(c(
+    "Circle",
+    "Square",
+    "Diamond",
+    "Triangle",
+    "Cross",
+    "Star",
+    "Wye"
+  ))
+}
+
+isShape <- function(shape){
+  shape <- capitalize(shape)
+  shapes1 <- symbolTypes()
+  comp <- sapply(shape,function(x){ return(x %in% shapes1) })
+  if(all(comp)){
+    return(TRUE)
+  }
+  return(FALSE)
+}
+
+getShapes <- function(items){
+  shapes1 <- symbolTypes()
+  if(!is.numeric(items)){
+    items <- as.numeric(as.factor(items))
+  }
+  items <- ((items-1) %% length(shapes1))+1
+  return(shapes1[items])
+}
+
 isColor <- function(color){
   if(!length(color)){
     return(FALSE)

@@ -717,10 +717,8 @@ button.custom-color {
 }
 .legend-bullet {
   margin: 0 7px;
-  padding: 5px;
-  background-color: #777777;
   display: inline-block;
-  border-radius: 50%;
+  vertical-align: top;
 }
 
 div.goback {

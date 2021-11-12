@@ -19,8 +19,10 @@ var texts = {
 "less": "menys",
 "Label": "Etiqueta",
 "Color": "Color",
+"Shape": "Shape",
 "selectacolorscalefor": "Selecciona una escala de color per",
 "selectacolorfor": "Selecciona un color per",
+"selectashapefor": "Selecciona una forma per",
 "selectcustomcolor": "Selecciona un color personalitzat",
 "legends": "Llegendes",
 "tools": "Eines",
@@ -28,5 +30,6 @@ var texts = {
 "absolute": "Absolut",
 "selectattribute": "Selecciona un atribut per mostrar com a ",
 "none": "cap",
+"default": "Per defecte",
 "searchsomething": "Busca alguna cosa..."
 }

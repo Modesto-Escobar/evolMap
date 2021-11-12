@@ -10,8 +10,8 @@ Object of class \code{evolMap}.
 
 \usage{
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
-  label = NULL, image = NULL, color = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL, period = NULL,
+  label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL,
+  info = NULL, start = NULL, end = NULL, period = NULL,
   markerCluster = FALSE, jitteredPoints = 0)
 }
 \arguments{
@@ -23,6 +23,7 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{label}{name of the column with labels in the markers data frame.}
 \item{image}{name of the column with the path to node image files in the data matrix.}
 \item{color}{name of the column with color variable in the data matrix.}
+\item{shape}{name of the column with shape variable in the data matrix.}
 \item{text}{name of the column with texts in the markers data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the data matrix.}
 \item{start}{name of the column with the start time of a period in the data matrix.}

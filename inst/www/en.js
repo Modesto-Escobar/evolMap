@@ -19,8 +19,10 @@ var texts = {
 "less": "less",
 "Label": "Label",
 "Color": "Color",
+"Shape": "Shape",
 "selectacolorscalefor": "Select a color scale for",
 "selectacolorfor": "Select a color for",
+"selectashapefor": "Select a shape for",
 "selectcustomcolor": "Select a custom color",
 "legends": "Legends",
 "tools": "Tools",
@@ -28,5 +30,6 @@ var texts = {
 "absolute": "Absolute",
 "selectattribute": "Select an attribute to display as ",
 "none": "none",
+"default": "default",
 "searchsomething": "Search something..."
 }

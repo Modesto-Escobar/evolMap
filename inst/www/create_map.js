@@ -17,7 +17,7 @@ function renderMap(data){
     infoPanel = new InfoPanel();
   }
 
-  var colorManagers = {};
+  var visualManagers = {};
 
   // custom icons with border styles
   L.CustomIcon = L.Icon.extend({
@@ -167,7 +167,7 @@ function renderMap(data){
 
   // geojson
   if(typeof geojson != "undefined"){
-    colorManagers.entityColor = new colorMgmt("entities","entityColor");
+    visualManagers.entityColor = new colorMgmt("entities","entityColor");
 
     var entities_layer = L.geoJSON(false,{
       onEachFeature: function(feature,layer){
@@ -214,7 +214,8 @@ function renderMap(data){
 
   // markers
   if(data.hasOwnProperty("markers")){
-    colorManagers.markerColor = new colorMgmt("markers","markerColor");
+    visualManagers.markerColor = new colorMgmt("markers","markerColor");
+    visualManagers.markerShape = new shapeMgmt("markers","markerShape");
 
     data.storeItems.markers = [];
     if(typeof data.markers.data[0] != "object"){
@@ -239,7 +240,7 @@ function renderMap(data){
   }
 
   if(data.hasOwnProperty("links")){
-    colorManagers.linkColor = new colorMgmt("links","linkColor");
+    visualManagers.linkColor = new colorMgmt("links","linkColor");
 
     data.storeItems.links = [];
     var linksidx = {};
@@ -282,7 +283,7 @@ function renderMap(data){
         link.line.setLatLngs([source.marker.getLatLng(),target.marker.getLatLng()]);
       }
 
-      link.line.setStyle({color: colorManagers.linkColor.getItemColor(link.properties), opacity: (someselected && !link._selected ? 0.5 : 1) });
+      link.line.setStyle({color: visualManagers.linkColor.getItemColor(link.properties), opacity: (someselected && !link._selected ? 0.5 : 1) });
     }
 
     var links_layer = L.layerGroup();
@@ -479,7 +480,11 @@ function renderMap(data){
           tabMarkers.setAttribute("tabname","markers");
 
           var markersChange = L.DomUtil.create('div','items-change markers-change',tabMarkers);
-          ["Label","Color"].forEach(function(d){
+          var visuals = ["Label","Color"];
+          if(data.options.markerShape!="_none_"){
+            visuals.push("Shape");
+          }
+          visuals.forEach(function(d){
             addVisualSelector(markersChange,"markers",d,applyVisual);
           })
 
@@ -1016,9 +1021,11 @@ function renderMap(data){
 
       if(data.storeItems.links){
         data.storeItems.links.forEach(function(link){
-          updateLine(link,someselected);
           if(link.line){
-            if(!link._hidden){
+            if(!link._hidden
+                 && !data.storeItems.markers[nodes[link.source]]._hidden
+                 && !data.storeItems.markers[nodes[link.target]]._hidden){
+              updateLine(link,someselected);
               link.line.addTo(links_layer);
             }else{
               link.line.removeFrom(links_layer);
@@ -1069,7 +1076,7 @@ function renderMap(data){
 
   function applyVisual(items,visual,value){
       var itemVisual = getItemOption(items,visual);
-      if(value=="_none_"){
+      if(value=="_default_"){
         delete data.options[itemVisual];
       }else{
         data.options[itemVisual] = value;
@@ -1079,7 +1086,7 @@ function renderMap(data){
       if(visual=="Color"){
         if(getDFcolumnType(items,value)=="number"){
             displayScalePicker(itemVisual,function(){
-              colorManagers[itemVisual].changeLevels(value);
+              visualManagers[itemVisual].changeLevels(value);
               update_items();
             });
         }
@@ -1633,7 +1640,7 @@ function renderMap(data){
               freq1.style.top = y(d.y)+"px";
               freq1.style.width = (x(d.x1) - x(d.x0) -1)+"px";
               freq1.style.height = (h - y(d.y))+"px";
-              freq1.style.backgroundColor = data.options[itemColor]==col ? colorManagers[itemColor].getColor((d.x0+d.x1)/2) : "#cbdefb";
+              freq1.style.backgroundColor = data.options[itemColor]==col ? visualManagers[itemColor].getColor((d.x0+d.x1)/2) : "#cbdefb";
               freqBar.appendChild(freq1);
 
               if(selectedValues.length){
@@ -1749,7 +1756,7 @@ function renderMap(data){
             text.setAttribute("text-anchor", "middle");
             text.style.fontSize = word.size + "px";
             text.style.fontFamily = font;
-            text.style.fill = data.options[itemColor]==col ? colorManagers[itemColor].getColor(word.text) : "#777777";
+            text.style.fill = data.options[itemColor]==col ? visualManagers[itemColor].getColor(word.text) : "#777777";
             text.setAttribute("transform", "translate(" + [word.x, word.y] + ")rotate(" + word.rotate + ")");
             text.style.cursor = "pointer";
             text.addEventListener("click",function(){
@@ -1795,7 +1802,7 @@ function renderMap(data){
             var freq1 = document.createElement("div");
             freq1.classList.add("freq1");
             freq1.style.width = percentage+"%";
-            freq1.style.backgroundColor = data.options[itemColor]==col ? colorManagers[itemColor].getColor(v) : null;
+            freq1.style.backgroundColor = data.options[itemColor]==col ? visualManagers[itemColor].getColor(v) : null;
             freq1.innerHTML = "&nbsp;";
             row.appendChild(freq1);
 
@@ -2141,9 +2148,16 @@ function renderMap(data){
     var update = false;
 
     // change color
-    var newcolor = data.options.markerColor ? colorManagers.markerColor.getItemColor(attr) : false;
+    var newcolor = data.options.markerColor ? visualManagers.markerColor.getItemColor(attr) : false;
     if(item.color != newcolor){
         item.color = newcolor;
+        update = true;
+    }
+
+    // change shape
+    var newshape = data.options.markerShape ? visualManagers.markerShape.getItemShape(attr) : false;
+    if(item.shape != newshape){
+        item.shape = newshape;
         update = true;
     }
 
@@ -2198,7 +2212,7 @@ function renderMap(data){
           options.borderColor = item.color;
         }
       }else{
-        options.iconUrl = getIconMarkerURI(item.color);
+        options.iconUrl = getIconMarkerURI(item.color,item.shape);
         options.iconSize = [40, 40];
         options.iconAnchor = [20, 40];
         options.popupAnchor = [0, -40];
@@ -2228,7 +2242,10 @@ function renderMap(data){
       var legendsContent = legendsPanel.getElementsByClassName("legends-content")[0];
       L.DomUtil.empty(legendsContent);
       Object.keys(data.storeItems).forEach(function(items){
-        listLegend(legendsContent,items);
+        listLegend(legendsContent,items,"Color");
+        if(items=="markers"){
+          listLegend(legendsContent,items,"Shape");
+        }
       })
 
       var bottom = legendsPanel.getElementsByClassName("legend-bottom-controls")[0];
@@ -2248,16 +2265,15 @@ function renderMap(data){
       legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? "block" : "none";
     }
 
-    function listLegend(container,items){
-      var visual = "Color",
-          itemVisual = getItemOption(items,visual);
+    function listLegend(container,items,visual){
+      var itemVisual = getItemOption(items,visual);
       if(data.storeItems[items] && data.options[itemVisual]){
         var column = data.options[itemVisual],
             type = getDFcolumnType(items,column);
         if(type){
           if(type=="number"){
-            var domain = colorManagers[itemVisual].getDomain(),
-                range = colorManagers[itemVisual].getRange();
+            var domain = visualManagers[itemVisual].getDomain(),
+                range = visualManagers[itemVisual].getRange();
 
             var legend = displayLegendHeader(container,items,visual,column);
             var scaleWrapper = L.DomUtil.create('div','legend-scale-wrapper',legend);
@@ -2275,7 +2291,7 @@ function renderMap(data){
             img.setAttribute("src",b64Icons.edit);
             img.addEventListener("click",function(){
               displayScalePicker(itemVisual,function(){
-                colorManagers[itemVisual].changeLevels(column);
+                visualManagers[itemVisual].changeLevels(column);
                 update_items();
               });
             });
@@ -2298,18 +2314,29 @@ function renderMap(data){
                 var legendItem = L.DomUtil.create('div','legend-item',legend);
                 var checkbox = L.DomUtil.create('div','legend-check-box',legendItem);
                 var bullet = L.DomUtil.create('div','legend-bullet',legendItem);
-                var color = colorManagers[itemVisual].getColor(d);
-                bullet.style.backgroundColor = color;
-                bullet.addEventListener("click",function(event){
-                  displayColorPicker(d,color,function(val){
-                    var range = colorManagers[itemVisual].getRange(),
-                        domain = colorManagers[itemVisual].getDomain();
-                    range[domain.indexOf(d)] = val;
-                    colorManagers[itemVisual]._scale.range(range);
-                    update_items();
-                  });
-                  event.stopPropagation();
-                })
+                var color = "#000000";
+                var shape = "Circle";
+                var pickerCallback = function(val){
+                      var range = visualManagers[itemVisual].getRange(),
+                          domain = visualManagers[itemVisual].getDomain();
+                      range[domain.indexOf(d)] = val;
+                      visualManagers[itemVisual]._scale.range(range);
+                      update_items();
+                };
+                if(visual=="Color"){
+                  color =  visualManagers[itemVisual].getColor(d);
+                  bullet.addEventListener("click",function(event){
+                    displayColorPicker(d,color,pickerCallback);
+                    event.stopPropagation();
+                  })
+                }else if(visual=="Shape"){
+                  shape = visualManagers[itemVisual].getShape(d);
+                  bullet.addEventListener("click",function(event){
+                    displayShapePicker(d,shape,pickerCallback);
+                    event.stopPropagation();
+                  })
+                }
+                displayBullet(bullet,color,shape);
                 L.DomUtil.create('span','',legendItem).textContent = d;
 
                 legendItem.style.cursor = "pointer";
@@ -2332,6 +2359,24 @@ function renderMap(data){
         }
       }
 
+      function displayBullet(bullet,color,shape){
+        var w = 16,
+            h = 16,
+            namespace = "http://www.w3.org/2000/svg";
+
+        var svg = document.createElementNS(namespace,"svg");
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        var g = document.createElementNS(namespace,"g");
+        g.setAttribute("transform", "translate(" + (w/2) + "," + (h/2) + ")");
+        svg.appendChild(g);
+        var path = document.createElementNS(namespace,"path");
+        path.setAttribute("d",d3.symbol(d3["symbol"+shape])());
+        path.setAttribute("fill",color);
+        g.appendChild(path);
+        bullet.appendChild(svg);
+      }
+
       function displayLegendHeader(container,items,visual,column){
             var legend = L.DomUtil.create('div','legend',container);
             var legendTitle = L.DomUtil.create('div','legend-title',legend);
@@ -2348,7 +2393,7 @@ function renderMap(data){
               win.appendChild(ul)
 
               var options = getItemsColumns(items).map(function(d){ return [d,d]; });
-              options.unshift(["_none_","-"+texts.none+"-"])
+              options.unshift(["_default_","-"+texts.default+"-"])
               options.forEach(function(d){
                 var value = d[0],
                     text = d[1];
@@ -2393,7 +2438,7 @@ function renderMap(data){
         if(layer.feature._table_selection){
           fillColor = '#ff0000';
         }else if(!layer.feature._selected){
-          fillColor = colorManagers.entityColor.getItemColor(layer.feature.properties);
+          fillColor = visualManagers.entityColor.getItemColor(layer.feature.properties);
           if(someselected){
             opacity = opacity>0.1 ? 0.1 : 0;
           }
@@ -2426,7 +2471,7 @@ function renderMap(data){
           tab.querySelectorAll(".items-change."+items+"-change > .visual-selector > .select-wrapper > select").forEach(function(select){
             var val = data.options[getItemOption(items,select.parentNode.parentNode.visual)];
             if(!val){
-              val = "_none_";
+              val = "_default_";
             }
             select.value = val;
           });
@@ -2756,6 +2801,78 @@ colorMgmt.prototype = {
   }
 }
 
+// shape management
+function shapeMgmt(items,itemProp){
+  this._items = items;
+  this._itemProp = itemProp;
+  this._itemCol;
+  this._scale;
+  this.changeLevels(data.options[this._itemProp]);
+}
+
+shapeMgmt.prototype = {
+  getItemShape: function(item){
+    if(data.options[this._itemProp]=="_none_"){
+      return "_none_";
+    }
+
+    if(data.options[this._itemProp]!=this._itemCol){
+      this.changeLevels(data.options[this._itemProp]);
+    }
+
+    return this.getShape(this._itemCol ? item[this._itemCol] : null);
+  },
+  getShape: function(value){
+    var shape = "Circle";
+    if(this._scale){
+      if(value !== null && typeof value == "object" && value.length){
+        value = value[0];
+      }
+      shape = this._scale(value);
+      if(!shape){
+        shape = "Circle";
+      }
+    }
+    return shape;
+  },
+  getDomain: function(){
+    if(this._scale){
+      return this._scale.domain();
+    }
+  },
+  getRange: function(){
+    if(this._scale){
+      return this._scale.range();
+    }
+  },
+  changeLevels: function(x){
+    this._itemCol = x;
+    if(x){
+      var col = data[this._items].columns.indexOf(x);
+      if(col!=-1){
+        var explicitCol = data[this._items].columns.indexOf("_"+this._itemProp+"_"+this._itemCol);
+        if(explicitCol!=-1){
+          // use explicit shapes
+          var aux = uniqueRangeDomain(data[this._items].data[col], data[this._items].data[explicitCol]);
+          this._scale = d3.scaleOrdinal()
+            .domain(aux.domain)
+            .range(aux.range)
+        }else{
+          if(data[this._items].types[col]!="number"){
+            this._scale = d3.scaleOrdinal()
+            .domain(data[this._items].data[col])
+            .range(data.shapes)
+          }
+        }
+      }else{
+        this._scale = undefined;
+      }
+    }else{
+      this._scale = undefined;
+    }
+  }
+}
+
 function uniqueRangeDomain(domainCol,rangeCol){
     var aux = [],
         domain = [],
@@ -2868,8 +2985,18 @@ InfoPanel.prototype = {
   }
 }
 
-function getIconMarkerURI(color){
+function getIconMarkerURI(color,shape){
   color = color ? color : data.options.defaultColor;
+  if(shape){
+    if(shape=="_none_"){
+      return "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8"?><svg width="40" height="40" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>');
+    }else{
+      return "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8"?>'+
+'<svg width="40" height="40" version="1.1" viewBox="-10 -10 20 20" xmlns="http://www.w3.org/2000/svg">'+
+'<path d="'+d3.symbol(d3["symbol"+shape])()+'" fill="'+color+'"/>'+
+'</svg>');
+    }
+  }
   return "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8"?>'+
 '<svg width="40" height="40" version="1.1" viewBox="0 0 10.583 10.583" xmlns="http://www.w3.org/2000/svg">'+
 '<path d="m8.599 3.3073c-1e-7 1.8266-3.3073 7.276-3.3073 7.276s-3.3073-5.4495-3.3073-7.276c0-1.8266 1.4807-3.3073 3.3073-3.3073 1.8266 5.5228e-8 3.3073 1.4807 3.3073 3.3073z" fill="'+color+'"/>'+
@@ -3033,7 +3160,7 @@ function addVisualSelector(sel,items,visual,applyVisual){
     L.DomUtil.create('span','',div).textContent = texts[visual];
 
     var options = getItemsColumns(items).map(function(d){ return [d,d]; });
-    options.unshift(["_none_","-"+texts.none+"-"])
+    options.unshift(["_default_","-"+texts.default+"-"])
     displaySelectWrapper(wrapper,options,function(value){
       applyVisual(items,visual,value);
     },data.options[getItemOption(items,visual)]);
@@ -3266,6 +3393,75 @@ function displayColorPicker(value, active, callback){
           active = color.hexString;
       });
     }
+
+    var center = document.createElement("center");
+    var button = document.createElement("button");
+    button.classList.add("primary");
+    button.textContent = texts["select"];
+    button.addEventListener("click",function(){
+          callback(active);
+          var bg = win.parentNode.parentNode;
+          bg.parentNode.removeChild(bg);
+    })
+    center.appendChild(button);
+    win.appendChild(center);
+
+    function deactiveSpans(picker){
+        var spans = picker.getElementsByTagName("span");
+        for(var i=0; i<spans.length; i++){
+          spans[i].classList.remove("active");
+        }
+    }
+}
+
+function displayShapePicker(value, active, callback){
+    var r = 14,
+        itemsPerRow = 10,
+        row,
+        win = displayWindow((r*2+12)*itemsPerRow);
+
+    var title = document.createElement("h2");
+    title.textContent = texts["selectashapefor"] + " \""+value+"\"";
+    win.appendChild(title);
+
+    var picker = document.createElement("div");
+    picker.classList.add("picker");
+    win.appendChild(picker);
+
+    data.shapes.forEach(function(d){
+      if(!row || row.getElementsByTagName("span").length>=itemsPerRow){
+        row = document.createElement("div");
+        row.classList.add("row");
+        picker.appendChild(row);
+      }
+
+      var rowSpan = document.createElement("span");
+      rowSpan.style.width = (r*2+1)+"px";
+      rowSpan.style.height = (r*2+1)+"px";
+      rowSpan.val = d;
+      rowSpan.classList[active==d ? "add" : "remove"]("active")
+      rowSpan.addEventListener("click",function(){
+          deactiveSpans(picker);
+          this.classList.add("active");
+          active = d;
+      })
+      row.appendChild(rowSpan);
+
+      var canvas = document.createElement("canvas");
+      canvas.setAttribute("width",r*2);
+      canvas.setAttribute("height",r*2);
+      canvas.textContent = d;
+      rowSpan.appendChild(canvas);
+
+      var ctx = canvas.getContext("2d");
+
+      ctx.translate(r, r);
+      ctx.fillStyle = "#000000";
+      ctx.beginPath();
+      d3.symbol(d3["symbol"+d]).size(r*10).context(ctx)();
+      ctx.closePath();
+      ctx.fill();
+    });
 
     var center = document.createElement("center");
     var button = document.createElement("button");

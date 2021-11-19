@@ -10,7 +10,7 @@ function renderMap(data){
       panstep = 25;
 
   document.body.innerHTML = '<div id="mapid"></div>';
-  document.body.addEventListener("keydown",shortcuts);
+  shortcuts();
 
   var infoPanel = false;
   if(data.options.markerInfo || data.options.entityInfo){
@@ -434,6 +434,7 @@ function renderMap(data){
                   L.DomUtil.empty(ul);
                   select_none();
                   data.storeItems[d[0]][d[1]]._selected = true;
+                  center_selection();
                   update_items();
                 });
                 ul.appendChild(li);
@@ -1129,7 +1130,6 @@ function renderMap(data){
       onlySelected.textContent = texts["showonlyselecteditems"] + " ";
       var onlyselectedCheck = document.createElement("div");
       onlyselectedCheck.classList.add("legend-check-box");
-      onlyselectedCheck.classList.add("checked");
       onlySelected.addEventListener("click", function(){
         onlyselectedCheck.classList.toggle("checked");
         show_tables();
@@ -1216,14 +1216,7 @@ function renderMap(data){
         matchedButton.textContent = texts["matchedintable"];
         matchedButton.style.marginLeft = "14px";
         matchedButton.addEventListener("click",function(){
-          data.storeItems[items].forEach(function(item){
-            delete item._selected;
-            if(item._table_selection){
-              delete item._table_selection;
-              item._selected = true;
-            }
-          });
-          update_items();
+          selectFromTable(items);
         });
         title.appendChild(matchedButton);
 
@@ -2553,6 +2546,17 @@ function renderMap(data){
     update_items();
   }
 
+  function selectFromTable(items){
+    data.storeItems[items].forEach(function(item){
+      delete item._selected;
+      if(item._table_selection){
+        delete item._table_selection;
+        item._selected = true;
+      }
+    });
+    update_items();
+  }
+
   function remove_items_filters(items){
     if(data.storeItems[items]){
       data.storeItems[items].forEach(function(item){
@@ -2584,7 +2588,8 @@ function renderMap(data){
     update_items();
   }
 
-  function shortcuts(event){
+  function shortcuts(){
+    document.body.onkeydown = function(event){
     var key = getKey(event);
     if(event.ctrlKey || event.metaKey){
       switch(key){
@@ -2621,28 +2626,85 @@ function renderMap(data){
           map.setZoom(map.getZoom()-zoomstep);
           return;
         case "0":
+        case "1":
+        case "2":
+        case "3":
+        case "c":
+        case "f":
+        case "o":
+        case "r":
+        case "s":
+        case "x":
           event.preventDefault();
+          return;
+      }
+    }
+    }
+
+    document.body.onkeyup = function(event){
+    var key = getKey(event);
+    if(event.ctrlKey || event.metaKey){
+      switch(key){
+        case "0":
           resetView(map);
           return;
+        case "1":
+          if(data.options.controls.tools !== undefined){
+            data.options.controls.tools = !data.options.controls.tools;
+            renderMap(data);
+          }
+          return;
+        case "2":
+          if(data.options.controls.buttons !== undefined){
+            data.options.controls.buttons = !data.options.controls.buttons;
+            renderMap(data);
+          }
+          return;
+        case "3":
+          if(data.options.controls.legends !== undefined){
+            data.options.controls.legends = !data.options.controls.legends;
+            renderMap(data);
+          }
+          return;
+        case "c":
+          resetPan(map);
+          return;
         case "f":
-          event.preventDefault();
           if(some_selected()){
             filter_selected();
           }
           return;
+        case "o":
+          var activetable = document.querySelector(".tables-section > .tables-section-header > .items-nav > ul > li.active");
+          if(activetable){
+            var items = activetable.item;
+            if(data.storeItems[items].filter(function(item){ return item._table_selection; }).length){
+              selectFromTable(items);
+            }
+          }
+          return;
         case "r":
-          event.preventDefault();
           remove_filters();
           return;
         case "s":
-          event.preventDefault();
           select_all();
+          return;
+        case "x":
+          if(event.shiftKey){
+            ["tools","buttons","legends"].forEach(function(d){
+              if(data.options.controls[d]){
+                data.options.controls[d] = false;
+              }
+            })
+            renderMap(data);
+          }else if(infoPanel){
+            infoPanel.close();
+          }
           return;
       }
     }else{
       switch(key){
         case " ":
-          event.preventDefault();
           if(timeApplied()){
             var playbutton = document.querySelector("a.time-control-play");
             if(playbutton.classList.contains('pressed')){
@@ -2654,11 +2716,18 @@ function renderMap(data){
           return;
       }
     }
+    }
   }
 
   function resetView(map){
     checkPeriodView(map,function(){
       map.setView(data.options.center, data.options.zoom);
+    });
+  }
+
+  function resetPan(map){
+    checkPeriodView(map,function(){
+      map.panTo(data.options.center);
     });
   }
 

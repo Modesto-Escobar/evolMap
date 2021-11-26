@@ -793,7 +793,7 @@ tr.selected-row {
   position: absolute;
   bottom: 0;
   left: 0;
-  z-index: 1001;
+  z-index: 999;
   display: flex;
   flex-direction: column;
 }
@@ -802,7 +802,7 @@ tr.selected-row {
 }
 .tables-section > .tables-section-header {
   position: relative;
-  margin-left: 20px;
+  margin: 0 20px;
 }
 .tables-section > .tables-section-header > .close-button {
   margin: 8px 10px 0 0;
@@ -825,7 +825,7 @@ tr.selected-row {
   height: 100%;
 }
 .tables-section > .tables-container > .table-wrapper {
-  margin: 20px;
+  margin: 20px 40px 40px 40px;
 }
 .tables-section > .tables-container > .table-wrapper > table {
   width: 100%;
@@ -837,6 +837,10 @@ tr.selected-row {
   font-size: 1.4em;
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+.maximize-table > .leaflet-container > .leaflet-control-container > div > .leaflet-control:not(.time-control) {
+  display: none;
 }
 
 /* frequencies section */

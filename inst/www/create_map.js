@@ -1106,9 +1106,13 @@ function renderMap(data){
       tablesSectionHeader.classList.add("tables-section-header");
       tablesSection.appendChild(tablesSectionHeader);
 
+      var buttonsPanel = document.querySelector(".leaflet-control.buttons-panel");
+      buttonsPanel.style.display = "none";
+
       var closeButton = document.createElement("div");
       closeButton.classList.add("close-button");
       closeButton.addEventListener("click", function(){
+        buttonsPanel.style.display = null;
         document.body.removeChild(tablesSection);
         document.body.classList.remove("maximize-table");
         itemsList.forEach(function(k){
@@ -2113,7 +2117,7 @@ function renderMap(data){
 
     item.marker.unbindPopup();
     if(data.options.markerText){
-      item.marker.bindPopup(prepareText(attr[data.options.markerText]));
+      item.marker.bindPopup(prepareText(attr[data.options.markerText]), { autoPan: false });
     }
 
     // magane label
@@ -2255,7 +2259,7 @@ function renderMap(data){
         var filterButton = bottom.getElementsByClassName("legend-bottom-button")[0];
         filterButton.classList[some_selected()&&!all_selected() ? "remove" : "add"]("disabled");
       }
-      legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? "block" : "none";
+      legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? null : "none";
     }
 
     function listLegend(container,items,visual){

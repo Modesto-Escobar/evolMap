@@ -283,7 +283,7 @@ function renderMap(data){
         link.line.setLatLngs([source.marker.getLatLng(),target.marker.getLatLng()]);
       }
 
-      link.line.setStyle({color: visualManagers.linkColor.getItemColor(link.properties), opacity: (someselected && !link._selected ? 0.5 : 1) });
+      link.line.setStyle({color: link._table_selection ? "#ff0000" : (link._selected ? "#ffff00" : visualManagers.linkColor.getItemColor(link.properties)), opacity: (someselected && !link._selected ? 0.5 : 1) });
     }
 
     var links_layer = L.layerGroup();

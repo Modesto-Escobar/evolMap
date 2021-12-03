@@ -361,7 +361,7 @@ map_html <- function(object, directory){
   if(!is.null(object$options$image)){
     dir.create(paste0(directory,"/images"))
     for(i in seq_along(object$markers[[object$options$image]])){
-      imagefile <- object$markers[i,object$options$image]
+      imagefile <- object$markers[[i,object$options$image]]
       if(!is.na(imagefile)){
         rawname <- getRawName(basename(imagefile))
         file.copy(imagefile,paste0(directory,"/images/",rawname))

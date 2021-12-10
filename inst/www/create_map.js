@@ -188,6 +188,9 @@ function renderMap(data){
             update_items();
             L.DomEvent.stopPropagation(event);
           });
+      },
+      pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng);
       }
     });
 
@@ -2430,17 +2433,23 @@ function renderMap(data){
     if(data.storeItems.entities){
       var someselected = some_selected();
       entities_layer.eachLayer(function(layer){
-        var fillColor = '#ffff00',
-            opacity = data.options.entityOpacity;
-        if(layer.feature._table_selection){
-          fillColor = '#ff0000';
-        }else if(!layer.feature._selected){
-          fillColor = visualManagers.entityColor.getItemColor(layer.feature.properties);
-          if(someselected){
-            opacity = opacity>0.1 ? 0.1 : 0;
+        if(layer.setStyle){
+          var fillColor = '#ffff00',
+              opacity = data.options.entityOpacity;
+          if(layer.feature._table_selection){
+            fillColor = '#ff0000';
+          }else if(!layer.feature._selected){
+            fillColor = visualManagers.entityColor.getItemColor(layer.feature.properties);
+            if(someselected){
+              opacity = opacity>0.1 ? 0.1 : 0;
+            }
+          }
+          if(layer.feature.geometry.type=="LineString" || layer.feature.geometry.type=="MultiLineString"){
+            layer.setStyle({ weight: 2, color: fillColor });
+          }else{
+            layer.setStyle({ weight: 1, color: "#777777", fillColor: fillColor, fillOpacity: opacity });
           }
         }
-        layer.setStyle({ weight: 1, color: "#777777", fillColor: fillColor, fillOpacity: opacity });
 
         if(layer.label){
           layer.label.removeFrom(entities_layer);
@@ -3671,10 +3680,11 @@ function uniqueValues(value, index, self) {
 function formatter(d){
   if(typeof d == 'number'){
     var dabs = Math.abs(d);
-    if(dabs>0 && dabs<1e-2)
+    if(dabs>0 && dabs<1e-2){
       d = d.toExponential(2);
-    else
+    }else{
       d = (d % 1 === 0)?d:d.toFixed(2);
+    }
   }
   return String(d);
 }
@@ -4109,41 +4119,100 @@ function controlsVisibility(data){
 }
 
 function getGeoCenter(geometry) {
-  var j = -1;
-  for(var i=0; i<geometry.coordinates.length; i++){
-    if(j==-1){
-      j = i;
-    }else{
-      var area1 = L.bounds(geometry.coordinates[i][0]).getSize(),
-          area2 = L.bounds(geometry.coordinates[j][0]).getSize();
-      area1 = area1.x*area1.y;
-      area2 = area2.x*area2.y;
-      if(area1 > area2){
-        j = i;
+  if(geometry.type=="Point"){
+    return [geometry.coordinates[1],geometry.coordinates[0]];
+  }
+
+  if(geometry.type=="MultiPoint" || geometry.type=="LineString"){
+    return getCentroid(geometry.coordinates).reverse();
+  }
+
+  if(geometry.type=="Polygon"){
+    return getCentroid(geometry.coordinates[0]).reverse();
+  }
+
+  if(geometry.type=="MultiLineString"){
+    var j = 0;
+    for(var i=0; i<geometry.coordinates.length; i++){
+      if(i>0){
+        var area1 = L.bounds(geometry.coordinates[i]).getSize(),
+            area2 = L.bounds(geometry.coordinates[j]).getSize();
+        area1 = area1.x*area1.y;
+        area2 = area2.x*area2.y;
+        if(area1 > area2){
+          j = i;
+        }
       }
     }
+    return getCentroid(geometry.coordinates[j][0]).reverse();
   }
-  return getCentroid(geometry.coordinates[j][0]).reverse();      
+
+  if(geometry.type=="MultiPolygon"){
+    var j = 0;
+    for(var i=0; i<geometry.coordinates.length; i++){
+      if(i>0){
+        var area1 = L.bounds(geometry.coordinates[i][0]).getSize(),
+            area2 = L.bounds(geometry.coordinates[j][0]).getSize();
+        area1 = area1.x*area1.y;
+        area2 = area2.x*area2.y;
+        if(area1 > area2){
+          j = i;
+        }
+      }
+    }
+    return getCentroid(geometry.coordinates[j][0]).reverse();
+  }   
 }
 
 function getCentroid(arr) {
+    var length = arr.length;
+
+    if(length==2){
+      return [(arr[0][0]+arr[1][0])/2,(arr[0][1]+arr[1][1])/2];
+    }
+
+    var maxx = -Infinity,
+        maxy = -Infinity,
+        minx = Infinity,
+        miny = Infinity;
+
     var twoTimesSignedArea = 0;
     var cxTimes6SignedArea = 0;
     var cyTimes6SignedArea = 0;
-
-    var length = arr.length
 
     var x = function (i) { return arr[i % length][0] };
     var y = function (i) { return arr[i % length][1] };
 
     for ( var i = 0; i < arr.length; i++) {
+        if(x(i)>maxx){
+          maxx = x(i);
+        }
+        if(y(i)>maxy){
+          maxy = y(i);
+        }
+        if(x(i)<minx){
+          minx = x(i);
+        }
+        if(y(i)<miny){
+          miny = y(i);
+        }
+
         var twoSA = x(i)*y(i+1) - x(i+1)*y(i);
         twoTimesSignedArea += twoSA;
         cxTimes6SignedArea += (x(i) + x(i+1)) * twoSA;
         cyTimes6SignedArea += (y(i) + y(i+1)) * twoSA;
     }
     var sixSignedArea = 3 * twoTimesSignedArea;
-    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];        
+
+    if(!sixSignedArea){
+      return [(minx+maxx)/2,(miny+maxy)/2];
+    }
+
+    var res = [cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];
+    if(res[0]>maxx || res[0]<minx || res[1]>maxy || res[1]<miny){
+      res = [(minx+maxx)/2,(miny+maxy)/2];
+    }
+    return res;
 }
 
 function quadraticPoint(sx,sy,tx,ty){

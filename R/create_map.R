@@ -192,7 +192,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
       }
     }
 
-    if(!identical(sf::st_is_longlat(entities),TRUE)){
+    if(identical(sf::st_is_longlat(entities),FALSE)){
       stop("entities: coordinates must be longlat degrees")
     }
 

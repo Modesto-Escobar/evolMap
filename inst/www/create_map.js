@@ -656,26 +656,27 @@ function renderMap(data){
           }
         };
 
-    var updateShowedDates;
-    if(data.periods && data.options.byperiod){
-      updateShowedDates = function(val){
-        dateSpan.textContent = getValuesFromDF("periods","periodStart")[val]+" - "+getValuesFromDF("periods","periodEnd")[val];
-        dateDiv.textContent = getCurrentPeriod(val);
-        updatePeriodDescription(val);
-      }
-    }else{
-      var getSpanText = String;
-      if(data.options.time.type=="POSIXct"){
+    var getSpanText = String;
+    if(data.options.time.type=="POSIXct"){
         getSpanText = function(val){
           return (new Date(val*1000)).toUTCString();
         }
-      }else if(data.options.time.type=="Date"){
+    }else if(data.options.time.type=="Date"){
         getSpanText = function(val){
           var d = new Date(val*86400000);
           return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
         }
-      }
+    }
 
+    var updateShowedDates;
+    if(data.periods && data.options.byperiod){
+      updateShowedDates = function(val){
+        dateSpan.textContent = getSpanText(getValuesFromDF("periods","periodStart")[val])+" - "+getSpanText(getValuesFromDF("periods","periodEnd")[val]);
+        dateSpan.title = dateSpan.textContent;
+        dateDiv.textContent = getCurrentPeriod(val);
+        updatePeriodDescription(val);
+      }
+    }else{
       var getDivText = function(t,v){ return t; };
       if(data.periods){
         getDivText = function(text,val){
@@ -685,6 +686,7 @@ function renderMap(data){
 
       updateShowedDates = function(val){
         dateSpan.textContent = getSpanText(data.options.time.range[val]);
+        dateSpan.title = dateSpan.textContent;
         dateDiv.textContent = getDivText(dateSpan.textContent,val);
         updatePeriodDescription(val);
       }
@@ -873,6 +875,7 @@ function renderMap(data){
         });
 
         var date = L.DomUtil.create('div','leaflet-control-time-control time-control-date',el);
+        date.style.width = "150px";
         date.appendChild(dateSpan);
 
         dateSpan.addEventListener("click",function(event){
@@ -2458,10 +2461,24 @@ function renderMap(data){
         if(data.options.entityLabel){
           var str = prepareText(layer.feature.properties[data.options.entityLabel]);
           if(str){
-            layer.label = new L.Tooltip({direction: 'center', permanent: true, className: "entity-label"});
+            layer.label = L.tooltip({direction: 'center', permanent: true, className: "entity-label"});
             layer.label.setContent(str);
             layer.label.setLatLng(new L.LatLng(layer.feature.properties._lat,layer.feature.properties._lng));
             layer.label.addTo(entities_layer);
+          }
+        }
+
+        if(layer.text){
+          layer.text.removeFrom(entities_layer);
+          delete layer.text;
+        }
+        if(layer.feature._selected && data.options.entityText){
+          var str = prepareText(layer.feature.properties[data.options.entityText]);
+          if(str){
+            layer.text = L.popup({ autoPan: false });
+            layer.text.setContent(str);
+            layer.text.setLatLng(new L.LatLng(layer.feature.properties._lat,layer.feature.properties._lng));
+            layer.text.addTo(entities_layer);
           }
         }
       });
@@ -2865,9 +2882,14 @@ colorMgmt.prototype = {
             if(!data.options["colorScale"+this._itemProp]){
               data.options["colorScale"+this._itemProp] = "WhBu";
             }
+            var domain = valuesExtent(data[this._items].data[col]),
+                range = data.colors.colorScales[data.options["colorScale"+this._itemProp]];
+            if(range.length==3){
+              domain = [domain[0],(domain[0]+domain[1])/2,domain[1]];
+            }
             this._scale = d3.scaleLinear()
-            .domain(valuesExtent(data[this._items].data[col]))
-            .range(data.colors.colorScales[data.options["colorScale"+this._itemProp]])
+            .domain(domain)
+            .range(range)
           }else{
             this._scale = d3.scaleOrdinal()
             .domain(data[this._items].data[col])

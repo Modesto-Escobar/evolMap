@@ -2278,6 +2278,8 @@ function renderMap(data){
             var domain = visualManagers[itemVisual].getDomain(),
                 range = visualManagers[itemVisual].getRange();
 
+            domain = [domain[0],domain[domain.length-1]];
+
             var legend = displayLegendHeader(container,items,visual,column);
             var scaleWrapper = L.DomUtil.create('div','legend-scale-wrapper',legend);
             var scaleLinear = L.DomUtil.create('div','legend-scale-gradient',scaleWrapper);
@@ -2285,8 +2287,41 @@ function renderMap(data){
             scaleLinear.style.width = "100%";
             scaleLinear.style.backgroundImage = "linear-gradient(to right, " + range.join(", ") + ")";
 
-            L.DomUtil.create('span','domain1',scaleWrapper).textContent = formatter(domain[0]);
-            L.DomUtil.create('span','domain2',scaleWrapper).textContent = formatter(domain[domain.length-1]);
+            renderDomain(0);
+            renderDomain(1);
+
+            function renderDomain(i){
+              var domInput = L.DomUtil.create('input');
+              domInput.style.width = "80%";
+              domInput.type = "text";
+              var container = L.DomUtil.create('div', 'domain'+(i+1), scaleWrapper);
+              var span = L.DomUtil.create('span', '', container);
+              span.textContent = formatter(domain[i]);
+              span.addEventListener("click",function(){
+                event.preventDefault();
+                domInput.value = "";
+                span.parentNode.removeChild(span);
+                container.appendChild(domInput);
+                domInput.focus();
+              })
+              domInput.addEventListener("keydown",function(event){
+                if(this.parentNode && getKey(event)=="Enter"){
+                    domain[i] = +domInput.value;
+                    visualManagers[itemVisual].changeDomain(domain);
+                    update_items();
+                    close(event);
+                }
+              })
+              domInput.addEventListener("blur",close)
+
+              function close(event){
+                event.preventDefault();
+                if(domInput.parentNode){
+                  domInput.parentNode.removeChild(domInput);
+                }
+                container.appendChild(span);
+              }
+            }
 
             var img = L.DomUtil.create('img','edit-legend-scale',legend);
             img.setAttribute("width","24");
@@ -2830,6 +2865,7 @@ function colorMgmt(items,itemProp){
   this._itemProp = itemProp;
   this._itemCol;
   this._scale;
+  this._type;
   this.changeLevels(data.options[this._itemProp]);
 }
 
@@ -2864,11 +2900,28 @@ colorMgmt.prototype = {
       return this._scale.range();
     }
   },
+  changeDomain: function(x){
+    if(this._scale){
+      if(typeof x != 'object'){
+        x = [x,x];
+      }
+      if(this._type=="number"){
+        if(x.length>2){
+          x = [x[0],x[x.length-1]];
+        }
+        if(this._scale.range().length==3){
+          x = [x[0],(x[0]+x[1])/2,x[1]];
+        }
+      }
+      this._scale.domain(x);
+    }
+  },
   changeLevels: function(x){
     this._itemCol = x;
     if(x){
       var col = data[this._items].columns.indexOf(x);
       if(col!=-1){
+        this._type = data[this._items].types[col];
         var explicitCol = data[this._items].columns.indexOf("_"+this._itemProp+"_"+this._itemCol);
         if(explicitCol!=-1){
           // use explicit colors
@@ -2877,8 +2930,7 @@ colorMgmt.prototype = {
             .domain(aux.domain)
             .range(aux.range)
         }else{
-          var type = data[this._items].types[col];
-          if(type=="number"){
+          if(this._type=="number"){
             if(!data.options["colorScale"+this._itemProp]){
               data.options["colorScale"+this._itemProp] = "WhBu";
             }
@@ -2890,6 +2942,7 @@ colorMgmt.prototype = {
             this._scale = d3.scaleLinear()
             .domain(domain)
             .range(range)
+            .clamp(true)
           }else{
             this._scale = d3.scaleOrdinal()
             .domain(data[this._items].data[col])

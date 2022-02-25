@@ -12,7 +12,7 @@ Object of class \code{evolMap}.
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL,
   info = NULL, start = NULL, end = NULL, period = NULL,
-  markerCluster = FALSE, jitteredPoints = 0)
+  markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -30,6 +30,7 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{end}{name of the column with the end time of a period in the data matrix.}
 \item{period}{name of the column with the period name in the data matrix.}
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
+\item{roundedIcons}{display markers with rounded borders.}
 \item{jitteredPoints}{Write an amount of noise to markers to avoid overlapping.}
 }
 \author{

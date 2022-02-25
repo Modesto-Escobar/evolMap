@@ -41,7 +41,7 @@ if(isColor(defaultColor)){
 
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
   name = NULL, label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL, info = NULL,
-  start = NULL, end = NULL, period = NULL, markerCluster = FALSE, jitteredPoints = 0){
+  start = NULL, end = NULL, period = NULL, markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -79,6 +79,11 @@ map$options$markerName <- name
 map$options$markerCluster <- NULL
 if(!is.null(markerCluster) && markerCluster){
   map$options$markerCluster <- TRUE
+}
+
+map$options$roundedIcons <- NULL
+if(!is.null(roundedIcons) && roundedIcons){
+  map$options$roundedIcons <- TRUE
 }
 
 map$options$markerLabel <- NULL

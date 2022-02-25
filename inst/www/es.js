@@ -31,5 +31,6 @@ var texts = {
 "selectattribute": "Selecciona un atributo para mostrar como ",
 "none": "nada",
 "default": "por defecto",
-"searchsomething": "Busca algo..."
+"searchsomething": "Busca algo...",
+"changespeed": "Cambia la velocidad"
 }

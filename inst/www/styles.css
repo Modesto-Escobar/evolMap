@@ -1043,6 +1043,8 @@ img.leaflet-marker-icon {
   -webkit-box-sizing: border-box;
   border-style: solid;
   border-width: 0;
+}
+img.leaflet-marker-icon.rounded-icon {
   border-radius: 50%;
 }
 img.leaflet-marker-icon.selected-marker {

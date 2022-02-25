@@ -928,22 +928,51 @@ function renderMap(data){
         dateslider.appendChild(inputRange);
 
         if(!(data.periods && data.options.periodDuration && data.options.byperiod)){
+          var initial = miliseconds;
           var speedSelectionDiv = L.DomUtil.create('div','leaflet-control-time-control time-control-speed',el); 
           var speedRange = L.DomUtil.create('input','slider',speedSelectionDiv);
           speedRange.type = "range";
-          speedRange.min = miliseconds/10;
-          speedRange.max = miliseconds*10;
-          speedRange.value = miliseconds;
-          speedRange.style.direction = "rtl";
+          speedRange.min = 0;
+          speedRange.max = 10;
+          speedRange.value = 5;
           speedRange.style.width = "50px";
-          speedRange.addEventListener("change",function(event){
-            miliseconds = +this.value;
+          speedRange.addEventListener("change",changeSpeed);
+          var speedSpan = L.DomUtil.create('span','',speedSelectionDiv);
+          speedSpan.textContent = " " + texts["speed"];
+          speedSpan.style.cursor = "pointer";
+          speedSpan.addEventListener("click",function(){
+            var win = displayWindow(300);
+            var h2 = document.createElement("h2");
+            h2.textContent = texts["changespeed"];
+            win.appendChild(h2);
+            var center = document.createElement("center");
+            var input = document.createElement("input");
+            input.style.width = "6em";
+            input.style.marginRight = "10px";
+            input.placeholder = speedRange.min+"-"+speedRange.max;
+            center.appendChild(input);
+            win.appendChild(center);
+            var button = document.createElement("button");
+            button.classList.add("primary");
+            button.textContent = texts["select"];
+            center.appendChild(button);
+            button.addEventListener("click",function(){
+              var val = Math.round(+input.value);
+              if(val>=(+speedRange.min) && val<=(+speedRange.max)){
+                speedRange.value = val;
+                changeSpeed();
+              }
+              var bg = win.parentNode.parentNode;
+              bg.parentNode.removeChild(bg);
+            });
+          })
+
+          function changeSpeed(){
+            miliseconds = initial*(Math.pow(1.6,10-speedRange.value)/Math.pow(1.6,5));
             if(isRunning()){
               newInterval();
             }
-          });
-          var speedSpan = L.DomUtil.create('span','',speedSelectionDiv);
-          speedSpan.textContent = " " + texts["speed"];
+          }
         }
 
         if(data.periods && data.options.time){
@@ -2229,6 +2258,9 @@ function renderMap(data){
       }
       if(item.low_opacity){
         options.className = "low-opacity";
+      }
+      if(data.options.roundedIcons){
+        options.className = (options.className) ? options.className + " rounded-icon" : "rounded-icon";
       }
 
       var icon = L.customIcon(options);

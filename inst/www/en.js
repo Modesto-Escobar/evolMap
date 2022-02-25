@@ -31,5 +31,6 @@ var texts = {
 "selectattribute": "Select an attribute to display as ",
 "none": "none",
 "default": "default",
-"searchsomething": "Search something..."
+"searchsomething": "Search something...",
+"changespeed": "Change speed"
 }

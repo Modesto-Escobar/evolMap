@@ -344,6 +344,24 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
   return(map)
 }
 
+add_description <- function(map, content = "", width = NULL){
+  if(!inherits(map, "evolMap")){
+    stop("map: must be an object of class 'evolMap'")
+  }
+
+  map$options[["description"]] <- content
+  map$options[["descriptionWidth"]] <- NULL
+  if (!is.null(width)){
+    if(is.numeric(width) && width>=0 && width<=100){
+      map$options[["descriptionWidth"]] <- width
+    }else{
+      warning("width: not a valid percentage.")
+    }
+  }
+
+  return(map)
+}
+
 map_html <- function(object, directory){
   language <- checkLanguage(object$options$language)
   language <- paste0(language,".js")

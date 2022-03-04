@@ -9,8 +9,36 @@ function renderMap(data){
   var zoomstep = 0.25,
       panstep = 25;
 
-  document.body.innerHTML = '<div id="mapid"></div>';
+  document.body.innerHTML = '<div id="Wrapper"></div>';
   shortcuts();
+
+  var Wrapper = document.getElementById("Wrapper");
+
+  var mapWrapper = document.createElement("div");
+  mapWrapper.id = "mapWrapper";
+
+  if(data.options.hasOwnProperty("description")){
+    var description = document.createElement("div");
+    description.id = "descriptionWrapper";
+    Wrapper.appendChild(description);
+
+    var descriptionWidth = 25;
+    if(data.options.hasOwnProperty("descriptionWidth")){
+      descriptionWidth = data.options.descriptionWidth;
+    }
+    mapWrapper.style.width = (100-descriptionWidth) + "%";
+    description.style.width = descriptionWidth + "%";
+
+    var descriptionContent = document.createElement("div");
+    descriptionContent.innerHTML = data.options.description;
+    description.appendChild(descriptionContent);
+  }
+
+  Wrapper.appendChild(mapWrapper);
+
+  var mapid = document.createElement("div");
+  mapid.id = "mapid";
+  mapWrapper.appendChild(mapid);
 
   var infoPanel = false;
   if(data.options.markerInfo || data.options.entityInfo){
@@ -558,7 +586,7 @@ function renderMap(data){
         goBack.addEventListener("click",remove_filters);
  
         var legendsContent = L.DomUtil.create('div','legends-content',legendsPanel);
-        legendsContent.style.maxHeight = (document.body.clientHeight-300) + "px";
+        legendsContent.style.maxHeight = (mapWrapper.clientHeight-300) + "px";
 
         var bottomControls = L.DomUtil.create('div','legend-bottom-controls',legendsPanel);
         var legendSelectAll = L.DomUtil.create('div','legend-selectall',bottomControls);
@@ -792,7 +820,7 @@ function renderMap(data){
       goTo(+this.value);
     });
 
-    var dateDiv = L.DomUtil.create('div','main-date-viewer',document.body);
+    var dateDiv = L.DomUtil.create('div','main-date-viewer',mapWrapper);
 
     var dateSpan = L.DomUtil.create('span','date-viewer');
     var dateInput = L.DomUtil.create('input','date-input');
@@ -1148,8 +1176,8 @@ function renderMap(data){
       closeButton.classList.add("close-button");
       closeButton.addEventListener("click", function(){
         buttonsPanel.style.display = null;
-        document.body.removeChild(tablesSection);
-        document.body.classList.remove("maximize-table");
+        mapWrapper.removeChild(tablesSection);
+        mapWrapper.classList.remove("maximize-table");
         itemsList.forEach(function(k){
           data.storeItems[k].forEach(function(item){
             delete item._table_selection;
@@ -1161,7 +1189,7 @@ function renderMap(data){
 
       var sizeButton = document.createElement("div");
       sizeButton.classList.add("size-button");
-      sizeButton.addEventListener("click", function(){ document.body.classList.toggle("maximize-table"); });
+      sizeButton.addEventListener("click", function(){ mapWrapper.classList.toggle("maximize-table"); });
       tablesSectionHeader.appendChild(sizeButton);
 
       var onlySelected = document.createElement("div");
@@ -1181,7 +1209,7 @@ function renderMap(data){
       tablesContainer = document.createElement("div");
       tablesContainer.classList.add("tables-container");
       tablesSection.appendChild(tablesContainer);
-      document.body.appendChild(tablesSection);
+      mapWrapper.appendChild(tablesSection);
     }
 
     if(tablesContainer){
@@ -1323,7 +1351,7 @@ function renderMap(data){
         thead.appendChild(tr);
         table.appendChild(thead);
 
-        // draw body
+        // draw tbody
         tbody = document.createElement("tbody");
         tbody.lastselected = -1;
         table.appendChild(tbody);
@@ -1449,7 +1477,7 @@ function renderMap(data){
       var closeButton = document.createElement("div");
       closeButton.classList.add("close-button");
       closeButton.addEventListener("click", function(){
-        document.body.removeChild(freqSection);
+        mapWrapper.removeChild(freqSection);
       });
       freqSectionHeader.appendChild(closeButton);
 
@@ -1481,7 +1509,7 @@ function renderMap(data){
       freqContainer = document.createElement("div");
       freqContainer.classList.add("frequencies-container");
       freqSection.appendChild(freqContainer);
-      document.body.appendChild(freqSection);
+      mapWrapper.appendChild(freqSection);
     }
 
     if(freqContainer){
@@ -2094,14 +2122,14 @@ function renderMap(data){
 
   function updatePeriodDescription(val){
     if(data.periods && data.options.periodDescription){
-      var periodDescription = document.body.getElementsByClassName("period-description");
+      var periodDescription = mapWrapper.getElementsByClassName("period-description");
       if(periodDescription.length){
         periodDescription = periodDescription[0];
       }else{
         periodDescription = document.createElement("div");
         periodDescription.classList.add("period-description");
         periodDescription.appendChild(document.createElement("span"));
-        document.body.appendChild(periodDescription);
+        mapWrapper.appendChild(periodDescription);
       }
       if(data.options.byperiod){
         periodDescription.childNodes[0].textContent = getValuesFromDF("periods","periodDescription")[val];

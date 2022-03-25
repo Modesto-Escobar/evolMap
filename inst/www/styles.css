@@ -1121,3 +1121,9 @@ img.leaflet-marker-icon.low-opacity {
   color: #222;
   box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
+
+.leaflet-control-show-location {
+  background: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  padding: 0 5px;
+}

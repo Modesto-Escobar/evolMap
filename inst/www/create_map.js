@@ -106,6 +106,22 @@ function renderMap(data){
       this._map.fire('boxzoomend', {boxZoomBounds: bounds});
   };
 
+  // location by url
+  var url = window.location.search;
+  if(url){
+    var pos1 = url.indexOf("@"),
+        pos2 = url.indexOf("z",pos1);
+    if(pos1!=-1 && pos2!=-1){
+      var location = url.substring(pos1+1,pos2).split(",");
+      data.options.center = [location[0],location[1]];
+      data.options.zoom = location[2];
+      delete data.options.periodLatitude;
+      delete data.options.periodLongitude;
+      delete data.options.periodZoom;
+    }
+  }
+
+  // initialize map
   var map = L.map("mapid",{
     zoomSnap: zoomstep,
     zoomDelta: zoomstep,
@@ -113,6 +129,29 @@ function renderMap(data){
     zoomControl: false,
     maxBounds: [[-90,-180],[90,180]]
   }).setView(data.options.center, data.options.zoom);
+
+  // show location
+  L.Control.showLocation = L.Control.extend({
+      onAdd: function(map) {
+        var div = L.DomUtil.create('div', 'leaflet-control-show-location leaflet-control');
+        panelStopPropagation(div);
+
+        map.on('moveend',writeLocation);
+        writeLocation();
+
+        function writeLocation(){
+          var loc = map.getCenter(),
+              zoom = map.getZoom();
+          div.textContent = "@"+loc.lat+","+loc.lng+","+zoom+"z";
+        }
+
+        return div;
+      },
+
+      onRemove: function(map) {
+        // Nothing to do here
+      }
+  });
 
   // zoom buttons
   L.Control.zoomButtons = L.Control.extend({
@@ -1122,6 +1161,7 @@ function renderMap(data){
   if(data.options.controls.tools !== undefined && L.Control.hasOwnProperty("toolsPanel")){
     (new L.Control.toolsPanel({ position: 'topleft' })).addTo(map);
   }
+  (new L.Control.showLocation({ position: 'bottomright' })).addTo(map);
   (new L.Control.zoomButtons({ position: 'bottomright' })).addTo(map);
   if(L.Control.hasOwnProperty("timeControl")){
     (new L.Control.timeControl({ position: 'bottomleft' })).addTo(map);

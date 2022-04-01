@@ -789,28 +789,98 @@ th {
   text-align: left;
   white-space: nowrap;
 }
-th.sorting,
-th.sorting_asc,
-th.sorting_desc {
-  cursor: pointer;
+.tables-section > .tables-container > table {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-th.sorting:after {
-  content: "\20\2195";
+.tables-section > .tables-container > table > tbody > tr.selected-row {
+  background-color: #cbdefb !important;
+}
+.tables-section > .tables-container > table > tbody > tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+.tables-section > .tables-container > table > thead,
+.tables-section > .tables-container > table > tbody {
+  display: block;
+}
+.tables-section > .tables-container > table > tbody {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-grow: 1;
+}
+.tables-section > .tables-container > table > thead > tr,
+.tables-section > .tables-container > table > tbody > tr {
+  display: block;
+  white-space: nowrap;
+}
+.tables-section > .tables-container > table > thead > tr > th,
+.tables-section > .tables-container > table > tbody > tr > td {
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0;
+  position: relative;
+}
+.tables-section > .tables-container > table > thead > tr > th > div,
+.tables-section > .tables-container > table > tbody > tr > td > div {
+  padding: 4px 8px;
+}
+.tables-section > .tables-container > table > thead > tr > th.sorting,
+.tables-section > .tables-container > table > thead > tr > th.sorting_asc,
+.tables-section > .tables-container > table > thead > tr > th.sorting_desc {
+  cursor: pointer;
+  position: relative;
+}
+.tables-section > .tables-container > table > thead > tr > th.sorting > div,
+.tables-section > .tables-container > table > thead > tr > th.sorting_asc > div,
+.tables-section > .tables-container > table > thead > tr > th.sorting_desc > div {
+  padding-right: 1.2em;
+}
+.tables-section > .tables-container > table > thead > tr > th.sorting:after,
+.tables-section > .tables-container > table > thead > tr > th.sorting_asc:after,
+.tables-section > .tables-container > table > thead > tr > th.sorting_desc:after {
+  position: absolute;
+  top: 0;
+  right: 0;
   font-size: 1.4em;
+  background: linear-gradient(to right, transparent 0%, white 25%);
+}
+.tables-section > .tables-container > table > thead > tr > th.sorting:after {
+  content: "\20\2195";
   color: #c6c6c6;
 }
-th.sorting_asc:after {
+.tables-section > .tables-container > table > thead > tr > th.sorting_asc:after {
   content: "\20\2191";
-  font-size: 1.4em;
   color: #2f7bee;
 }
-th.sorting_desc:after {
+.tables-section > .tables-container > table > thead > tr > th.sorting_desc:after {
   content: "\20\2193";
-  font-size: 1.4em;
   color: #2f7bee;
 }
-tr.selected-row {
-  background-color: #cbdefb !important;
+.tables-section > .tables-container > table > tbody > tr > td:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to right, transparent 90%, white);
+  pointer-events: none;
+}
+.tables-section > .tables-container > table > thead > tr > th.text-right,
+.tables-section > .tables-container > table > tbody > tr > td.text-right {
+  text-align: right;
+}
+.tables-section > .tables-container > table > tbody > tr > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, white);
+}
+.tables-section > .tables-container > table > tbody > tr.selected-row > td:after {
+  background: linear-gradient(to right, transparent 90%, #cbdefb);
+}
+.tables-section > .tables-container > table > tbody > tr.selected-row > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, #cbdefb);
 }
 .tables-section {
   background-color: #ffffff;
@@ -845,21 +915,16 @@ tr.selected-row {
   font-size: 0.8em;
   line-height: 1.4;
 }
-.tables-section > .tables-container{
+.tables-section > .tables-container {
   flex-grow: 1;
   overflow-y: auto;
   height: 100%;
+  margin: 0 40px 40px 40px;
 }
-.tables-section > .tables-container > .table-wrapper {
-  margin: 20px 40px 40px 40px;
+.tables-section > .tables-section-header > .table-title {
+  margin: 20px;
 }
-.tables-section > .tables-container > .table-wrapper > table {
-  width: 100%;
-}
-.tables-section td {
-  white-space: nowrap;
-}
-.tables-section > .tables-container > .table-wrapper > .table-title > span {
+.tables-section > .tables-section-header > .table-title > span {
   font-size: 1.4em;
   font-weight: bold;
   margin-bottom: 10px;

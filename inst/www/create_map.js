@@ -130,7 +130,6 @@ function renderMap(data){
     maxBounds: [[-90,-180],[90,180]]
   }).setView(data.options.center, data.options.zoom);
 
-  // show location
   L.Control.showLocation = L.Control.extend({
       onAdd: function(map) {
         var div = L.DomUtil.create('div', 'leaflet-control-show-location leaflet-control');
@@ -142,7 +141,7 @@ function renderMap(data){
         function writeLocation(){
           var loc = map.getCenter(),
               zoom = map.getZoom();
-          div.textContent = "@"+loc.lat+","+loc.lng+","+zoom+"z";
+          div.textContent = "@"+loc.lat.toFixed(4)+","+loc.lng.toFixed(4)+","+zoom+"z";
         }
 
         return div;
@@ -1199,10 +1198,9 @@ function renderMap(data){
 
   function show_tables(event){
     var itemsList = Object.keys(data.storeItems);
-
-    var tablesContainer = document.querySelector(".tables-section > .tables-container");
-    if(!tablesContainer && event){
-      var tablesSection = document.createElement("div");
+    var tablesSection = document.querySelector(".tables-section");
+    if(!tablesSection && event){
+      tablesSection = document.createElement("div");
       tablesSection.classList.add("tables-section");
 
       var tablesSectionHeader = document.createElement("div");
@@ -1246,41 +1244,51 @@ function renderMap(data){
 
       displayItemNav(tablesSectionHeader,itemsList,show_tables);
 
-      tablesContainer = document.createElement("div");
+      var tablesContainer = document.createElement("div");
       tablesContainer.classList.add("tables-container");
+      tablesContainer.lastselected = -1;
       tablesSection.appendChild(tablesContainer);
       mapWrapper.appendChild(tablesSection);
     }
 
-    if(tablesContainer){
-      var active = tablesContainer.parentNode.querySelector(".tables-section-header > .items-nav > ul > li.active");
+    if(tablesSection){
+      var active = tablesSection.querySelector(".tables-section-header > .items-nav > ul > li.active");
       if(active){
-        renderTable(tablesContainer,active.item);
+        renderTable(tablesSection,active.item);
       }
     }
 
-    function renderTable(container,items){
-      if(!container || !data.storeItems[items] || !data.storeItems[items].length){
+    function renderTable(parent,items){
+      var tablesSectionHeader = parent.querySelector(".tables-section-header"),
+          tablesContainer = parent.querySelector(".tables-container");
+
+      if(!tablesContainer || !data.storeItems[items] || !data.storeItems[items].length){
         return
       }
 
-      var tbody = container.querySelector(".table-wrapper."+items+"-table-wrapper > table > tbody");
+      var thead = false,
+          tbody = tablesContainer.querySelector("tbody"),
+          lastscroll = 0;
+
+      if(tbody && tbody.scrollTop){
+        lastscroll = tbody.scrollTop;
+      }
+
+      L.DomUtil.empty(tablesContainer);
+      tbody = false;
 
       var columns = getItemsColumns(items);
+      var tabletitle = parent.querySelector(".table-title");
+      if(tabletitle){
+        tabletitle.querySelector("span").textContent = texts[items];
+      }else{
+        tabletitle = document.createElement("div");
+        tabletitle.classList.add("table-title");
+        tablesSectionHeader.appendChild(tabletitle);
 
-      if(!tbody){
-        L.DomUtil.empty(container);
-
-        var div = document.createElement("div");
-        div.classList.add(items+"-table-wrapper");
-        div.classList.add("table-wrapper");
-
-        var title = document.createElement("div");
-        title.classList.add("table-title");
         var span = document.createElement("span");
         span.textContent = texts[items];
-        title.appendChild(span);
-        div.appendChild(title);
+        tabletitle.appendChild(span);
 
         var xlsxButton = document.createElement("img");
         xlsxButton.setAttribute("src", b64Icons.xlsx);
@@ -1290,7 +1298,7 @@ function renderMap(data){
         xlsxButton.addEventListener("click",function(){
           table2xlsx(items,tbody.data,columns);
         });
-        title.appendChild(xlsxButton);
+        tabletitle.appendChild(xlsxButton);
 
         var searchInput = document.createElement("input");
         searchInput.type = "text";
@@ -1313,9 +1321,10 @@ function renderMap(data){
               }
             });
           }
+          onlyselectedCheck.classList.add("checked");
           update_items();
         })
-        title.appendChild(searchInput);
+        tabletitle.appendChild(searchInput);
 
         var matchedButton = document.createElement("button");
         matchedButton.classList.add("table-select");
@@ -1323,9 +1332,10 @@ function renderMap(data){
         matchedButton.textContent = texts["matchedintable"];
         matchedButton.style.marginLeft = "14px";
         matchedButton.addEventListener("click",function(){
+          onlyselectedCheck.classList.add("checked");
           selectFromTable(items);
         });
-        title.appendChild(matchedButton);
+        tabletitle.appendChild(matchedButton);
 
         var filterButton = document.createElement("button");
         filterButton.classList.add("table-filter");
@@ -1343,7 +1353,7 @@ function renderMap(data){
           });
           update_items();
         });
-        title.appendChild(filterButton);
+        tabletitle.appendChild(filterButton);
 
         var resetButton = document.createElement("button");
         resetButton.classList.add("table-resetfilter");
@@ -1354,12 +1364,15 @@ function renderMap(data){
         resetButton.addEventListener("click",function(){
           remove_filters(items);
         });
-        title.appendChild(resetButton);
+        tabletitle.appendChild(resetButton);
+      }
+
+      if(!tbody || !thead){
 
         var table = document.createElement("table");
 
         // draw header
-        var thead = document.createElement("thead");
+        thead = document.createElement("thead");
         var tr = document.createElement("tr");
         var desc0 = columns.map(function(){ return false; }),
             desc = desc0.slice();
@@ -1372,9 +1385,11 @@ function renderMap(data){
           var th = document.createElement("th");
           th.classList.add("sorting");
           if(getDFcolumnType(items,col)=="number"){
-            th.style.textAlign =  "right";
+            th.classList.add("text-right");
           }
-          th.textContent = col;
+          var div = document.createElement("div");
+          div.textContent = col;
+          th.appendChild(div);
           th.addEventListener("click",function(){
             renderTableBody(tbody,items,tbody.data,columns,sort1);
             var desci = desc[i];
@@ -1393,49 +1408,48 @@ function renderMap(data){
 
         // draw tbody
         tbody = document.createElement("tbody");
-        tbody.lastselected = -1;
         table.appendChild(tbody);
 
-        div.appendChild(table);
-        container.appendChild(div);
+        tablesContainer.appendChild(table);
       }
 
-      var onlySelectedItems = container.parentNode.querySelector(".only-selected-data > .legend-check-box.checked") ? true : false;
+      var onlySelectedItems = tablesSection.querySelector(".only-selected-data > .legend-check-box.checked") ? true : false;
       tbody.data = data.storeItems[items].filter(function(item){
         return (!onlySelectedItems || item._selected || item._table_selection) && !item._hidden && !item._outoftime;
       });
       renderTableBody(tbody,items,tbody.data,columns);
 
+      if(lastscroll){
+        tbody.scrollTop = lastscroll;
+      }
+
       ["select","filter"].forEach(function(d){
-        container.querySelector("button.table-"+d).classList[tbody.data.filter(function(item){ return item._table_selection; }).length ? "remove" : "add"]("disabled");
+        tablesSection.querySelector("button.table-"+d).classList[tbody.data.filter(function(item){ return item._table_selection; }).length ? "remove" : "add"]("disabled");
       })
-      container.querySelector("button.table-resetfilter").classList[data.storeItems[items].filter(function(item){ return (!onlySelectedItems || item._selected || item._table_selection) && item._hidden && !item._outoftime; }).length ? "remove" : "add"]("disabled");
+      tablesSection.querySelector("button.table-resetfilter").classList[data.storeItems[items].filter(function(item){ return (!onlySelectedItems || item._selected || item._table_selection) && item._hidden && !item._outoftime; }).length ? "remove" : "add"]("disabled");
 
       function renderTableBody(tbody,items,subitems,columns,order){
         L.DomUtil.empty(tbody);
-        var textSearched = tbody.parentNode.parentNode.querySelector(".table-title > input").value.length>0;
         if(!subitems.length){
-          var tr = document.createElement("tr");
-          var td = document.createElement("td");
-          td.setAttribute("colspan", columns.length);
-          td.textContent = texts["selectsomeitems"];
-          tr.appendChild(td);
-          tbody.appendChild(tr);
+          tbody.textContent = texts["selectsomeitems"];
         }else{
           if(order){
             subitems.sort(order);
           }
           subitems.forEach(function(item,j){
-            if(textSearched && !item._table_selection){
-              return;
-            }
             var tr = document.createElement("tr");
             columns.forEach(function(col){
               var td = document.createElement("td");
               if(getDFcolumnType(items,col)=="number"){
-                td.style.textAlign =  "right";
+                td.classList.add("text-right");
               }
-              td.textContent = prepareText(item.properties[col]);
+              var div = document.createElement("div"),
+                  text = prepareText(item.properties[col]);              
+              div.innerHTML = text ? text : "&nbsp;";
+              if(text){
+                div.setAttribute("title",text);
+              }
+              td.appendChild(div);
               td.addEventListener("mousedown",function(event){
                 event.preventDefault();
               })
@@ -1446,17 +1460,18 @@ function renderMap(data){
             }
             tr.addEventListener("click",function(event){
               var selections = false;
-              if(event.shiftKey && tbody.lastselected!=-1){
-                selections = sequence(Math.min(tbody.lastselected,this.rowIndex)-1,Math.max(tbody.lastselected,this.rowIndex));
+              if(event.shiftKey && tablesContainer.lastselected!=-1){
+                selections = sequence(Math.min(tablesContainer.lastselected,this.rowIndex)-1,Math.max(tablesContainer.lastselected,this.rowIndex));
               }
               subitems.forEach(function(item,i){
                 var selected = item._table_selection ? true : false;
 
                 if(selections){
-                  if(event.ctrlKey || event.metaKey)
+                  if(event.ctrlKey || event.metaKey){
                     selected = selected || selections.indexOf(i)!=-1;
-                  else
+                  }else{
                     selected = selections.indexOf(i)!=-1;
+                  }
                 }else{
                   if(event.ctrlKey || event.metaKey){
                     selected = selected ^ i==j;
@@ -1472,13 +1487,44 @@ function renderMap(data){
                 }
               });
 
-              tbody.lastselected = item._table_selection ? this.rowIndex : -1;
+              tablesContainer.lastselected = item._table_selection ? this.rowIndex : -1;
 
               update_items();
             })
             tbody.appendChild(tr);
           });
         }
+
+        computeColumnWidth();
+      }
+
+      function computeColumnWidth(){
+        var widths = [],
+            tbodytr = tbody.querySelectorAll("tr"),
+            theadth = thead.querySelectorAll("tr > th");
+
+        theadth.forEach(function(d,i){
+          widths[i] = Math.min(d.offsetWidth,300);
+        });
+        for(var i=0; i<50 && i<tbodytr.length; i++){
+          tbodytr[i].querySelectorAll("td").forEach(function(d,i){
+            var w = Math.min(d.offsetWidth+10,300);
+            if(w > widths[i]){
+              widths[i] = w;
+            }
+          });
+        }
+
+        theadth.forEach(function(d,i){
+          d.style.width = widths[i]+"px";
+        });
+        tbodytr.forEach(function(dd){
+          dd.querySelectorAll("td").forEach(function(d,i){
+            d.style.width =  widths[i]+"px";
+          });
+        })
+
+        tbody.style.width = widths.reduce(function(p,c){ return p+c; },10)+"px";
       }
 
       function table2xlsx(items,subitems,columns){

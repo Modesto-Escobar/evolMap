@@ -1,7 +1,7 @@
 Package: evolMap
 Type: Package
-Version: 1.2.16
-Date: 2022-03-25
+Version: 1.2.17
+Date: 2022-04-01
 Title: Evolutive Maps
 Description: Dynamic and evolutive maps with R, powered by 'leaflet'.
 License: GPL-3

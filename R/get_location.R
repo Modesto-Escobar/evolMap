@@ -9,7 +9,7 @@ get_location <- function(x){
     return(layout)
   }else{
     if(length(x) && !is.na(x) && x!=""){
-      url <- paste0("https://nominatim.openstreetmap.org/search?q=",x,"&format=json")
+      url <- paste0("https://nominatim.openstreetmap.org/search?q=",URLencode(x),"&format=json")
       tmp <- NULL
       tryCatch({
         tmp <- curl::curl_download(url,tempfile())

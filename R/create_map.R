@@ -378,7 +378,19 @@ map_html <- function(object, directory){
   styles <- c(styles, "styles.css")
   scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")
 
-  unlink(directory,recursive=TRUE)
+  indexfile <- paste0(directory,"/index.html")
+  if(file.exists(directory)){
+    if(file.exists(indexfile)){
+      content <- scan(file = indexfile, what = character(0), sep = "\n", quiet = TRUE)
+      if(sum(content=="<!--netCoin Project-->")==1){
+        unlink(directory, recursive = TRUE)
+      }else{
+        stop(paste0("directory: '",directory,"' already exists"))
+      }
+    }else{
+      stop(paste0("directory: '",directory,"' already exists"))
+    }
+  }
   dir.create(directory)
 
   if(!is.null(object$options$image)){
@@ -430,6 +442,7 @@ map_html <- function(object, directory){
 '<html>',
 '<head>',
 '<meta charset="UTF-8">',
+'<!--netCoin Project-->',
 paste0('<title>',basename(directory),'</title>'))
 for(style in styles){
   file.copy(paste0(www,"/",style),paste0(directory,"/lib"))
@@ -453,7 +466,7 @@ indexhtml <- c(indexhtml,
 '</body>',
 '</html>')
 
-  write(paste0(indexhtml,collapse="\n"),paste0(directory,"/index.html"))
+  write(paste0(indexhtml,collapse="\n"),indexfile)
 }
 
 printTable <- function(x, name){

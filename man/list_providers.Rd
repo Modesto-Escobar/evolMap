@@ -2,7 +2,7 @@
 \alias{list_providers}
 \title{Get location coordinates.}
 \description{
-\code{list_providers} returns some place's latitude and longitude. 
+List of all providers with their variations. 
 }
 \value{
 This function returns a list of available map providers for the \code{\link{create_map}} function.

@@ -107,18 +107,22 @@ function renderMap(data){
   };
 
   // location by url
-  var url = window.location.search;
-  if(url){
-    var pos1 = url.indexOf("@"),
-        pos2 = url.indexOf("z",pos1);
+  var locationurl = window.location.search;
+  if(locationurl){
+    var pos1 = locationurl.indexOf("@"),
+        pos2 = locationurl.indexOf("z",pos1);
     if(pos1!=-1 && pos2!=-1){
-      var location = url.substring(pos1+1,pos2).split(",");
+      var location = locationurl.substring(pos1+1,pos2).split(",");
       data.options.center = [location[0],location[1]];
       data.options.zoom = location[2];
       delete data.options.periodLatitude;
       delete data.options.periodLongitude;
       delete data.options.periodZoom;
+    }else{
+      locationurl = false;
     }
+  }else{
+    locationurl = false;
   }
 
   // initialize map
@@ -2719,7 +2723,39 @@ function renderMap(data){
       });
     }
     if(points.length==1){
-      map.setView(points[0]);
+      map.setView(points[0],7);
+    }else{
+      var bounds = L.polygon(points).getBounds().pad(1);
+      map.fitBounds(bounds);
+    }
+  }
+
+  function center_visibles(){
+    var points = [];
+    if(data.storeItems.markers){
+      data.storeItems["markers"].forEach(function(item){
+        if(!item._hidden && !item._outoftime){
+          points.push([item.latitude,item.longitude]);
+        }
+      });
+    }
+    if(data.storeItems.entities){
+      entities_layer.eachLayer(function(layer){
+        var item = layer.feature
+        if(item && (!item._hidden && !item._outoftime)){
+          points.push([item.properties._lat,item.properties._lng]);
+        }
+      });
+    }
+    if(data.storeItems.links){
+      data.storeItems["links"].forEach(function(item){
+        if(!item._hidden && !item._outoftime){
+          points.push(item.line.getBounds().getCenter());
+        }
+      });
+    }
+    if(points.length==1){
+      map.setView(points[0],7);
     }else{
       var bounds = L.polygon(points).getBounds().pad(1);
       map.fitBounds(bounds);
@@ -2943,7 +2979,11 @@ function renderMap(data){
   }
 
   function periodView(map){
-    checkPeriodView(map);
+    checkPeriodView(map,function(){
+      if(!locationurl){
+        center_visibles();
+      }
+    });
   }
 
   function checkPeriodView(map,callback){

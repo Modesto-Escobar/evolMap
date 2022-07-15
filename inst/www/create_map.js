@@ -2722,12 +2722,7 @@ function renderMap(data){
         }
       });
     }
-    if(points.length==1){
-      map.setView(points[0],7);
-    }else{
-      var bounds = L.polygon(points).getBounds().pad(1);
-      map.fitBounds(bounds);
-    }
+    center_points(points);
   }
 
   function center_visibles(){
@@ -2754,10 +2749,16 @@ function renderMap(data){
         }
       });
     }
-    if(points.length==1){
+    center_points(points);
+  }
+
+  function center_points(points){
+    if(points.length==0){
+      map.setView([0,0],2);
+    }else if(points.length==1){
       map.setView(points[0],7);
-    }else{
-      var bounds = L.polygon(points).getBounds().pad(1);
+    }else if(points.length>1){
+      var bounds = L.polygon(points).getBounds().pad(0.5);
       map.fitBounds(bounds);
     }
   }

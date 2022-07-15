@@ -480,7 +480,10 @@ print.evolMap <- function(x, ...) {
   printTable(x$markers,"Markers")
 }
 
-plot.evolMap <- function(x, directory = tempdir(), ...){
+plot.evolMap <- function(x, directory = NULL, ...){
+  if(is.null(directory)){
+    directory <- paste0(tempdir(),"/evolMap")
+  }
   map_html(x, directory)
   browseURL(normalizePath(paste(directory, "index.html", sep = "/")))
 }

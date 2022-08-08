@@ -2981,7 +2981,7 @@ function renderMap(data){
 
   function periodView(map){
     checkPeriodView(map,function(){
-      if(!locationurl){
+      if(!locationurl && data.options.autoZoom){
         center_visibles();
       }
     });

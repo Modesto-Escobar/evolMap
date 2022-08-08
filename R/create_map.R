@@ -1,19 +1,27 @@
-create_map <- function(center = c(0,0), zoom = 3, provider = "OpenStreetMap", defaultColor = "#2f7bee", controls = 1:3, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", defaultColor = "#2f7bee", controls = 1:3, language = c("en","es","ca")){
 
   object <- list(options=list())
 
+  object$options$autoZoom <- TRUE
+
   if(length(center)==2 && is.numeric(center)){
     object$options$center <- center
+    object$options$autoZoom <- FALSE
   }else{
-    warning("center: must be 2 numbers (latitude and longitude)")
-    object$options$center <- formals(create_map)$zoom
+    if(!is.null(center)){
+      warning("center: must be 2 numbers (latitude and longitude)")
+    }
+    object$options$center <- c(0,0)
   }
 
   if(is.numeric(zoom) && zoom>=0){
     object$options$zoom <- zoom
+    object$options$autoZoom <- FALSE
   }else{
-    warning("zoom: must be a number greater than or equal to 0")
-    object$options$zoom <- formals(create_map)$zoom
+    if(!is.null(zoom)){
+      warning("zoom: must be a number greater than or equal to 0")
+    }
+    object$options$zoom <- 3
   }
 
 providers <- list_providers()

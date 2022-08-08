@@ -9,7 +9,7 @@ Object of class \code{evolMap}.
 }
 
 \usage{
-create_map(center = c(0,0), zoom = 3,
+create_map(center = NULL, zoom = NULL,
   provider = "OpenStreetMap", defaultColor = "#2f7bee",
   controls = 1:3, language = c("en","es","ca"))
 }

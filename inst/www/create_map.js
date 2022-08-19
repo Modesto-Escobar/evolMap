@@ -2758,7 +2758,7 @@ function renderMap(data){
     }else if(points.length==1){
       map.setView(points[0],7);
     }else if(points.length>1){
-      var bounds = L.polygon(points).getBounds().pad(0.5);
+      var bounds = L.polygon(points).getBounds().pad(0.05);
       map.fitBounds(bounds);
     }
   }

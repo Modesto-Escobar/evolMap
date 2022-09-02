@@ -180,7 +180,7 @@ function renderMap(data){
   });
 
   // providers
-  L.tileLayer.provider(data.options.provider).addTo(map);
+  L.tileLayer.provider(data.options.provider,{ noWrap: true }).addTo(map);
 
   map.on("boxzoomend",function(e){
       var bounds = e.boxZoomBounds;

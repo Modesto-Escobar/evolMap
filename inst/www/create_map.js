@@ -3,6 +3,10 @@ window.onload = function(){
   data = controlsVisibility(data);
 
   renderMap(data);
+
+  if(typeof tutorialTour != "undefined"){
+    tutorialTour(data.options);
+  }
 }
 
 function renderMap(data){
@@ -2268,11 +2272,6 @@ function renderMap(data){
       item.marker.setLatLng([item.latitude,item.longitude]);
     }
 
-    item.marker.unbindPopup();
-    if(data.options.markerText){
-      item.marker.bindPopup(prepareText(attr[data.options.markerText]), { autoPan: false });
-    }
-
     // magane label
     if(data.options.markerLabel){
           var str = prepareText(attr[data.options.markerLabel]);
@@ -2345,6 +2344,13 @@ function renderMap(data){
       }else{
         setIcon(item);
       }
+    }
+
+    item.marker.unbindPopup();
+    if(data.options.markerText){
+      var text = prepareText(attr[data.options.markerText]);
+      text = text.replace('class="auto-color" style="','style="background-color:'+(item.color ? item.color : "#cbdefb")+';');
+      item.marker.bindPopup(text, { autoPan: false });
     }
 
     function setIcon(item){
@@ -2843,6 +2849,9 @@ function renderMap(data){
       switch(key){
         case "ArrowLeft":
           event.preventDefault();
+          if(event.shiftKey){
+            return;
+          }
           var center = map.getCenter();
           center.lng = center.lng - panstep;
           map.panTo(center);
@@ -2855,6 +2864,9 @@ function renderMap(data){
           return;
         case "ArrowRight":
           event.preventDefault();
+          if(event.shiftKey){
+            return;
+          }
           var center = map.getCenter();
           center.lng = center.lng + panstep;
           map.panTo(center);
@@ -2893,6 +2905,18 @@ function renderMap(data){
     var key = getKey(event);
     if(event.ctrlKey || event.metaKey){
       switch(key){
+        case "ArrowLeft":
+          event.preventDefault();
+          if(event.shiftKey){
+            document.querySelector("a.time-control-prev").dispatchEvent(new Event('click'));
+          }
+          return;
+        case "ArrowRight":
+          event.preventDefault();
+          if(event.shiftKey){
+            document.querySelector("a.time-control-next").dispatchEvent(new Event('click'));
+          }
+          return;
         case "0":
           resetView(map);
           return;

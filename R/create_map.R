@@ -370,6 +370,33 @@ add_description <- function(map, content = "", width = NULL){
   return(map)
 }
 
+add_tutorial <- function(map, image=NULL, description=NULL){
+  if(!inherits(map,"evolMap")){
+    stop("map: must be an object of class 'evolMap'")
+  }
+
+  map$options$tutorial <- list()
+  if(!is.null(image) && is.character(image) && file.exists(image)){
+    mime <- c("image/jpeg","image/jpeg","image/png","image/svg","image/gif")
+    names(mime) <- c("jpeg","jpg","png","svg","gif")
+    imgname <- sub("^.*/","",image)
+    extension <- sub("^.*\\.","",imgname)
+    if(extension %in% names(mime)){
+      src <- paste0("data:",mime[extension],";base64,",base64encode(image))
+      map$options$tutorial$image <- src
+    }else{
+      warning("image: image format not supported")
+    }
+  }
+  if(!is.null(description) && is.character(description)){
+    map$options$tutorial$description <- description
+  }
+  if(!length(map$options$tutorial)){
+    map$options$tutorial <- TRUE
+  }
+  return(map)
+}
+
 map_html <- function(object, directory){
   language <- checkLanguage(object$options$language)
   language <- paste0(language,".js")
@@ -382,6 +409,10 @@ map_html <- function(object, directory){
   }
   if(length(object$links)){
     scripts <- c(scripts, "leaflet.curve.js")
+  }
+  if(!is.null(object$options$tutorial) && !identical(as.logical(object$options$tutorial),FALSE)){
+    scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
+    styles <- c(styles,"tutorial.css")
   }
   styles <- c(styles, "styles.css")
   scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")

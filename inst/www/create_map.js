@@ -205,8 +205,8 @@ function renderMap(data){
           data.storeItems["links"].forEach(function(item){
             delete item._selected;
             if(!item._hidden && !item._outoftime){
-              var pt = item.line ? item.line.getLatLngs() : false;
-              if(pt && bounds.contains(pt[0]) && bounds.contains(pt[1])){
+              var pt = item.line ? item.line.getBounds() : false;
+              if(pt && bounds.contains(pt.getNorthEast()) && bounds.contains(pt.getSouthWest())){
                 item._selected = true;
               }
             }

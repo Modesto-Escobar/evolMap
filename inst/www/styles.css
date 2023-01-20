@@ -1192,3 +1192,18 @@ img.leaflet-marker-icon.low-opacity {
   margin: 0;
   padding: 0 5px;
 }
+
+.leaflet-container a.leaflet-popup-close-button {
+border: 2px solid;
+border-radius: 50%;
+height: 20px;
+width: 20px;
+padding: 2px;
+font-size: 20px;
+line-height: 0.8;
+margin: 5px;
+color: #777777;
+}
+.leaflet-container a.leaflet-popup-close-button:hover {
+color: #000000;
+}

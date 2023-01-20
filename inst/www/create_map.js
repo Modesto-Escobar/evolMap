@@ -2348,9 +2348,23 @@ function renderMap(data){
 
     item.marker.unbindPopup();
     if(data.options.markerText){
+      var options = { autoPan: false };
       var text = prepareText(attr[data.options.markerText]);
-      text = text.replace('class="auto-color" style="','style="background-color:'+(item.color ? item.color : "#cbdefb")+';');
-      item.marker.bindPopup(text, { autoPan: false });
+      var aux = document.createElement("div");
+      aux.innerHTML = text;
+      var template = aux.querySelector(":scope > div.info-template");
+      if(template){
+        if(template.style.width){
+          options.maxWidth = parseInt(template.style.width);
+        }
+        var autocolor = template.querySelector(".auto-color");
+        if(autocolor){
+          autocolor.style.backgroundColor = (item.color ? item.color : "#cbdefb");
+          text = aux.innerHTML;
+        }
+      }
+      aux.remove();
+      item.marker.bindPopup(text, options);
     }
 
     function setIcon(item){

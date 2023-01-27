@@ -1,7 +1,7 @@
 // tutorial texts to translate
 var tutorial_texts = {
   elementsmap: "Mapa d'elements",
-  beforestarting: "Abans de començar a fer servir aquesta pàgina, es recomana revisar aquest breu tutorial per conèixer la seva informació i possibilitats.",
+  beforestarting: 'Abans de començar a fer servir aquesta pàgina, es recomana revisar aquest breu tutorial per conèixer la seva informació i possibilitats.',
 
   mainpage: 'Aquesta és la <span class="highlight">pàgina principal</span>.',
   collectionofelements: 'Això és un mapa que representa algunes de les dones artistes més rellevants segons el lloc de naixement i l\'any en què van néixer.',
@@ -17,10 +17,10 @@ var tutorial_texts = {
   todomultiplesearches: 'Per fer <span class="highlight">cerques múltiples</span>, cal escriure cada element en una línia diferent i enviar la consulta prement alhora les tecles majúscula i Intro.',
 
   toolsmenu: 'Al menú d\'eines es poden canviar molts aspectes de la visualització.',
-  toolsmenu1: 'Les etiquetes que apareixen juntament amb els elements.',
-  toolsmenu2: 'El color de l\'anell al voltant de les imatges.',
-  toolsmenu3: 'La forma de les imatges segons una categoria.',
-  toolsmenu4: 'Els filtres de la informació visualitzada.',
+  toolsmenu1: '- Les etiquetes que apareixen juntament amb els elements.',
+  toolsmenu2: '- El color de l\'anell al voltant de les imatges.',
+  toolsmenu3: '- La forma de les imatges segons una categoria.',
+  toolsmenu4: '- Els filtres de la informació visualitzada.',
 
   figurescanalsobefiltered: 'També poden <span class="highlight">filtrar-se</span> els elements seleccionant una o diverses de les categories de la llegenda per veure al mapa només els tipus que interessin.',
 

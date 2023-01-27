@@ -1,4 +1,4 @@
-create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", defaultColor = "#2f7bee", controls = 1:3, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
 
   object <- list(options=list())
 
@@ -40,6 +40,10 @@ if(isColor(defaultColor)){
 
   if(!is.null(controls)){
     object$options[["controls"]] <- as.numeric(controls)
+  }
+
+  if(!is.null(note)){
+    object$options[["note"]] <- as.character(note)
   }
 
   object$options$language <- checkLanguage(language)

@@ -1,7 +1,7 @@
 // tutorial texts to translate
 var tutorial_texts = {
   elementsmap: "Element Map",
-  beforestarting: "Before starting to use this page, it is recommended to review this short tutorial to know its information and possibilities.",
+  beforestarting: 'Before starting to use this page, it is recommended to review this short tutorial to know its information and possibilities.',
 
   mainpage: 'This is the <span class="highlight">main page</span>.',
   collectionofelements: 'This is a map that represents some elements.',
@@ -17,10 +17,10 @@ var tutorial_texts = {
   todomultiplesearches: 'To do <span class="highlight">multiple searches</span>, you have to write each name on a different line and submit the query by pressing the Shift and Enter keys at the same time.',
 
   toolsmenu: 'Many aspects of the display can be changed in the tools menu.',
-  toolsmenu1: 'The labels that appear along with the elements.',
-  toolsmenu2: 'The color of the ring around the images.',
-  toolsmenu3: 'The shape of the images according to a category.',
-  toolsmenu4: 'The filters of the displayed information.',
+  toolsmenu1: '- The labels that appear along with the elements.',
+  toolsmenu2: '- The color of the ring around the images.',
+  toolsmenu3: '- The shape of the images according to a category.',
+  toolsmenu4: '- The filters of the displayed information.',
 
   figurescanalsobefiltered: 'You can also <span class="highlight">filter</span> items by selecting one or more of the categories in the legend to see only the types of interest on the map.',
 

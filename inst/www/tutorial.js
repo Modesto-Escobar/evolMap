@@ -58,13 +58,13 @@ function tutorialTour(options){
         .style("height","60px")
     }
     tutorialContent.append("h3").text(tutorial_texts["elementsmap"])
-    tutorialContent.append("p").text(tutorial_texts["beforestarting"])
+    tutorialContent.append("p").html(tutorial_texts["beforestarting"])
   });
 
   steps.push(function(){
     tutorialContent.selectAll("*").remove()
     tutorialContent.append("p").html(tutorial_texts["mainpage"])
-    tutorialContent.append("p").text(options.tutorial.description ? options.tutorial.description : tutorial_texts["collectionofelements"])
+    tutorialContent.append("p").html(options.tutorial.description ? options.tutorial.description : tutorial_texts["collectionofelements"])
     tutorialContent.append("p").html(tutorial_texts['eachfigure'])
   });
 
@@ -121,10 +121,10 @@ function tutorialTour(options){
       tutorial.style("top",(60)+"px")
       tutorialContent.append("p").html(tutorial_texts['toolsmenu'])
       var ul = tutorialContent.append("ul")
-      ul.append("li").append("p").text('- '+tutorial_texts['toolsmenu1'])
-      ul.append("li").append("p").text('- '+tutorial_texts['toolsmenu2'])
-      ul.append("li").append("p").text('- '+tutorial_texts['toolsmenu3'])
-      ul.append("li").append("p").text('- '+tutorial_texts['toolsmenu4'])
+      ul.append("li").append("p").html(tutorial_texts['toolsmenu1'])
+      ul.append("li").append("p").html(tutorial_texts['toolsmenu2'])
+      ul.append("li").append("p").html(tutorial_texts['toolsmenu3'])
+      ul.append("li").append("p").html(tutorial_texts['toolsmenu4'])
     });
   }
 

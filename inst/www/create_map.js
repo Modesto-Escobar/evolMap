@@ -18,13 +18,16 @@ function renderMap(data){
 
   var Wrapper = document.getElementById("Wrapper");
 
+  var contentWrapper = document.createElement("div");
+  contentWrapper.id = "contentWrapper";
+
   var mapWrapper = document.createElement("div");
   mapWrapper.id = "mapWrapper";
 
   if(data.options.hasOwnProperty("description")){
     var description = document.createElement("div");
     description.id = "descriptionWrapper";
-    Wrapper.appendChild(description);
+    contentWrapper.appendChild(description);
 
     var descriptionWidth = 25;
     if(data.options.hasOwnProperty("descriptionWidth")){
@@ -33,12 +36,47 @@ function renderMap(data){
     mapWrapper.style.width = (100-descriptionWidth) + "%";
     description.style.width = descriptionWidth + "%";
 
-    var descriptionContent = document.createElement("div");
-    descriptionContent.innerHTML = data.options.description;
-    description.appendChild(descriptionContent);
+    resetDescriptionContent();
+
+    function emtyDescription(){
+      for (var i = description.childNodes.length - 1; i >= 0; i--) {
+          description.removeChild(description.childNodes[i]);
+      }
+    }
+
+    function resetDescriptionContent(){
+      emtyDescription();
+      var descriptionContent = document.createElement("div");
+      descriptionContent.classList.add("description-content");
+      descriptionContent.innerHTML = data.options.description;
+      description.appendChild(descriptionContent);
+    }
+
+    function frameInDescription(){
+      emtyDescription();
+
+      var iframe = document.createElement("iframe");
+      iframe.name = "leftframe";
+      description.appendChild(iframe);
+
+      var close = document.createElement("div");
+      close.classList.add("close-button");
+      close.addEventListener("click",function(){
+        resetDescriptionContent();
+      });
+      description.appendChild(close);
+    }
   }
 
-  Wrapper.appendChild(mapWrapper);
+  contentWrapper.appendChild(mapWrapper);
+  Wrapper.appendChild(contentWrapper);
+
+  if(data.options.hasOwnProperty("note")){
+    var note = document.createElement("div");
+    note.classList.add("footer-note");
+    note.innerHTML = data.options.note;
+    Wrapper.appendChild(note);
+  }
 
   var mapid = document.createElement("div");
   mapid.id = "mapid";
@@ -248,6 +286,7 @@ function renderMap(data){
           layer.on("click",function(event){
             if(data.options.entityInfo){
               infoPanel.changeContent(feature.properties[data.options.entityInfo]);
+              checkTemplateInInfoPanel();
             }
 
             if(event.originalEvent.ctrlKey || event.originalEvent.metaKey){
@@ -370,34 +409,38 @@ function renderMap(data){
   if(data.storeItems.markers || data.storeItems.entities){
     L.Control.buttonsPanel = L.Control.extend({
       onAdd: function(map) {
-        var panelButtons = L.DomUtil.create('div', 'leaflet-bar buttons-panel panel-style');
+        var panelButtons = L.DomUtil.create('div', 'buttons-panel');
         panelStopPropagation(panelButtons);
 
-        var tableButton = L.DomUtil.create('img','tables-button',panelButtons);
-        tableButton.setAttribute("src", b64Icons.table);
-        tableButton.setAttribute("alt", "table");
-        tableButton.style.cursor = "pointer";
-        tableButton.style.verticalAlign = "middle";
-        tableButton.addEventListener("click",show_tables);
+        if(data.options.controls.buttons && L.Control.hasOwnProperty("buttonsPanel")){
+          panelButtons.classList.add('leaflet-bar','panel-style');
 
-        var freqButton = L.DomUtil.create('img','frequencies-button',panelButtons);
-        freqButton.setAttribute("src", b64Icons.chart);
-        freqButton.setAttribute("alt", "frequencies");
-        freqButton.style.cursor = "pointer";
-        freqButton.style.verticalAlign = "middle";
-        freqButton.addEventListener("click",show_frequencies);
+          var tableButton = L.DomUtil.create('img','tables-button',panelButtons);
+          tableButton.setAttribute("src", b64Icons.table);
+          tableButton.setAttribute("alt", "table");
+          tableButton.style.cursor = "pointer";
+          tableButton.style.verticalAlign = "middle";
+          tableButton.addEventListener("click",show_tables);
 
-        var selectall = L.DomUtil.create('button','primary selectall-button',panelButtons);
-        selectall.textContent = texts["selectall"];
-        selectall.addEventListener("click",select_all);
+          var freqButton = L.DomUtil.create('img','frequencies-button',panelButtons);
+          freqButton.setAttribute("src", b64Icons.chart);
+          freqButton.setAttribute("alt", "frequencies");
+          freqButton.style.cursor = "pointer";
+          freqButton.style.verticalAlign = "middle";
+          freqButton.addEventListener("click",show_frequencies);
 
-        var filter = L.DomUtil.create('button','primary filter-button',panelButtons);
-        filter.textContent = texts["filter"];
-        filter.addEventListener("click",filter_selected);
+          var selectall = L.DomUtil.create('button','primary selectall-button',panelButtons);
+          selectall.textContent = texts["selectall"];
+          selectall.addEventListener("click",select_all);
 
-        var clear = L.DomUtil.create('button','primary-outline clear resetfilter-button',panelButtons);
-        clear.textContent = texts["clear"];
-        clear.addEventListener("click",remove_filters);
+          var filter = L.DomUtil.create('button','primary filter-button',panelButtons);
+          filter.textContent = texts["filter"];
+          filter.addEventListener("click",filter_selected);
+
+          var clear = L.DomUtil.create('button','primary-outline clear resetfilter-button',panelButtons);
+          clear.textContent = texts["clear"];
+          clear.addEventListener("click",remove_filters);
+        }
 
         return panelButtons;
       },
@@ -441,7 +484,7 @@ function renderMap(data){
           }
           var txt = this.value;
           var found = false;
-          if(txt.length>1){
+          if(txt.length>2){
             txt = new RegExp(txt,'i');
             searchItem("entities",txt);
             searchItem("markers",txt);
@@ -538,6 +581,10 @@ function renderMap(data){
     L.Control.toolsPanel = L.Control.extend({
       onAdd: function(map) {
         var toolsPanelWrapper = L.DomUtil.create('div', 'tools-panel-wrapper');
+
+        if(data.options.controls.search){
+          toolsPanelWrapper.style.marginTop = "82px";
+        }
 
         var toolsPanel = createNewPanel("tools",data.options.controls,update_tools,toolsPanelWrapper);
 
@@ -930,7 +977,10 @@ function renderMap(data){
         play.addEventListener("click",function(event){
           event.preventDefault();
           if(!isRunning()){
-            document.querySelector(".tools-panel-wrapper").classList.add("collapse-panel");
+            var tools = document.querySelector(".tools-panel-wrapper");
+            if(tools){
+              tools.classList.add("collapse-panel");
+            }
             play.classList.add('pressed');
             pauseButton.classList.remove('pressed');
             newInterval();
@@ -1164,7 +1214,9 @@ function renderMap(data){
   }
 
   // display controls
-  (new L.Control.searchPanel({ position: 'topleft' })).addTo(map);
+  if(data.options.controls.search && L.Control.hasOwnProperty("searchPanel")){
+    (new L.Control.searchPanel({ position: 'topleft' })).addTo(map);
+  }
   if(data.options.controls.tools !== undefined && L.Control.hasOwnProperty("toolsPanel")){
     (new L.Control.toolsPanel({ position: 'topleft' })).addTo(map);
   }
@@ -1173,9 +1225,7 @@ function renderMap(data){
   if(L.Control.hasOwnProperty("timeControl")){
     (new L.Control.timeControl({ position: 'bottomleft' })).addTo(map);
   }
-  if(data.options.controls.buttons && L.Control.hasOwnProperty("buttonsPanel")){
-    (new L.Control.buttonsPanel({ position: 'bottomleft' })).addTo(map);
-  }
+  (new L.Control.buttonsPanel({ position: 'bottomleft' })).addTo(map);
   if(data.options.controls.legends !== undefined && L.Control.hasOwnProperty("legendsPanel")){
     (new L.Control.legendsPanel({ position: 'topright' })).addTo(map);
   }
@@ -2245,6 +2295,7 @@ function renderMap(data){
             map.setView(event.target.getLatLng());
           }
           infoPanel.changeContent(attr[data.options.markerInfo]);
+          checkTemplateInInfoPanel();
         }
         if(event.originalEvent.ctrlKey || event.originalEvent.metaKey){
           item._selected = !item._selected;
@@ -2350,21 +2401,44 @@ function renderMap(data){
     if(data.options.markerText){
       var options = { autoPan: false };
       var text = prepareText(attr[data.options.markerText]);
-      var aux = document.createElement("div");
-      aux.innerHTML = text;
-      var template = aux.querySelector(":scope > div.info-template");
+      var popup = document.createElement("div");
+      popup.innerHTML = text;
+      var template = popup.querySelector(":scope > div.info-template, :scope > .panel-template");
       if(template){
+        options.className = "template-mode";
         if(template.style.width){
           options.maxWidth = parseInt(template.style.width);
         }
         var autocolor = template.querySelector(".auto-color");
         if(autocolor){
           autocolor.style.backgroundColor = (item.color ? item.color : "#cbdefb");
-          text = aux.innerHTML;
+        }
+        var links = template.querySelectorAll("a[target=rightframe]");
+        if(links.length){
+            if(!infoPanel){
+              infoPanel = new InfoPanel();
+            }
+            for(var i=0; i<links.length; i++){
+              links[i].addEventListener("mousedown",function(e){
+                infoPanel.changeContent('<iframe name=rightframe></iframe>');
+              });
+            }
+        }
+        if(description){
+          var links = template.querySelectorAll("a[target=leftframe]");
+          if(links.length){
+            for(var i=0; i<links.length; i++){
+              links[i].addEventListener("mousedown",function(e){
+                frameInDescription();
+              });
+            }
+          }
         }
       }
-      aux.remove();
-      item.marker.bindPopup(text, options);
+      if(popup.childNodes==1){
+        popup = childNodes[0];
+      }
+      item.marker.bindPopup(popup, options);
     }
 
     function setIcon(item){
@@ -2629,11 +2703,17 @@ function renderMap(data){
   }
 
   function update_buttons(){
-    var panel = document.querySelector(".buttons-panel");
-    if(panel){
-      panel.getElementsByClassName("selectall-button")[0].classList[all_selected()?"add":"remove"]("disabled");
-      panel.getElementsByClassName("filter-button")[0].classList[some_selected()&&!all_selected()?"remove":"add"]("disabled");
-      panel.getElementsByClassName("resetfilter-button")[0].classList[some_filtered()?"remove":"add"]("disabled");
+    var b1 = document.querySelector(".buttons-panel > .selectall-button"),
+        b2 = document.querySelector(".buttons-panel > .filter-button"),
+        b3 = document.querySelector(".buttons-panel > .resetfilter-button");
+    if(b1){
+      b1.classList[all_selected()?"add":"remove"]("disabled");
+    }
+    if(b2){
+      b2.classList[some_selected()&&!all_selected()?"remove":"add"]("disabled");
+    }
+    if(b3){
+      b3.classList[some_filtered()?"remove":"add"]("disabled");
     }
   }
 
@@ -3082,6 +3162,40 @@ function renderMap(data){
     }
     return false;
   }
+
+  function checkTemplateInInfoPanel(){
+    var content = document.querySelector("body > .infopanel > .panel-content > div");
+    if(content){
+      var template = content.querySelector(":scope > .info-template, :scope > .panel-template");
+      if(template){
+        // TODO: auto-color
+        var links = template.querySelectorAll("a[target=rightframe]");
+        if(links.length){
+            for(var i=0; i<links.length; i++){
+              links[i].addEventListener("mousedown",function(e){
+                var iframe = document.createElement("iframe");
+                iframe.name = "rightframe";
+                content.appendChild(iframe);
+              });
+              links[i].addEventListener("mouseup",function(e){
+                template.style.display = "none";
+              });
+            }
+        }
+        if(description){
+          var links = template.querySelectorAll("a[target=leftframe]");
+          if(links.length){
+            for(var i=0; i<links.length; i++){
+              links[i].addEventListener("mousedown",function(e){
+                frameInDescription();
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
 } // end function onload
 
 // color management
@@ -4394,6 +4508,7 @@ function controlsVisibility(data){
   controls.tools = showControls(data.options,1);
   controls.buttons = showControls(data.options,2);
   controls.legends = showControls(data.options,3);
+  controls.search = showControls(data.options,4);
 
   data.options.controls = controls;
 

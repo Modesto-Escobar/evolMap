@@ -1,7 +1,7 @@
 // tutorial texts to translate
 var tutorial_texts = {
   elementsmap: "Mapa de elementos",
-  beforestarting: "Antes de comenzar a usar esta página, se recomienda revisar este breve tutorial para conocer su información y posibilidades.",
+  beforestarting: 'Antes de comenzar a usar esta página, se recomienda revisar este breve tutorial para conocer su información y posibilidades.',
 
   mainpage: 'Esta es la <span class="highlight">página principal</span>.',
   collectionofelements: 'Esto es un mapa que representa algunos elementos',
@@ -17,10 +17,10 @@ var tutorial_texts = {
   todomultiplesearches: 'Para hacer <span class="highlight">búsquedas múltiples</span>, hay que escribir cada elemento en una línea diferente y enviar la consulta pulsando al mismo tiempo las teclas mayúscula e Intro.',
 
   toolsmenu: 'En el menú de herramientas pueden cambiarse muchos aspectos de la visualización.',
-  toolsmenu1: 'Las etiquetas que aparecen junto con los elementos.',
-  toolsmenu2: 'El color del anillo alrededor de las imágenes.',
-  toolsmenu3: 'La forma de las imágenes según una categoría.',
-  toolsmenu4: 'Los filtros de la información visualizada.',
+  toolsmenu1: '- Las etiquetas que aparecen junto con los elementos.',
+  toolsmenu2: '- El color del anillo alrededor de las imágenes.',
+  toolsmenu3: '- La forma de las imágenes según una categoría.',
+  toolsmenu4: '- Los filtros de la información visualizada.',
 
   figurescanalsobefiltered: 'También pueden <span class="highlight">filtrarse</span> los elementos seleccionando una o varias de las categorías de la leyenda para ver en el mapa solo los tipos que interesen.',
 

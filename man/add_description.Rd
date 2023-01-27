@@ -13,7 +13,7 @@ add_description(map, content = "", width = NULL)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
-\item{content}{a character string indicating a desription text for the graph.}
+\item{content}{a character string indicating a description text for the graph.}
 \item{width}{a percentage indicating a width for the description panel (25 by default).}
 }
 \author{

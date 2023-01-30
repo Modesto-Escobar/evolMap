@@ -406,13 +406,12 @@ function renderMap(data){
   }
 
   // panel buttons
-  if(data.storeItems.markers || data.storeItems.entities){
-    L.Control.buttonsPanel = L.Control.extend({
+  L.Control.buttonsPanel = L.Control.extend({
       onAdd: function(map) {
         var panelButtons = L.DomUtil.create('div', 'buttons-panel');
         panelStopPropagation(panelButtons);
 
-        if(data.options.controls.buttons && L.Control.hasOwnProperty("buttonsPanel")){
+        if((data.storeItems.markers || data.storeItems.entities) && (data.options.controls.buttons && L.Control.hasOwnProperty("buttonsPanel"))){
           panelButtons.classList.add('leaflet-bar','panel-style');
 
           var tableButton = L.DomUtil.create('img','tables-button',panelButtons);
@@ -448,8 +447,7 @@ function renderMap(data){
       onRemove: function(map) {
         // Nothing to do here
       }
-    });
-  }
+  });
 
   // search
   L.Control.searchPanel = L.Control.extend({
@@ -2874,6 +2872,8 @@ function renderMap(data){
     if(infoPanel){
       infoPanel.close();
     }
+
+    resetDescriptionContent();
   }
 
   function filter_selected(items){

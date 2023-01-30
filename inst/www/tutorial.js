@@ -77,6 +77,23 @@ function tutorialTour(options){
     tutorialArrow.style("display","none")
   });
 
+  var timeNav = body.select(".leaflet-bar.time-control");
+  if(!timeNav.empty() && timeNav.node().offsetWidth){
+    steps.push(function(){
+      tutorialContent.selectAll("*").remove()
+      tutorialContent.append("p").html(tutorial_texts['timecontrol'])
+      var tutorialDim = tutorial.node().getBoundingClientRect();
+      tutorial.style("top",(dim.height-tutorialDim.height-90)+"px")
+      tutorial.style("left","60px")
+
+      var timeNavDim = timeNav.node().getBoundingClientRect();
+      tutorialArrow.style("display",null)
+        .style("transform","rotate(180deg)")
+        .style("left",(timeNavDim.left+(timeNavDim.width/2))+"px")
+        .style("top",(dim.height-100)+"px")
+    });
+  }
+
   steps.push(function(){
     tutorialContent.selectAll("*").remove()
     tutorialContent.append("p").html(tutorial_texts["theuseofthezoom"])
@@ -201,13 +218,6 @@ function tutorialTour(options){
               tutorialTour(options);
             })
           tutorial.append("p")
-          tutorial.append("a")
-          .attr("target","_blank")
-          .attr("href","https://sociocav.usal.es/blog/nca/")
-          .append("button")
-            .attr("class","primary")
-            .style("width","100%")
-            .text(tutorial_texts['gototheprojectwebsite'])
         }else{
           tutorial.remove();
         }

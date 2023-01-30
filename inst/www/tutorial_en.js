@@ -9,6 +9,8 @@ var tutorial_texts = {
 
   hoveringthemouse: '<span class="highlight">Hovering the mouse</span> over any figure will open a box with basic information.',
   whenclicking: 'And <span class="highlight">clicking</span> on the figure will open its Wikipedia page in the box on the right of the screen.',
+  
+  timecontrol: 'You can change the time that is displayed using these controls.',
 
   theuseofthezoom: 'The <span class="highlight">use of zoom</span> will be essential to move freely around the map and discover all the elements distributed throughout the world.',
   zoombuttons: 'In addition to being able to use the mouse or keyboard, with these buttons you can zoom in on the map, zoom out or return to the original zoom.',
@@ -31,7 +33,6 @@ var tutorial_texts = {
   hello: "Hello!",
   doyouneedhelp: "Do you need help?",
   seethetutorials: "See the tutorials",
-  gototheprojectwebsite: "Go to the project website",
 
   closetutorial: "Close tutorial",
   skiptutorial: "Skip tutorial"

@@ -2288,10 +2288,10 @@ function renderMap(data){
       item.marker = new L.Marker();
       item.marker.on("click",function(event){
         item.marker.openPopup();
+        if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
+          map.setView(event.target.getLatLng());
+        }
         if(data.options.markerInfo){
-          if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-            map.setView(event.target.getLatLng());
-          }
           infoPanel.changeContent(attr[data.options.markerInfo]);
           checkTemplateInInfoPanel();
         }

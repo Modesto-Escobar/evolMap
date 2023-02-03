@@ -82,15 +82,15 @@ function tutorialTour(options){
     steps.push(function(){
       tutorialContent.selectAll("*").remove()
       tutorialContent.append("p").html(tutorial_texts['timecontrol'])
+      var timeNavDim = timeNav.node().getBoundingClientRect();
       var tutorialDim = tutorial.node().getBoundingClientRect();
-      tutorial.style("top",(dim.height-tutorialDim.height-90)+"px")
+      tutorial.style("top",(timeNavDim.top-tutorialDim.height-50)+"px")
       tutorial.style("left","60px")
 
-      var timeNavDim = timeNav.node().getBoundingClientRect();
       tutorialArrow.style("display",null)
         .style("transform","rotate(180deg)")
         .style("left",(timeNavDim.left+(timeNavDim.width/2))+"px")
-        .style("top",(dim.height-100)+"px")
+        .style("top",(timeNavDim.top-60)+"px")
     });
   }
 
@@ -98,6 +98,7 @@ function tutorialTour(options){
     tutorialContent.selectAll("*").remove()
     tutorialContent.append("p").html(tutorial_texts["theuseofthezoom"])
     tutorialContent.append("p").html(tutorial_texts["zoombuttons"])
+    var zoomDim = body.select(".leaflet-bar.zoom-buttons").node().getBoundingClientRect();
     var tutorialDim = tutorial.node().getBoundingClientRect();
     tutorial.style("top",(dim.height-tutorialDim.height-43)+"px")
     tutorial.style("left",(dim.width-tutorialDim.width-120)+"px")
@@ -105,7 +106,7 @@ function tutorialTour(options){
     tutorialArrow.style("display",null)
       .style("transform","rotate(90deg)")
       .style("left",(dim.width-100)+"px")
-      .style("top",(dim.height-150)+"px")
+      .style("top",(zoomDim.top+(zoomDim.height/2)-20)+"px")
   });
 
   var searchBox = body.select(".search-wrapper > .search-box");

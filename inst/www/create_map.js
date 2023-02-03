@@ -454,6 +454,16 @@ function renderMap(data){
       onAdd: function(map) {
         var searchPanel = createNewPanel("search");
 
+        var datalength = 0;
+        if(data.storeItems["markers"]){
+          datalength += data.storeItems["markers"].length;
+        }
+        if(data.storeItems["entities"]){
+          datalength +=  data.storeItems["entities"].length;
+        }
+        var typingTimer;
+        var typingInterval = datalength > 1000 ? 1000 : 500;
+
         var searchPadding = L.DomUtil.create('div','search-padding',searchPanel);
 
         var searchWrapper = L.DomUtil.create('div','search-wrapper',searchPadding);
@@ -473,16 +483,22 @@ function renderMap(data){
         searchInput.type = "text";
         searchInput.placeholder = texts['searchsomething'];
         searchInput.addEventListener("keydown",function(event){
+          clearTimeout(typingTimer);
           L.DomEvent.stopPropagation(event);
         });
         searchInput.addEventListener("keyup",function(event){
+          clearTimeout(typingTimer);
           if(getKey(event)=="Enter"){
             searchIcon.click();
             return;
           }
-          var txt = this.value;
+          typingTimer = setTimeout(doneTyping, typingInterval);
+        })
+
+        function doneTyping(){
+          var txt = searchInput.value;
           var found = false;
-          if(txt.length>2){
+          if(txt.length > (datalength > 1000 ? 3 : 1)){
             txt = new RegExp(txt,'i');
             searchItem("entities",txt);
             searchItem("markers",txt);
@@ -559,7 +575,7 @@ function renderMap(data){
               })
             }
           }
-        })
+        }
 
         var ul = document.createElement("ul");
         ul.classList.add("suggestions-list");
@@ -2288,10 +2304,10 @@ function renderMap(data){
       item.marker = new L.Marker();
       item.marker.on("click",function(event){
         item.marker.openPopup();
-        if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-          map.setView(event.target.getLatLng());
-        }
         if(data.options.markerInfo){
+          if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
+            map.setView(event.target.getLatLng());
+          }
           infoPanel.changeContent(attr[data.options.markerInfo]);
           checkTemplateInInfoPanel();
         }
@@ -2873,7 +2889,9 @@ function renderMap(data){
       infoPanel.close();
     }
 
-    resetDescriptionContent();
+    if(typeof resetDescriptionContent == "function"){
+      resetDescriptionContent();
+    }
   }
 
   function filter_selected(items){

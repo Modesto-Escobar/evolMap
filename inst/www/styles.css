@@ -167,13 +167,19 @@ padding: 1em;
 }
 
 /* time control */
+.leaflet-touch .leaflet-bar a {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+}
+
 .time-control .leaflet-control-time-control {
   float: left;
   border-right: 1px solid #ccc;
   border-bottom-width: 0px;
   background-color: #ffffff;
-  height: 30px;
-  line-height: 30px;
+  height: 36px;
+  line-height: 36px;
 }
 
 .time-control .leaflet-control-time-control:hover {
@@ -201,9 +207,9 @@ padding: 1em;
 }
 
 .time-control .leaflet-control-time-control svg.icon {
-  width: 10px;
-  height: 10px;
-  margin: 10px auto;
+  width: 12px;
+  height: 12px;
+  margin: 12px auto;
 }
 .time-control a.pressed {
   background-color: #777777; 
@@ -1168,9 +1174,10 @@ img.leaflet-marker-icon.low-opacity {
   text-align: center;
   z-index: 1002;
   font-size: 2em;
-  text-shadow: 1px 1px 2px #000000;
-  color: #ffffff;
+  text-shadow: 1px 1px 5px #ffffff;
+  color: #000000;
   pointer-events: none;
+  font-weight: bold;
 }
 .maximize-table > .main-date-viewer {
   text-shadow: none;
@@ -1217,3 +1224,4 @@ color: #777777;
 .leaflet-container .leaflet-popup.template-mode > a.leaflet-popup-close-button:hover {
 color: #000000;
 }
+

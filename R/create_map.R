@@ -51,8 +51,18 @@ if(isColor(defaultColor)){
   return(structure(object, class="evolMap"))
 }
 
+setInfoFrame <- function(map,infoFrame){
+  if(is.character(infoFrame) && (infoFrame[1] %in% c("right","left"))){
+    map$options$infoFrame <- infoFrame[1]
+    if(map$options$infoFrame=="left" && is.null(map$options$description)){
+      warning("infoFrame: you must add a description (with add_description) to use the left panel")
+    }
+  }
+  return(map)
+}
+
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
-  name = NULL, label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL, info = NULL,
+  name = NULL, label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"),
   start = NULL, end = NULL, period = NULL, markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
@@ -127,6 +137,8 @@ if(!is.null(info)){
   map$options$markerInfo <- info
 }
 
+map <- setInfoFrame(map,infoFrame)
+
 map$options$markerPeriod <- NULL
 if(!is.null(period)){
   data[[period]] <- as.character(data[[period]])
@@ -186,7 +198,7 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
   return(map)
 }
 
-add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, start = NULL, end = NULL, period = NULL, opacity = 0.2){
+add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), start = NULL, end = NULL, period = NULL, opacity = 0.2){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -256,6 +268,8 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
         warning("info: column missing in attributes")
       }
     }
+
+    map <- setInfoFrame(map,infoFrame)
 
     map$options$entityName <- name
 

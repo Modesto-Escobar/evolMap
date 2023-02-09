@@ -11,7 +11,8 @@ Object of class \code{evolMap}.
 \usage{
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
   label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL,
-  info = NULL, start = NULL, end = NULL, period = NULL,
+  info = NULL, infoFrame = c("right","left"),
+  start = NULL, end = NULL, period = NULL,
   markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0)
 }
 \arguments{
@@ -26,6 +27,7 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{shape}{name of the column with shape variable in the data matrix.}
 \item{text}{name of the column with texts in the markers data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the data matrix.}
+\item{infoFrame}{In which panel should the information be displayed? The left panel is only available if a description is provided with \code{add_description}.}
 \item{start}{name of the column with the start time of a period in the data matrix.}
 \item{end}{name of the column with the end time of a period in the data matrix.}
 \item{period}{name of the column with the period name in the data matrix.}

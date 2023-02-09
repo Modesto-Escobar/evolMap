@@ -10,7 +10,8 @@ Object of class \code{evolMap}.
 
 \usage{
 add_entities(map, entities, attributes = NULL, name = NULL,
-  label = NULL, color = NULL, text = NULL, info = NULL,
+  label = NULL, color = NULL, text = NULL,
+  info = NULL, infoFrame = c("right","left"),
   start = NULL, end = NULL, period = NULL, opacity = 0.2)
 }
 \arguments{
@@ -22,6 +23,7 @@ add_entities(map, entities, attributes = NULL, name = NULL,
 \item{color}{name of the column with color variable in the spatial object.}
 \item{text}{name of the column with texts in the entities data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the data matrix.}
+\item{infoFrame}{In which panel should the information be displayed? The left panel is only available if a description is provided with \code{add_description}.}
 \item{start}{name of the column with the start time of a period in the data matrix.}
 \item{end}{name of the column with the end time of a period in the data matrix.}
 \item{period}{name of the column with the period name in the data matrix.}

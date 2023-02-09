@@ -36,35 +36,41 @@ function renderMap(data){
     mapWrapper.style.width = (100-descriptionWidth) + "%";
     description.style.width = descriptionWidth + "%";
 
-    resetDescriptionContent();
+    descriptionContent();
 
     function emtyDescription(){
       for (var i = description.childNodes.length - 1; i >= 0; i--) {
           description.removeChild(description.childNodes[i]);
       }
     }
+  
+    function descriptionCloseButton(){
+      var close = document.createElement("div");
+      close.classList.add("close-button");
+      close.addEventListener("click",function(){
+        descriptionContent();
+      });
+      description.appendChild(close);
+    }
 
-    function resetDescriptionContent(){
+    function descriptionContent(content){
       emtyDescription();
-      var descriptionContent = document.createElement("div");
-      descriptionContent.classList.add("description-content");
-      descriptionContent.innerHTML = data.options.description;
-      description.appendChild(descriptionContent);
+      var div = document.createElement("div");
+      div.classList.add("description-content");
+      div.innerHTML = content ? content : data.options.description;
+      description.appendChild(div);
+
+      if(content){
+        descriptionCloseButton();
+      }
     }
 
     function frameInDescription(){
-      emtyDescription();
-
       var iframe = document.createElement("iframe");
       iframe.name = "leftframe";
       description.appendChild(iframe);
 
-      var close = document.createElement("div");
-      close.classList.add("close-button");
-      close.addEventListener("click",function(){
-        resetDescriptionContent();
-      });
-      description.appendChild(close);
+      descriptionCloseButton();
     }
   }
 
@@ -285,8 +291,7 @@ function renderMap(data){
       onEachFeature: function(feature,layer){
           layer.on("click",function(event){
             if(data.options.entityInfo){
-              infoPanel.changeContent(feature.properties[data.options.entityInfo]);
-              checkTemplateInInfoPanel();
+              displayInfo(feature.properties[data.options.entityInfo], visualManagers.entityColor.getItemColor(feature.properties));
             }
 
             if(event.originalEvent.ctrlKey || event.originalEvent.metaKey){
@@ -474,6 +479,7 @@ function renderMap(data){
         searchIcon.appendChild(getSVG("search"));
         searchIcon.addEventListener("click",function(){
             center_selection();
+            open_marker_popup();
             searchInput.value = "";
             searchIcon.classList.add("disabled");
             L.DomUtil.empty(ul);
@@ -569,6 +575,7 @@ function renderMap(data){
                   select_none();
                   data.storeItems[d[0]][d[1]]._selected = true;
                   center_selection();
+                  open_marker_popup();
                   update_items();
                 });
                 ul.appendChild(li);
@@ -2304,12 +2311,11 @@ function renderMap(data){
       item.marker = new L.Marker();
       item.marker.on("click",function(event){
         item.marker.openPopup();
+        if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
+          map.setView(event.target.getLatLng());
+        }
         if(data.options.markerInfo){
-          if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-            map.setView(event.target.getLatLng());
-          }
-          infoPanel.changeContent(attr[data.options.markerInfo]);
-          checkTemplateInInfoPanel();
+          displayInfo(attr[data.options.markerInfo],item.color);
         }
         if(event.originalEvent.ctrlKey || event.originalEvent.metaKey){
           item._selected = !item._selected;
@@ -2443,6 +2449,7 @@ function renderMap(data){
           if(links.length){
             for(var i=0; i<links.length; i++){
               links[i].addEventListener("mousedown",function(e){
+                emtyDescription();
                 frameInDescription();
               });
             }
@@ -2784,6 +2791,15 @@ function renderMap(data){
     }
   }
 
+  function open_marker_popup(){
+    if(data.storeItems.markers){
+      var selected = data.storeItems.markers.filter(function(item){ return item._selected; });
+      if(selected.length==1){
+        selected[0].marker.openPopup();
+      }
+    }
+  }
+
   function update_tools(){
     var panel = document.querySelector(".tools-panel-wrapper:not(.collapse-panel) > .tools-panel");
     if(panel){
@@ -2889,8 +2905,8 @@ function renderMap(data){
       infoPanel.close();
     }
 
-    if(typeof resetDescriptionContent == "function"){
-      resetDescriptionContent();
+    if(typeof descriptionContent == "function"){
+      descriptionContent();
     }
   }
 
@@ -3181,12 +3197,64 @@ function renderMap(data){
     return false;
   }
 
-  function checkTemplateInInfoPanel(){
+  function displayInfo(info,color){
+    if(data.options.infoFrame=="left"){
+      if(description){
+        descriptionContent(info);
+        checkTemplateInDescription(color);
+      }
+    }else{
+      infoPanel.changeContent(info);
+      checkTemplateInInfoPanel(color);
+    }
+  }
+
+  function panelTemplateAutoColor(template,color){
+    if(template.classList.contains("panel-template","auto-color")){
+      color = color ? color : "#cbdefb";
+      if(template.classList.contains("mode-1")){
+        template.style.backgroundColor = color;
+      }else if(template.classList.contains("mode-2")){
+        template.querySelector(".panel-template > h2").style.backgroundColor = color;
+      }
+    }
+  }
+
+  function checkTemplateInDescription(color){
+    var content = document.querySelector("#descriptionWrapper > .description-content");
+    if(content){
+      var template = content.querySelector(":scope > .info-template, :scope > .panel-template");
+      if(template){
+        panelTemplateAutoColor(template,color);
+        var links = template.querySelectorAll("a[target=rightframe]");
+        if(links.length){
+          for(var i=0; i<links.length; i++){
+            links[i].addEventListener("mousedown",function(e){
+              infoPanel.changeContent('<iframe name=rightframe></iframe>');
+            });
+          }
+        }
+        var links = template.querySelectorAll("a[target=leftframe]");
+        if(links.length){
+          for(var i=0; i<links.length; i++){
+            links[i].addEventListener("mousedown",function(e){
+              frameInDescription();
+            });
+            links[i].addEventListener("mouseup",function(e){
+              content.style.display = "none";
+            });
+          }
+        }
+      }
+    }
+  }
+
+  function checkTemplateInInfoPanel(color){
     var content = document.querySelector("body > .infopanel > .panel-content > div");
     if(content){
       var template = content.querySelector(":scope > .info-template, :scope > .panel-template");
       if(template){
-        // TODO: auto-color
+        panelTemplateAutoColor(template,color);
         var links = template.querySelectorAll("a[target=rightframe]");
         if(links.length){
             for(var i=0; i<links.length; i++){
@@ -3205,6 +3273,7 @@ function renderMap(data){
           if(links.length){
             for(var i=0; i<links.length; i++){
               links[i].addEventListener("mousedown",function(e){
+                emtyDescription();
                 frameInDescription();
               });
             }

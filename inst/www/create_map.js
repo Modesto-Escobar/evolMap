@@ -478,11 +478,13 @@ function renderMap(data){
         var searchIcon = L.DomUtil.create('button','search-icon disabled',searchWrapper);
         searchIcon.appendChild(getSVG("search"));
         searchIcon.addEventListener("click",function(){
+          if(searchInput.value!=""){
             center_selection();
             open_marker_popup();
             searchInput.value = "";
             searchIcon.classList.add("disabled");
             L.DomUtil.empty(ul);
+          }
         });
 
         var searchInput = L.DomUtil.create('input','',searchBox);
@@ -494,7 +496,9 @@ function renderMap(data){
         });
         searchInput.addEventListener("keyup",function(event){
           clearTimeout(typingTimer);
+          L.DomEvent.stopPropagation(event);
           if(getKey(event)=="Enter"){
+            doneTyping();
             searchIcon.click();
             return;
           }
@@ -2328,12 +2332,6 @@ function renderMap(data){
         update_items();
         L.DomEvent.stopPropagation(event);
       });
-      item.marker.on("mouseover",function(event){
-        item.marker.openPopup();
-      });
-      item.marker.on("mouseout",function(event){
-        item.marker.closePopup();
-      });
     }
 
     // update position
@@ -2795,7 +2793,18 @@ function renderMap(data){
     if(data.storeItems.markers){
       var selected = data.storeItems.markers.filter(function(item){ return item._selected; });
       if(selected.length==1){
-        selected[0].marker.openPopup();
+        var marker = selected[0].marker;
+        if(!map.hasLayer(marker)){
+          var parent = markers_layer.getVisibleParent(marker);
+          if(parent){
+            setTimeout(function(){
+              parent.spiderfy();
+              marker.openPopup();
+            }, 1000);
+          }
+        }else{
+          marker.openPopup();
+        }
       }
     }
   }
@@ -2886,7 +2895,7 @@ function renderMap(data){
     if(points.length==0){
       map.setView([0,0],2);
     }else if(points.length==1){
-      map.setView(points[0],7);
+      map.setView(points[0],7,{animate:false});
     }else if(points.length>1){
       var bounds = L.polygon(points).getBounds().pad(0.05);
       map.fitBounds(bounds);

@@ -5,7 +5,7 @@
 Data: Birthplaces locations of classical sociologists.
 }
 \description{
-Matrix with birthplace locations of some sociologists.
+Matrix with birthplace locations of certain sociologists.
 }
 \usage{data("locations")}
 \format{
@@ -16,7 +16,7 @@ Matrix with birthplace locations of some sociologists.
   }
 }
 \source{
-Own elaboration from manuals of sociology and OpenStreetMap
+Own elaboration from manuals of sociology and OpenStreetMap.
 }
 \references{
 See \code{\link{sociologists}.}

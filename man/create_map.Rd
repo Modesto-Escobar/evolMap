@@ -2,7 +2,7 @@
 \alias{create_map}
 \title{Interactive map.}
 \description{
-\code{create_map} produces an interactive map with 'Leaflet'. 
+\code{create_map} produces the structure of an interactive map with 'Leaflet'. 
 }
 \value{
 Object of class \code{evolMap}.
@@ -14,16 +14,16 @@ create_map(center = NULL, zoom = NULL, provider = "OpenStreetMap",
   controls = 1:4, language = c("en","es","ca"))
 }
 \arguments{
-\item{center}{a numeric vector giving latitude and longitude to set the initial view.}
-\item{zoom}{a number greater than or equal to 0 to start displaying zoom.}
-\item{provider}{character string with the map/provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available maps/providers.}
-\item{note}{text at bottom of the map.}
+\item{center}{a numeric two size vector length giving latitude and longitude to set the initial view.}
+\item{zoom}{a number greater than or equal to 0 to stablish the startet zoom.}
+\item{provider}{character string with the map provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available map providers.}
+\item{note}{text to appear at the bottom of the map.}
 \item{defaultColor}{a character vector giving a valid html color for marker representation.}
-\item{controls}{a numeric vector indicating which controls will be shown. 1 = tools, 2 = buttons, 3 = legends, 4 = search box. NULL hide all controls, negative values deny each control and 0 deny all.}
+\item{controls}{a numeric vector indicating which controls will be shown. 1 = tools, 2 = buttons, 3 = legends, 4 = search box. NULL hides all controls, negative values deny each control and 0 denies all.}
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
+Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communication, University of Salamanca, Carlos Prieto \email{cprietos@usal.es}, and  David Barrios \email{metal@usal.es}, Bioinformatics Service, University of Salamanca.
 }
 \examples{
 # create map

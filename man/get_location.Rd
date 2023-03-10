@@ -12,10 +12,10 @@ Matrix with the latitude and longitude coordinates of each input place.
 get_location(x)
 }
 \arguments{
-\item{x}{a vector String with place names whose coordinates are downloaded from OpenStreetMap.}
+\item{x}{a vector string with place names ("city, country") whose coordinates will be downloaded from OpenStreetMap.}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
+Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communication, University of Salamanca, Carlos Prieto \email{cprietos@usal.es}, and  David Barrios \email{metal@usal.es}, Bioinformatics Service, University of Salamanca.
 }
 \examples{
 get_location(c("Salamanca, Spain","New York, United States"))

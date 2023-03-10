@@ -15,19 +15,19 @@ add_periods(map, periods, name = NULL, start = NULL, end = NULL,
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
-\item{periods}{a data frame defining periods with the following columns: name, start and end.}
-\item{name}{name of the column with names in the periods data frame (first column by default).}
-\item{start}{name of the column with the start time of a period in the data frame (second column by default).}
-\item{end}{name of the column with the end time of a period in the data frame (third column by default).}
-\item{latitude}{name of the column with the latitude coordinates for center zoom in each period.}
+\item{periods}{a period data frame defining periods with the following columns: name, start and end.}
+\item{name}{name of the column with names in the period data frame (first column by default).}
+\item{start}{name of the column with the start time of a period in the period data frame (second column by default).}
+\item{end}{name of the column with the end time of a period in the period data frame (third column by default).}
+\item{latitude}{name of the column with the latitude coordinates to center zoom on each period.}
 \item{longitude}{name of the column with the longitude coordinates for center zoom in each period.}
-\item{zoom}{name of the column with the zoom to display each period.}
-\item{description}{name of the column with a description of each period.}
-\item{duration}{name of the column with a period duration in seconds.}
-\item{periodrep}{Should time run by period? If false, time will run by year, the period only will be shown in header.}
+\item{zoom}{name of the column with the zoom size to display each period.}
+\item{description}{name of the column with the description of each period.}
+\item{duration}{name of the column with the period duration in seconds.}
+\item{periodrep}{If false, time will run by year, and the period will only be shown in the header. Otherwise, time will run by period.}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
+Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communication, University of Salamanca, Carlos Prieto \email{cprietos@usal.es}, and  David Barrios \email{metal@usal.es}, Bioinformatics Service, University of Salamanca.
 }
 \examples{
 data(sociologists)

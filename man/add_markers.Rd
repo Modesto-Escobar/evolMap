@@ -1,6 +1,6 @@
 \name{add_markers}
 \alias{add_markers}
-\title{Add Markers.}
+\title{Add markers.}
 \description{
 Add markers to the interactive map. 
 }
@@ -17,26 +17,26 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
-\item{data}{a data frame with the locations and information to show in each one. Column names can be passed as parameter to the arguments.}
+\item{data}{a marker data frame with the locations and information to show in each marker. Its column names can be passed as parameters to the arguments of the function.}
 \item{latitude}{name of the column with the latitude coordinates for each marker (first column by default).}
 \item{longitude}{name of the column with the longitude coordinates for each marker (second column by default).}
-\item{name}{name of the column with names in the markers data frame.}
-\item{label}{name of the column with labels in the markers data frame.}
-\item{image}{name of the column with the path to node image files in the data matrix.}
-\item{color}{name of the column with color variable in the data matrix.}
-\item{shape}{name of the column with shape variable in the data matrix.}
-\item{text}{name of the column with texts in the markers data frame. This information will be shown as a popup.}
-\item{info}{name of the column with information to display in a panel in the data matrix.}
-\item{infoFrame}{In which panel should the information be displayed? The left panel is only available if a description is provided with \code{add_description}.}
-\item{start}{name of the column with the start time of a period in the data matrix.}
-\item{end}{name of the column with the end time of a period in the data matrix.}
-\item{period}{name of the column with the period name in the data matrix.}
+\item{name}{name of the column with names in the marker data frame.}
+\item{label}{name of the column with labels in the marker data frame.}
+\item{image}{name of the column with the path to marker image files in the marker data frame.}
+\item{color}{name of the column with color variable in the marker data frame.}
+\item{shape}{name of the column with shape variable in the marker data frame.}
+\item{text}{name of the column with texts in the marker data frame. This information will be shown as a popup.}
+\item{info}{name of the column with information to display in a panel in the marker data frame.}
+\item{infoFrame}{Panel (right or left) where the information is to be displayed The left panel is only available if a description is provided with \code{add_description}.}
+\item{start}{name of the column with the start time of a period in the marker data frame.}
+\item{end}{name of the column with the end time of a period in the marker data frame.}
+\item{period}{name of the column with the period name in the marker data frame.} 
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
 \item{roundedIcons}{display markers with rounded borders.}
-\item{jitteredPoints}{Write an amount of noise to markers to avoid overlapping.}
+\item{jitteredPoints}{add an amount of noise to markers to avoid overlapping.}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
+Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communication, University of Salamanca, Carlos Prieto \email{cprietos@usal.es}, and  David Barrios \email{metal@usal.es}, Bioinformatics Service, University of Salamanca.
 }
 \examples{
 # load data

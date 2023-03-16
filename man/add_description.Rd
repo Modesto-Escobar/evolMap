@@ -24,7 +24,7 @@ Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communicati
 map <- create_map()
 map <- add_description(map, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

@@ -43,7 +43,7 @@ map <- create_map()
 map <- add_markers(map, markers, name="name", color="name", markerCluster=FALSE)
 map <- add_links(map, links, color="num")
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

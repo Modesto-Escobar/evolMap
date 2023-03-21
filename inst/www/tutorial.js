@@ -194,16 +194,34 @@ function tutorialTour(options){
     });
   }
 
+  // multipages
+  if(window.name == "multiPages"){
+    steps.push(function(){
+      tutorialContent.selectAll("*").remove()
+      tutorial.style("top","30px")
+      tutorial.style("left","10px")
+      tutorialContent.append("p").html(tutorial_texts['inadditiontothispage'])
+      tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
+
+      tutorialArrow.style("display",null)
+        .style("left","30px")
+        .style("top","0px")
+      tutorial2.style("display","none")
+    });
+  }
+
   go2step(0);
 
   function tutorial_menu(){
     tutorial.remove();
     tutorial2.remove();
     tutorialArrow.remove();
-    var tutorialIcon = body.select(".buttons-panel").append("div")
+    var tutorialIconWrapper = body.select(".buttons-panel").append("div")
+      .attr("class","tutorial-icon-wrapper");
+    tutorialIconWrapper.append("div")
       .attr("class","tutorial-icon")
       .on("click",function(){
-        tutorialIcon.remove();
+        tutorialIconWrapper.remove();
         tutorial = body.select("body > .tutorial");
         if(tutorial.empty()){
           tutorial = body.append("div")
@@ -226,6 +244,9 @@ function tutorialTour(options){
           tutorial.remove();
         }
       })
+    tutorialIconWrapper.append("div")
+      .attr("class","tutorial-icon-ad")
+      .html(tutorial_texts.clickthisbutton)
   }
 
   function updateButtons(c,l){

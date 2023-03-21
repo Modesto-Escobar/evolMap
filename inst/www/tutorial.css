@@ -100,6 +100,9 @@ div.tutorial > .img-and-text:after {
   clear: both;
 }
 
+div.tutorial-icon-wrapper { 
+  position: relative;
+}
 div.tutorial-icon {
   width: 24px;
   height: 24px;
@@ -117,4 +120,16 @@ div.tutorial-icon:after {
   width: 24px;
   display: inline-block;
   text-align: center;
+}
+div.tutorial-icon-ad {
+  position: absolute;
+  border: #2f7bee solid 1px;
+  border-radius: 20px;
+  padding: 10px;
+  width: 240px;
+  bottom: -4px;
+  left: 24px;
+  background-color: #ffffff;
+  text-align: center;
+  font-size: 18px;
 }

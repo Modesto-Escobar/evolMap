@@ -428,12 +428,12 @@ map_html <- function(object, directory){
   if(length(object$links)){
     scripts <- c(scripts, "leaflet.curve.js")
   }
+  styles <- c(styles, "styles.css")
+  scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")
   if(!is.null(object$options$tutorial) && !identical(as.logical(object$options$tutorial),FALSE)){
     scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
     styles <- c(styles,"tutorial.css")
   }
-  styles <- c(styles, "styles.css")
-  scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")
 
   indexfile <- paste0(directory,"/index.html")
   if(file.exists(directory)){

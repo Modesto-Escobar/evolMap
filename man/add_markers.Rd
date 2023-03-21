@@ -58,7 +58,7 @@ map <- add_markers(map, sociologists,
   label = "label", image = "picture",
   start = "birth", end = "death")
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

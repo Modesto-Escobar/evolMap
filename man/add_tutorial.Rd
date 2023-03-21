@@ -24,7 +24,7 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 map <- create_map()
 map <- add_tutorial(map)
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

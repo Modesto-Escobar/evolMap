@@ -56,7 +56,7 @@ end = c(1799,1824,1850,1874)
 )
 map <- add_periods(map, periods)
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

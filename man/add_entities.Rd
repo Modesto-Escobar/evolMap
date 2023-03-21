@@ -36,7 +36,7 @@ Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communicati
 data(World)
 map <- create_map()
 map <- add_entities(map, World, color="pop")
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

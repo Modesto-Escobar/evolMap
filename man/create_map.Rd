@@ -29,7 +29,7 @@ Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communicati
 # create map
 map <- create_map()
 
-\dontrun{
+\donttest{
 # plot map
 plot(map)
 }

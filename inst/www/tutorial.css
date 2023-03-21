@@ -3,7 +3,7 @@ div.tutorial {
   border: #2f7bee solid 1px;
   border-radius: 40px;
   background-color: #ffffff;
-  z-index: 1000;
+  z-index: 1010;
   padding: 40px;
   text-align: center;
   font-size: 18px;
@@ -60,7 +60,7 @@ height: 60px;
 margin-left: -20px;
 position: absolute;
 display: inline-block;
-z-index: 1001;
+z-index: 1011;
 pointer-events: none;
 }
 div.tutorial-arrow:before,

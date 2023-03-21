@@ -6,5 +6,5 @@ Dynamic and evolutive maps with R, powered by 'leaflet'.
 
 ```r
 library(devtools)
-install_github('BioinfoUSAL/evolMap')
+install_github('Modesto-Escobar/evolMap')
 ```

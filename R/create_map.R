@@ -534,7 +534,16 @@ printTable <- function(x, name){
 }
 
 print.evolMap <- function(x, ...) {
-  printTable(x$markers,"Markers")
+  cat("evolMap object\n")
+  if(!is.null(x$markers)){
+    printTable(x$markers,"Markers")
+  }
+  if(!is.null(x$entities)){
+    printTable(x$entities,"Entities")
+  }
+  if(!is.null(x$links)){
+    printTable(x$links,"Links")
+  }  
 }
 
 plot.evolMap <- function(x, directory = NULL, ...){

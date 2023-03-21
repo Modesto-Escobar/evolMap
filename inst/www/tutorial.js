@@ -85,7 +85,7 @@ function tutorialTour(options){
       var timeNavDim = timeNav.node().getBoundingClientRect();
       var tutorialDim = tutorial.node().getBoundingClientRect();
       tutorial.style("top",(timeNavDim.top-tutorialDim.height-50)+"px")
-      tutorial.style("left","60px")
+      tutorial.style("left",(timeNavDim.left)+"px")
 
       tutorialArrow.style("display",null)
         .style("transform","rotate(180deg)")
@@ -146,7 +146,10 @@ function tutorialTour(options){
     });
   }
 
-  var legendsPanel = body.select(".legends-panel");
+  var legendsPanel = body.select(".legends-panel-wrapper > .legends-panel");
+  if(legendsPanel.empty() || !legendsPanel.node().offsetWidth){
+    legendsPanel = body.select(".legends-panel-wrapper > .show-panel-button");
+  }
   if(!legendsPanel.empty() && legendsPanel.node().offsetWidth){
     steps.push(function(){
       var legendDim = legendsPanel.node().getBoundingClientRect();
@@ -156,9 +159,9 @@ function tutorialTour(options){
       tutorialArrow.style("display",null)
         .style("transform","rotate(90deg)")
         .style("left",(dim.width-legendDim.width-50)+"px")
-        .style("top",(60)+"px")
+        .style("top",(-30 + legendDim.top + legendDim.height/2)+"px")
       tutorial.style("left",(dim.width-legendDim.width-tutorialDim.width-50)+"px")
-      tutorial.style("top",(60)+"px")
+      tutorial.style("top",(legendDim.top)+"px")
     });
   }
 

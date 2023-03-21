@@ -613,6 +613,10 @@ button.custom-color {
 .search-panel > .search-padding > .search-wrapper > .search-icon.disabled > svg {
   fill: #777777;
 }
+.search-panel > .search-padding > .search-wrapper > ul.suggestions-list {
+  max-height: 500px;
+  overflow: auto;
+}
 .search-panel > .search-padding > .search-wrapper > ul.suggestions-list > li {
   padding: 5px 10px;
   cursor: pointer;

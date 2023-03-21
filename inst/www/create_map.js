@@ -2838,57 +2838,47 @@ function renderMap(data){
     }
   }
 
-  function center_selection(){
+  function get_points(condition){
     var points = [];
     if(data.storeItems.markers){
       data.storeItems["markers"].forEach(function(item){
-        if(item._selected){
+        if(condition(item)){
           points.push([item.latitude,item.longitude]);
         }
       });
     }
     if(data.storeItems.entities){
       entities_layer.eachLayer(function(layer){
-        if(layer.feature && layer.feature._selected){
-          points.push([layer.feature.properties._lat,layer.feature.properties._lng]);
-        }
-      });
-    }
-    if(data.storeItems.links){
-      data.storeItems["links"].forEach(function(item){
-        if(item._selected){
-          points.push(item.line.getBounds().getCenter());
-        }
-      });
-    }
-    center_points(points);
-  }
-
-  function center_visibles(){
-    var points = [];
-    if(data.storeItems.markers){
-      data.storeItems["markers"].forEach(function(item){
-        if(!item._hidden && !item._outoftime){
-          points.push([item.latitude,item.longitude]);
-        }
-      });
-    }
-    if(data.storeItems.entities){
-      entities_layer.eachLayer(function(layer){
-        var item = layer.feature
-        if(item && (!item._hidden && !item._outoftime)){
+        var item = layer.feature;
+        if(item && condition(item)){
           points.push([item.properties._lat,item.properties._lng]);
         }
       });
     }
     if(data.storeItems.links){
       data.storeItems["links"].forEach(function(item){
-        if(!item._hidden && !item._outoftime){
+        if(condition(item)){
           points.push(item.line.getBounds().getCenter());
         }
       });
     }
-    center_points(points);
+    return points;
+  }
+
+  function get_selected_points(){
+    return get_points(function(item){ return item._selected; });
+  }
+
+  function center_selection(){
+    center_points(get_selected_points());
+  }
+
+  function get_visible_points(){
+    return get_points(function(item){ return !item._hidden && !item._outoftime; });
+  }
+
+  function center_visibles(){
+    center_points(get_visible_points());
   }
 
   function center_points(points){
@@ -2900,6 +2890,20 @@ function renderMap(data){
       var bounds = L.polygon(points).getBounds().pad(0.05);
       map.fitBounds(bounds);
     }
+  }
+
+  function get_points_center(points){
+    if(points.length==0){
+      return [0,0];
+    }else if(points.length==1){
+      return points[0];
+    }else if(points.length>1){
+      return getCentroid(points);
+    }
+  }
+
+  function get_visibles_center(){
+    return get_points_center(get_visible_points());
   }
 
   function select_none(){
@@ -3130,14 +3134,24 @@ function renderMap(data){
 
   function resetView(map){
     checkPeriodView(map,function(){
-      map.setView(data.options.center, data.options.zoom);
+      if(data.options.autoZoom){
+        center_visibles();
+      }else{
+        map.setView(data.options.center, data.options.zoom);
+      }
     });
   }
 
   function resetPan(map){
-    checkPeriodView(map,function(){
-      map.panTo(data.options.center);
-    });
+      var center = data.options.center;
+      if(data.periods && data.options.byperiod){
+        if(data.options.periodLatitude && data.options.periodLongitude){
+          center = [getValuesFromDF("periods","periodLatitude")[current],getValuesFromDF("periods","periodLongitude")[current]];
+        }else{
+          center = get_visibles_center();
+        }
+      }
+      map.panTo(center);
   }
 
   function periodView(map){

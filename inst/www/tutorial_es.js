@@ -33,8 +33,6 @@ var tutorial_texts = {
   inadditiontothispage: 'Además de esta página principal, hay otras páginas con distinta información.',
   tonavigatefromonetoanother: 'Para <span class="highlight">navegar de una pestaña a otra</span>, utiliza el icono <img src="'+b64Icons.home+'"/> disponible en la parte superior izquierda de la pantalla.',
 
-  clickthisbutton: 'Click en este botón para ver los tutoriales',
-
   hello: "¡Hola!",
   doyouneedhelp: "¿Necesitas ayuda?",
   seethetutorials: "Ver los tutoriales",

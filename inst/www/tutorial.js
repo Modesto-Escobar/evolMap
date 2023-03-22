@@ -204,6 +204,7 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
 
       tutorialArrow.style("display",null)
+        .style("transform",null)
         .style("left","30px")
         .style("top","0px")
       tutorial2.style("display","none")
@@ -216,12 +217,20 @@ function tutorialTour(options){
     tutorial.remove();
     tutorial2.remove();
     tutorialArrow.remove();
-    var tutorialIconWrapper = body.select(".buttons-panel").append("div")
-      .attr("class","tutorial-icon-wrapper");
-    tutorialIconWrapper.append("div")
+    var container = body.select(".buttons-panel"),
+        iconmargin = null;
+    if(!container.node().childNodes.length){
+      var aux = body.select(".time-control");
+      if(!aux.empty()){
+        container = aux;
+        iconmargin = "5px";
+      }
+    }
+    var tutorialIcon = container.append("div")
       .attr("class","tutorial-icon")
+      .style("margin",iconmargin)
       .on("click",function(){
-        tutorialIconWrapper.remove();
+        tutorialIcon.remove();
         tutorial = body.select("body > .tutorial");
         if(tutorial.empty()){
           tutorial = body.append("div")
@@ -244,9 +253,6 @@ function tutorialTour(options){
           tutorial.remove();
         }
       })
-    tutorialIconWrapper.append("div")
-      .attr("class","tutorial-icon-ad")
-      .html(tutorial_texts.clickthisbutton)
   }
 
   function updateButtons(c,l){

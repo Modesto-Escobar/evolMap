@@ -74,6 +74,38 @@ function renderMap(data){
     }
   }
 
+  if(data.options.main || data.options.multipages || typeof tutorialTour != "undefined"){
+    var topbar = document.createElement("div");
+    topbar.classList.add("topbar");
+    topbar.style.backgroundColor = "#ffffff";
+    topbar.style.padding = "6px 12px";
+    Wrapper.appendChild(topbar);
+
+    if(data.options.multipages){
+      var button = document.createElement("button");
+      button.classList.add("primary","home");
+      button.textContent = "home";
+      button.style.minWidth = "unset";
+      button.style.color = "transparent";
+      button.style.width = "2.2em";
+      button.style.backgroundRepeat = "no-repeat";
+      button.style.backgroundPosition = "center";
+      button.style.backgroundImage = "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMTYiIHdpZHRoPSIxNiIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNNiAxOWgzdi02aDZ2Nmgzdi05bC02LTQuNUw2IDEwWm0tMiAyVjlsOC02IDggNnYxMmgtN3YtNmgtMnY2Wm04LTguNzVaIi8+PC9zdmc+)";
+      topbar.appendChild(button);
+
+      button.addEventListener("click",function(){
+        window.history.back();
+      })
+    }
+
+    if(data.options.main){
+      var span = document.createElement("span");
+      span.textContent = data.options.main;
+      span.style.marginLeft = "1em";
+      topbar.appendChild(span);
+    }
+  }
+
   contentWrapper.appendChild(mapWrapper);
   Wrapper.appendChild(contentWrapper);
 

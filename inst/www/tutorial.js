@@ -61,12 +61,14 @@ function tutorialTour(options){
     tutorialContent.append("p").html(tutorial_texts["beforestarting"])
   });
 
-  steps.push(function(){
-    tutorialContent.selectAll("*").remove()
-    tutorialContent.append("p").html(tutorial_texts["mainpage"])
-    tutorialContent.append("p").html(options.tutorial.description ? options.tutorial.description : tutorial_texts["collectionofelements"])
-    tutorialContent.append("p").html(tutorial_texts['eachfigure'])
-  });
+  if(options.tutorial.description){
+    steps.push(function(){
+      tutorialContent.selectAll("*").remove()
+      tutorialContent.append("p").html(tutorial_texts["mainpage"])
+      tutorialContent.append("p").html(options.tutorial.description)
+      tutorialContent.append("p").html(tutorial_texts['eachfigure'])
+    });
+  }
 
   steps.push(function(){
     tutorial.style("top",(dim.height/4)+"px")
@@ -195,18 +197,19 @@ function tutorialTour(options){
   }
 
   // multipages
-  if(window.name == "multiPages"){
+  if(options.multipages){
     steps.push(function(){
-      tutorialContent.selectAll("*").remove()
-      tutorial.style("top","30px")
-      tutorial.style("left","10px")
+      tutorialContent.selectAll("*").remove();
+      var multigraphDim = body.select("#Wrapper > .topbar > .primary.home").node().getBoundingClientRect();
+      tutorial.style("top",(multigraphDim.bottom+40)+"px")
+      tutorial.style("left",multigraphDim.left+"px")
       tutorialContent.append("p").html(tutorial_texts['inadditiontothispage'])
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
 
       tutorialArrow.style("display",null)
         .style("transform",null)
-        .style("left","30px")
-        .style("top","0px")
+        .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
+        .style("top",(multigraphDim.bottom+10)+"px")
       tutorial2.style("display","none")
     });
   }
@@ -217,18 +220,8 @@ function tutorialTour(options){
     tutorial.remove();
     tutorial2.remove();
     tutorialArrow.remove();
-    var container = body.select(".buttons-panel"),
-        iconmargin = null;
-    if(!container.node().childNodes.length){
-      var aux = body.select(".time-control");
-      if(!aux.empty()){
-        container = aux;
-        iconmargin = "5px";
-      }
-    }
-    var tutorialIcon = container.append("div")
+    var tutorialIcon = body.select("#Wrapper > .topbar").append("div")
       .attr("class","tutorial-icon")
-      .style("margin",iconmargin)
       .on("click",function(){
         tutorialIcon.remove();
         tutorial = body.select("body > .tutorial");

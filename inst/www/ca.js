@@ -19,6 +19,7 @@ var texts = {
 "less": "menys",
 "Label": "Etiqueta",
 "Color": "Color",
+"Size": "Grandària",
 "Shape": "Shape",
 "selectacolorscalefor": "Selecciona una escala de color per",
 "selectacolorfor": "Selecciona un color per",

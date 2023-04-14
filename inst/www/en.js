@@ -19,6 +19,7 @@ var texts = {
 "less": "less",
 "Label": "Label",
 "Color": "Color",
+"Size": "Size",
 "Shape": "Shape",
 "selectacolorscalefor": "Select a color scale for",
 "selectacolorfor": "Select a color for",

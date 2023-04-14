@@ -10,13 +10,14 @@ Object of class \code{evolMap}.
 
 \usage{
 create_map(center = NULL, zoom = NULL, provider = "OpenStreetMap",
-  note = NULL, defaultColor = "#2f7bee",
+  main = NULL, note = NULL, defaultColor = "#2f7bee",
   controls = 1:4, language = c("en","es","ca"))
 }
 \arguments{
 \item{center}{a numeric two size vector length giving latitude and longitude to set the initial view.}
 \item{zoom}{a number greater than or equal to 0 to stablish the startet zoom.}
 \item{provider}{character string with the map provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available map providers.}
+\item{main}{upper title of the graph.}
 \item{note}{text to appear at the bottom of the map.}
 \item{defaultColor}{a character vector giving a valid html color for marker representation.}
 \item{controls}{a numeric vector indicating which controls will be shown. 1 = tools, 2 = buttons, 3 = legends, 4 = search box. NULL hides all controls, negative values deny each control and 0 denies all.}

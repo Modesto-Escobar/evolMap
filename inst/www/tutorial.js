@@ -10,6 +10,35 @@ function tutorialTour(options){
     .style("left",(dim.width/4)+"px")
     .style("width",(dim.width/2-panelOffset)+"px")
 
+  var tutorialIcon = body.select("#Wrapper > .topbar").append("div")
+      .attr("class","tutorial-icon")
+      .style("visibility","hidden")
+      .on("click",function(){
+        tutorialIcon.style("visibility","hidden");
+        tutorial = body.select("body > .tutorial");
+        if(tutorial.empty()){
+          tutorial = body.append("div")
+          .attr("class","tutorial")
+          .style("top",60+"px")
+          .style("right",60+"px")
+          .style("width",240+"px")
+          tutorial.append("p").text(tutorial_texts['hello'])
+          tutorial.append("p").text(tutorial_texts['doyouneedhelp'])
+          tutorial
+          .append("button")
+            .attr("class","primary")
+            .style("width","100%")
+            .text(tutorial_texts['seethetutorials'])
+            .on("click",function(){
+              tutorialIcon.remove();
+              tutorialTour(options);
+            })
+          tutorial.append("p")
+        }else{
+          tutorial.remove();
+        }
+      })
+
   var count = 0;
   var steps = [];
 
@@ -220,32 +249,7 @@ function tutorialTour(options){
     tutorial.remove();
     tutorial2.remove();
     tutorialArrow.remove();
-    var tutorialIcon = body.select("#Wrapper > .topbar").append("div")
-      .attr("class","tutorial-icon")
-      .on("click",function(){
-        tutorialIcon.remove();
-        tutorial = body.select("body > .tutorial");
-        if(tutorial.empty()){
-          tutorial = body.append("div")
-          .attr("class","tutorial")
-          .style("top",60+"px")
-          .style("right",60+"px")
-          .style("width",240+"px")
-          tutorial.append("p").text(tutorial_texts['hello'])
-          tutorial.append("p").text(tutorial_texts['doyouneedhelp'])
-          tutorial
-          .append("button")
-            .attr("class","primary")
-            .style("width","100%")
-            .text(tutorial_texts['seethetutorials'])
-            .on("click",function(){
-              tutorialTour(options);
-            })
-          tutorial.append("p")
-        }else{
-          tutorial.remove();
-        }
-      })
+    tutorialIcon.style("visibility","visible");
   }
 
   function updateButtons(c,l){

@@ -11,7 +11,7 @@ Object of class \code{evolMap}.
 \usage{
 add_periods(map, periods, name = NULL, start = NULL, end = NULL,
   latitude = NULL, longitude = NULL, zoom = NULL,
-  description = NULL, duration = NULL, periodrep = TRUE)
+  description = NULL, popup = FALSE, duration = NULL, periodrep = TRUE)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -23,6 +23,7 @@ add_periods(map, periods, name = NULL, start = NULL, end = NULL,
 \item{longitude}{name of the column with the longitude coordinates for center zoom in each period.}
 \item{zoom}{name of the column with the zoom size to display each period.}
 \item{description}{name of the column with the description of each period.}
+\item{popup}{should the description be displayed as a popup?.}
 \item{duration}{name of the column with the period duration in seconds.}
 \item{periodrep}{If false, time will run by year, and the period will only be shown in the header. Otherwise, time will run by period.}
 }

@@ -1,4 +1,4 @@
-create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
 
   object <- list(options=list())
 
@@ -42,6 +42,10 @@ if(isColor(defaultColor)){
     object$options[["controls"]] <- as.numeric(controls)
   }
 
+  if(!is.null(main)){
+    object$options[["main"]] <- as.character(main)
+  }
+
   if(!is.null(note)){
     object$options[["note"]] <- as.character(note)
   }
@@ -62,7 +66,7 @@ setInfoFrame <- function(map,infoFrame){
 }
 
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
-  name = NULL, label = NULL, image = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"),
+  name = NULL, label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"),
   start = NULL, end = NULL, period = NULL, markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
@@ -118,6 +122,15 @@ map$options$markerText <- NULL
 if(!is.null(text)){
   data[[text]] <- as.character(data[[text]])
   map$options$markerText <- text
+}
+
+map$options$markerSize <- NULL
+if(!is.null(size)){
+  if(is.numeric(data[[size]])){
+    map$options$markerSize <- size
+  }else{
+    warning("size: must be a numeric column from data")
+  }
 }
 
 map$options$image <- NULL
@@ -307,7 +320,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
   return(map)
 }
 
-add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, latitude = NULL, longitude = NULL, zoom = NULL, description = NULL, duration = NULL, periodrep = TRUE){
+add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, latitude = NULL, longitude = NULL, zoom = NULL, description = NULL, popup = FALSE, duration = NULL, periodrep = TRUE){
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
   }
@@ -352,6 +365,11 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
   if(!is.null(description)){
     periods[,description] <- as.character(periods[,description])
     map$options$periodDescription <- description
+  }
+
+  map$options$periodPopup <- NULL
+  if(!is.null(popup) && popup){
+    map$options$periodPopup <- TRUE
   }
 
   map$options$periodDuration <- NULL

@@ -802,15 +802,28 @@ function renderMap(data){
         L.DomUtil.create('span', '',legendSelectAll).textContent = texts["selectall"];
         legendSelectAll.style.cursor = "pointer";
         legendSelectAll.addEventListener("click",function(){
-          if(selectAllCheck.classList.contains("checked")){
-            select_none();
-          }else{
-            select_all();
+          var checked = selectAllCheck.classList.contains("checked");
+          var items = legendsContent.querySelectorAll(".legend-item > .legend-check-box");
+          for(var i=0; i<items.length; i++){
+            if(checked ^ items[i].classList.contains("checked")){
+              items[i].parentNode.click();
+            }
+            items[i].parentNode.click();
           }
         });
         var filterButton = L.DomUtil.create('button','legend-bottom-button primary',bottomControls);
         filterButton.textContent = texts["filter"];
-        filterButton.addEventListener("click",filter_selected);
+        filterButton.addEventListener("click",function(){
+          select_none();
+          var items = legendsContent.querySelectorAll(".legend-item > .legend-check-box.checked");
+          if(items.length){
+            for(var i=0; i<items.length; i++){
+              items[i].parentNode.click();
+              items[i].parentNode.click();
+            }
+            filter_selected();
+          }
+        });
 
         return legendsPanelWrapper;
       },
@@ -893,15 +906,17 @@ function renderMap(data){
         };
 
     var getSpanText = String;
-    if(data.options.time.type=="POSIXct"){
+    if(data.options.time){
+      if(data.options.time.type=="POSIXct"){
         getSpanText = function(val){
           return (new Date(val*1000)).toUTCString();
         }
-    }else if(data.options.time.type=="Date"){
+      }else if(data.options.time.type=="Date"){
         getSpanText = function(val){
           var d = new Date(val*86400000);
           return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
         }
+      }
     }
 
     var updateShowedDates;
@@ -1344,6 +1359,8 @@ function renderMap(data){
   }
   (new L.Control.buttonsPanel({ position: 'bottomleft' })).addTo(map);
   if(data.options.controls.legends !== undefined && L.Control.hasOwnProperty("legendsPanel")){
+    delete data.checkedLegendItems;
+    data.checkedLegendItems = {};
     (new L.Control.legendsPanel({ position: 'topright' })).addTo(map);
   }
 
@@ -1360,15 +1377,6 @@ function renderMap(data){
         data.options[itemVisual] = value;
       }
       update_items();
-
-      if(visual=="Color"){
-        if(getDFcolumnType(items,value)=="number"){
-            displayScalePicker(itemVisual,function(){
-              visualManagers[itemVisual].changeLevels(value);
-              update_items();
-            });
-        }
-      }
   }
 
   function show_tables(event){
@@ -2624,8 +2632,9 @@ function renderMap(data){
         }
       })
 
-      var bottom = legendsPanel.getElementsByClassName("legend-bottom-controls")[0];
-      if(!legendsContent.getElementsByClassName("legend-check-box").length){
+      var bottom = legendsPanel.getElementsByClassName("legend-bottom-controls")[0],
+          allboxes = legendsContent.getElementsByClassName("legend-check-box").length;
+      if(!allboxes){
         bottom.style.display = "none";
       }else{
         bottom.style.display = "block";
@@ -2636,18 +2645,23 @@ function renderMap(data){
         checkbox.classList[checked ? "add" : "remove"]("checked");
 
         var filterButton = bottom.getElementsByClassName("legend-bottom-button")[0];
-        filterButton.classList[some_selected()&&!all_selected() ? "remove" : "add"]("disabled");
+        filterButton.classList[checked && (allboxes!=checked) ? "remove" : "add"]("disabled");
       }
       legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? null : "none";
     }
 
     function listLegend(container,items,visual){
       var itemVisual = getItemOption(items,visual);
+      if(!data.checkedLegendItems[itemVisual]){
+        data.checkedLegendItems[itemVisual] = {};
+      }
       if(data.storeItems[items] && data.options[itemVisual]){
         var column = data.options[itemVisual],
             type = getDFcolumnType(items,column);
         if(type){
           if(type=="number"){
+            delete data.checkedLegendItems[itemVisual];
+
             var domain = visualManagers[itemVisual].getDomain(),
                 range = visualManagers[itemVisual].getRange();
 
@@ -2659,6 +2673,13 @@ function renderMap(data){
             scaleLinear.style.height = "10px";
             scaleLinear.style.width = "100%";
             scaleLinear.style.backgroundImage = "linear-gradient(to right, " + range.join(", ") + ")";
+            scaleLinear.style.cursor = "pointer";
+            scaleLinear.addEventListener("click",function(){
+              displayScalePicker(itemVisual,function(){
+                visualManagers[itemVisual].changeLevels(column);
+                update_items();
+              });
+            });
 
             renderDomain(0);
             renderDomain(1);
@@ -2695,18 +2716,14 @@ function renderMap(data){
                 container.appendChild(span);
               }
             }
-
-            var img = L.DomUtil.create('img','edit-legend-scale',legend);
-            img.setAttribute("width","24");
-            img.setAttribute("height","24");
-            img.setAttribute("src",b64Icons.edit);
-            img.addEventListener("click",function(){
-              displayScalePicker(itemVisual,function(){
-                visualManagers[itemVisual].changeLevels(column);
-                update_items();
-              });
-            });
           }else{
+            if(data.checkedLegendItems[itemVisual].column && data.checkedLegendItems[itemVisual].column != column){
+              data.checkedLegendItems[itemVisual] = {};
+            }
+            if(!data.checkedLegendItems[itemVisual].column){
+              data.checkedLegendItems[itemVisual].column = column;
+              data.checkedLegendItems[itemVisual].values = {};
+            }
             var values = data.storeItems[items].filter(function(item){
               return !item._hidden && !item._outoftime;
             }).map(function(item){
@@ -2720,6 +2737,11 @@ function renderMap(data){
             }
 
             if(values.length){
+              for(var val in data.checkedLegendItems[itemVisual].values){
+                if(values.indexOf(val)==-1){
+                  delete data.checkedLegendItems[itemVisual].values[val];
+                }
+              }
               var legend = displayLegendHeader(container,items,visual,column);
               values.forEach(function(d){
                 var legendItem = L.DomUtil.create('div','legend-item',legend);
@@ -2752,7 +2774,12 @@ function renderMap(data){
 
                 legendItem.style.cursor = "pointer";
                 legendItem.addEventListener("click",function(){
-                  var checked = checkbox.classList.contains("checked");
+                  var checked = +data.checkedLegendItems[itemVisual].values[d];
+                  if(checked){
+                    delete data.checkedLegendItems[itemVisual].values[d];
+                  }else{
+                    data.checkedLegendItems[itemVisual].values[d] = true;
+                  }
                   data.storeItems[items].forEach(function(item){
                     if(isItemSelected(items,item,column,d)){
                       item._selected = !checked;
@@ -2761,13 +2788,19 @@ function renderMap(data){
                   update_items();
                 });
 
-                if(allItemsSelectedByValue(items,column,d)){
+                if(data.checkedLegendItems[itemVisual].values[d]){
                   checkbox.classList.add("checked");
                 }
               })
+            }else{
+              data.checkedLegendItems[itemVisual].values = {};
             }
           }
+        }else{
+          delete data.checkedLegendItems[itemVisual];
         }
+      }else{
+        delete data.checkedLegendItems[itemVisual];
       }
 
       function displayBullet(bullet,color,shape){

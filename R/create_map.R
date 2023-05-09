@@ -171,7 +171,7 @@ if(!is.null(period)){
   return(map)
 }
 
-add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period = NULL){
+add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period = NULL, curve = TRUE, arrows = FALSE){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -183,6 +183,16 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
 
   if(is.null(map$options$markerName)){
     stop("Markers must be provided with a 'name' in order to identify each link with his source and target")
+  }
+
+  map$options$linkCurve <- NULL
+  if(!is.null(curve) && curve){
+    map$options$linkCurve <- TRUE
+  }
+
+  map$options$linkArrows <- NULL
+  if(!is.null(arrows) && arrows){
+    map$options$linkArrows <- TRUE
   }
 
   source <- 1

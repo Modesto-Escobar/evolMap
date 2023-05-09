@@ -132,6 +132,7 @@ button.primary-outline.clear {
 
 #contentWrapper {
   flex-grow: 1;
+  overflow: hidden;
 }
 
 #descriptionWrapper {
@@ -980,6 +981,7 @@ th {
 }
 .frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > h2 {
   margin: 12px 0 6px 0;
+  font-size: 2em;
 }
 .frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .freq-bar {
   position: relative;
@@ -1257,3 +1259,10 @@ color: #777777;
 color: #000000;
 }
 
+.arrow-icon > i {
+  transform-origin: bottom right;
+  border: solid black;
+  border-width: 0 4px 4px 0;
+  display: inline-block;
+  padding: 4px;
+}

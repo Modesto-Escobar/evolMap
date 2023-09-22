@@ -2666,7 +2666,7 @@ function renderMap(data){
       L.DomUtil.empty(legendsContent);
       Object.keys(data.storeItems).forEach(function(items){
         listLegend(legendsContent,items,"Color");
-        if(items=="markers"){
+        if(items=="markers" && data.options.markerShape!=="-markerShape-"){
           listLegend(legendsContent,items,"Shape");
         }
       })
@@ -4054,6 +4054,11 @@ function addVisualSelector(sel,items,visual,applyVisual){
     if(visual=="Size"){
       options = options.filter(function(d){
         return getDFcolumnType(items,d) == "number";
+      });
+    }
+    if(visual=="Shape"){
+      options = options.filter(function(d){
+        return getDFcolumnType(items,d) != "number";
       });
     }
     options = options.map(function(d){ return [d,d]; });

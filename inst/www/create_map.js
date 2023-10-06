@@ -2492,7 +2492,7 @@ function renderMap(data){
           map.setView(event.target.getLatLng());
         }
         if(data.options.markerInfo){
-          displayInfo(attr[data.options.markerInfo],item.color);
+          displayInfo(attr[data.options.markerInfo],item.color,item.image);
         }
         if(event.originalEvent.ctrlKey || event.originalEvent.metaKey){
           item._selected = !item._selected;
@@ -2607,7 +2607,7 @@ function renderMap(data){
         if(template.style.width){
           options.maxWidth = parseInt(template.style.width);
         }
-        templateInPopup(template,item.color);
+        templateInPopup(template,item);
       }
       if(popup.childNodes==1){
         popup = childNodes[0];
@@ -3410,15 +3410,15 @@ function renderMap(data){
     return false;
   }
 
-  function displayInfo(info,color){
+  function displayInfo(info,color,image){
     if(data.options.infoFrame=="left"){
       if(description){
         descriptionContent(info);
-        checkTemplateInDescription(color);
+        checkTemplateInDescription(color,image);
       }
     }else{
       infoPanel.changeContent(info);
-      checkTemplateInInfoPanel(color);
+      checkTemplateInInfoPanel(color,image);
     }
   }
 
@@ -3435,7 +3435,7 @@ function renderMap(data){
     }
   }
 
-  function checkTemplateInDescription(color){
+  function checkTemplateInDescription(color,image){
     var content = document.querySelector("#descriptionWrapper > .description-content");
     if(content){
       var template = content.querySelector(":scope > .info-template, :scope > .panel-template");
@@ -3460,11 +3460,17 @@ function renderMap(data){
             });
           }
         }
+        if(image){
+          var autoimg = template.querySelector("img[src=_auto_]");
+          if(autoimg){
+            autoimg.setAttribute("src",image);
+          }
+        }
       }
     }
   }
 
-  function checkTemplateInInfoPanel(color){
+  function checkTemplateInInfoPanel(color,image){
     var content = document.querySelector("body > .infopanel > .panel-content > div");
     if(content){
       var template = content.querySelector(":scope > .info-template, :scope > .panel-template");
@@ -3494,15 +3500,21 @@ function renderMap(data){
             }
           }
         }
+        if(image){
+          var autoimg = template.querySelector("img[src=_auto_]");
+          if(autoimg){
+            autoimg.setAttribute("src",image);
+          }
+        }
       }
     }
   }
 
-  function templateInPopup(template,color){
+  function templateInPopup(template,item){
     if(template){
         var autocolor = template.querySelector(".auto-color");
         if(autocolor){
-          color = color ? color : "#cbdefb";
+          var color = item.color ? item.color : "#cbdefb";
           autocolor.style.backgroundColor = color;
           autocolor.style.color = d3.hsl(color).l > 0.75 ? "#000000" : "#ffffff";
         }
@@ -3526,6 +3538,12 @@ function renderMap(data){
                 frameInDescription();
               });
             }
+          }
+        }
+        if(item.image){
+          var autoimg = template.querySelector("img[src=_auto_]");
+          if(autoimg){
+            autoimg.setAttribute("src",item.image);
           }
         }
     }

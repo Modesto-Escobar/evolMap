@@ -1182,8 +1182,14 @@ img.leaflet-marker-icon.low-opacity {
   font-size: 3.2em;
   text-shadow: 1px 1px 5px #ffffff;
   color: #000000;
-  pointer-events: none;
   font-weight: bold;
+}
+.main-date-viewer > .main-date-prev,
+.main-date-viewer > .main-date-next {
+  cursor: pointer;
+}
+.main-date-viewer > .main-date-text {
+  pointer-events: none;
 }
 .maximize-table > .main-date-viewer {
   text-shadow: none;

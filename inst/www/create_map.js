@@ -10,7 +10,7 @@ window.onload = function(){
 }
 
 function renderMap(data){
-  var zoomstep = 0.25,
+  var zoomstep = data.options.zoomstep,
       panstep = 25;
 
   document.body.style.fontSize = "10px";
@@ -1067,8 +1067,12 @@ function renderMap(data){
     });
 
     var dateDiv = L.DomUtil.create('div','main-date-viewer',mapWrapper),
-        dateDivSpan = document.createElement("span");
-    dateDiv.appendChild(dateDivSpan);
+        dateDivPrev = L.DomUtil.create('span','main-date-prev',dateDiv),
+        dateDivSpan = L.DomUtil.create('span','main-date-text',dateDiv),
+        dateDivNext = L.DomUtil.create('span','main-date-next',dateDiv);
+
+    dateDivPrev.innerHTML = "&#129168;&nbsp;";
+    dateDivNext.innerHTML = "&nbsp;&#129170;";
 
     var dateSpan = L.DomUtil.create('span','date-viewer');
     var dateInput = L.DomUtil.create('input','date-input');
@@ -1081,16 +1085,18 @@ function renderMap(data){
 
         panelStopPropagation(el);
 
-        var prev = L.DomUtil.create('a','leaflet-control-time-control time-control-prev',el);
+        var prev = L.DomUtil.create('a','leaflet-control-time-control time-control-prev',el),
+            fnPrev = function(event){
+              event.preventDefault();
+              if(isRunning()){
+                pause();
+              }
+              loadPrevFrame();
+            };
         prev.href = "#";
         prev.appendChild(getSVG('prev'));
-        prev.addEventListener("click",function(event){
-          event.preventDefault();
-          if(isRunning()){
-            pause();
-          }
-          loadPrevFrame();
-        });
+        prev.addEventListener("click",fnPrev);
+        document.querySelector(".main-date-viewer > .main-date-prev").addEventListener("click",fnPrev);
 
         var loopButton = L.DomUtil.create('a','leaflet-control-time-control time-control-loop',el);
         loopButton.href = "#";
@@ -1142,16 +1148,18 @@ function renderMap(data){
           }
         });
 
-        var next = L.DomUtil.create('a','leaflet-control-time-control time-control-next',el);
+        var next = L.DomUtil.create('a','leaflet-control-time-control time-control-next',el),
+            fnNext = function(event){
+              event.preventDefault();
+              if(isRunning()){
+                pause();
+              }
+              loadNextFrame();
+            };
         next.href = "#";
         next.appendChild(getSVG('next'));
-        next.addEventListener("click",function(event){
-          event.preventDefault();
-          if(isRunning()){
-            pause();
-          }
-          loadNextFrame();
-        });
+        next.addEventListener("click",fnNext);
+        document.querySelector(".main-date-viewer > .main-date-next").addEventListener("click",fnNext);
 
         var date = L.DomUtil.create('div','leaflet-control-time-control time-control-date',el);
         date.style.width = "150px";
@@ -2489,7 +2497,13 @@ function renderMap(data){
       item.marker.on("click",function(event){
         item.marker.openPopup();
         if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-          map.setView(event.target.getLatLng());
+          if(item.marker.getPopup()){
+            var point = map.project(event.target.getLatLng());
+            point.y = point.y - window.innerHeight/4;
+            map.setView(map.unproject(point));
+          }else{
+            map.setView(event.target.getLatLng());
+          }
         }
         if(data.options.markerInfo){
           displayInfo(attr[data.options.markerInfo],item.color,item.image);
@@ -3862,6 +3876,10 @@ function InfoPanel(){
   this.panel.appendChild(this.panelContent);
   this.panelContent.appendChild(this.panelContentDiv);
   document.body.appendChild(this.panel);
+
+  if(data.options.rightFrameWidth){
+    panel.style.left = (100 - data.options.rightFrameWidth) + "%";
+  }
 
   dragElementX(this.dragbar,function(pos){
     // panel margin and dragbar width offset

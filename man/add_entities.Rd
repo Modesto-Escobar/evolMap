@@ -11,7 +11,7 @@ Object of class \code{evolMap}.
 \usage{
 add_entities(map, entities, attributes = NULL, name = NULL,
   label = NULL, color = NULL, text = NULL,
-  info = NULL, infoFrame = c("right","left"),
+  info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL,
   start = NULL, end = NULL, period = NULL, opacity = 0.2)
 }
 \arguments{
@@ -24,6 +24,7 @@ add_entities(map, entities, attributes = NULL, name = NULL,
 \item{text}{name of the column in the entities or attributes data frame with texts in the entities or attributes data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the data matrix.}
 \item{infoFrame}{Panel (right or left) where the information is to be displayed. The left panel is only available if a description is provided with \code{add_description}.}
+\item{rightFrameWidth}{a percentage indicating the width for the right information panel.}
 \item{start}{name of the column with the start time of a period in the entities or attributes data frame.}
 \item{end}{name of the column with the end time of a period in the entities or attributes data frame.}
 \item{period}{name of the column with the period name in the entities or attributes data frame.}

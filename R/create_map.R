@@ -1,4 +1,4 @@
-create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
 
   object <- list(options=list())
 
@@ -22,6 +22,15 @@ create_map <- function(center = NULL, zoom = NULL, provider = "OpenStreetMap", m
       warning("zoom: must be a number greater than or equal to 0")
     }
     object$options$zoom <- 3
+  }
+
+  if(is.numeric(zoomStep) && zoomStep>0){
+    object$options$zoomstep <- zoomStep
+  }else{
+    if(!is.null(zoomStep)){
+      warning("zoomStep: must be a number greater than 0")
+    }
+    object$options$zoomstep <- 0.25
   }
 
 providers <- list_providers()
@@ -65,8 +74,20 @@ setInfoFrame <- function(map,infoFrame){
   return(map)
 }
 
+setRightFrameWidth <- function(map,width){
+  map$options[["rightFrameWidth"]] <- NULL
+  if (!is.null(width)){
+    if(is.numeric(width) && width>=0 && width<=100){
+      map$options[["rightFrameWidth"]] <- width
+    }else{
+      warning("width: not a valid percentage.")
+    }
+  }
+  return(map)
+}
+
 add_markers <- function(map, data, latitude = NULL, longitude = NULL,
-  name = NULL, label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"),
+  name = NULL, label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL,
   start = NULL, end = NULL, period = NULL, markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0){
 
   if(!inherits(map, "evolMap")){
@@ -151,6 +172,7 @@ if(!is.null(info)){
 }
 
 map <- setInfoFrame(map,infoFrame)
+map <- setRightFrameWidth(map,rightFrameWidth)
 
 map$options$markerPeriod <- NULL
 if(!is.null(period)){
@@ -221,7 +243,7 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
   return(map)
 }
 
-add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), start = NULL, end = NULL, period = NULL, opacity = 0.2){
+add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL, start = NULL, end = NULL, period = NULL, opacity = 0.2){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -293,6 +315,7 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
     }
 
     map <- setInfoFrame(map,infoFrame)
+    map <- setRightFrameWidth(map,rightFrameWidth)
 
     map$options$entityName <- name
 

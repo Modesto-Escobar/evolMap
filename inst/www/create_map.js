@@ -271,6 +271,10 @@ function renderMap(data){
     maxBounds: [[-90,-180],[90,180]]
   }).setView(data.options.center, data.options.zoom);
 
+  map.on('movestart',function(){
+    map.closePopup();    
+  });
+
   L.Control.showLocation = L.Control.extend({
       onAdd: function(map) {
         var div = L.DomUtil.create('div', 'leaflet-control-show-location leaflet-control');
@@ -954,6 +958,7 @@ function renderMap(data){
         dateSpan.title = dateSpan.textContent;
         dateDivSpan.textContent = getCurrentPeriod(val);
         updatePeriodDescription(val);
+        updateMainDateViewerNav(val);
       }
     }else{
       var getDivText = function(t,v){ return t; };
@@ -968,6 +973,7 @@ function renderMap(data){
         dateSpan.title = dateSpan.textContent;
         dateDivSpan.textContent = getDivText(dateSpan.textContent,val);
         updatePeriodDescription(val);
+        updateMainDateViewerNav(val);
       }
     }
 
@@ -1091,7 +1097,9 @@ function renderMap(data){
               if(isRunning()){
                 pause();
               }
-              loadPrevFrame();
+              if(current-step>=min || loop){
+                loadPrevFrame();
+              }
             };
         prev.href = "#";
         prev.appendChild(getSVG('prev'));
@@ -1154,7 +1162,9 @@ function renderMap(data){
               if(isRunning()){
                 pause();
               }
-              loadNextFrame();
+              if(current+step<=max || loop){
+                loadNextFrame();
+              }
             };
         next.href = "#";
         next.appendChild(getSVG('next'));
@@ -2489,18 +2499,29 @@ function renderMap(data){
     }
   }
 
+  function updateMainDateViewerNav(val){
+    dateDivPrev.style.visibility = val<=min && !loop ? "hidden" : "visible";
+    dateDivNext.style.visibility = val>=max && !loop ? "hidden" : "visible";
+  }
+
   function updateMarker(item,someselected){
 
     var attr = item.properties;
     if(!item.marker){
       item.marker = new L.Marker();
       item.marker.on("click",function(event){
-        item.marker.openPopup();
         if(!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)){
-          if(item.marker.getPopup()){
+          var popup = item.marker.getPopup();
+          if(popup){
+            var maxBounds = map.options.maxBounds;
+            popup.on("remove",function(){
+              map.setMaxBounds(maxBounds);
+            })
+            map.setMaxBounds(null);
             var point = map.project(event.target.getLatLng());
             point.y = point.y - window.innerHeight/4;
             map.setView(map.unproject(point));
+            item.marker.openPopup();
           }else{
             map.setView(event.target.getLatLng());
           }

@@ -108,6 +108,9 @@ function renderMap(data){
 
       var multiSelect = document.createElement("select");
       sel.appendChild(multiSelect);
+      if(!Array.isArray(data.options.multigraph.names)){
+        data.options.multigraph.names = [data.options.multigraph.names];
+      }
       data.options.multigraph.names.forEach(function(item,i){
         var option = document.createElement("option");
         option.textContent = item;

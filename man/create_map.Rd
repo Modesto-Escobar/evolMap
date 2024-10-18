@@ -10,7 +10,7 @@ Object of class \code{evolMap}.
 
 \usage{
 create_map(center = NULL, zoom = NULL, zoomStep = NULL,
-  provider = "OpenStreetMap", main = NULL, note = NULL,
+  provider = "OpenStreetMap", main = NULL, note = NULL, mode = 1,
   defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca"))
 }
 \arguments{
@@ -20,8 +20,9 @@ create_map(center = NULL, zoom = NULL, zoomStep = NULL,
 \item{provider}{character string with the map provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available map providers.}
 \item{main}{upper title of the graph.}
 \item{note}{text to appear at the bottom of the map.}
+\item{mode}{a number indicating the graphic style. (default: 1)}
 \item{defaultColor}{a character vector giving a valid html color for marker representation.}
-\item{controls}{a numeric vector indicating which controls will be shown. 1 = tools, 2 = buttons, 3 = legends, 4 = search box. NULL hides all controls, negative values deny each control and 0 denies all.}
+\item{controls}{a numeric vector indicating which controls will be shown. 1 = tools (filters in mode=2), 2 = buttons, 3 = legends, 4 = search box. NULL hides all controls, negative values deny each control and 0 denies all.}
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 }
 \author{

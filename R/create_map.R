@@ -1,6 +1,8 @@
-create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, mode = 1, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
 
   object <- list(options=list())
+
+  object$options$mode <- as.numeric(mode)
 
   object$options$autoZoom <- TRUE
 
@@ -479,8 +481,17 @@ map_html <- function(object, directory){
   if(length(object$links)){
     scripts <- c(scripts, "leaflet.curve.js")
   }
-  styles <- c(styles, "styles.css")
-  scripts <- c(scripts, "jszip.min.js","iro.min.js", language, "create_map.js")
+  if(object$options$mode==2){
+    styles <- c(styles, "styles2.css")
+  }else{
+    styles <- c(styles, "styles.css")
+  }
+  scripts <- c(scripts, "jszip.min.js","iro.min.js", language)
+  if(object$options$mode==2){
+    scripts <- c(scripts, "create_map2.js")
+  }else{
+    scripts <- c(scripts, "create_map.js")
+  }
   if(!is.null(object$options$tutorial) && !identical(as.logical(object$options$tutorial),FALSE)){
     scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
     styles <- c(styles,"tutorial.css")

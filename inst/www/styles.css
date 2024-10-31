@@ -1186,7 +1186,21 @@ img.leaflet-marker-icon.low-opacity {
 }
 .main-date-viewer > .main-date-prev,
 .main-date-viewer > .main-date-next {
+  display: inline-block;
+  vertical-align: middle;
+  width: 0; 
+  height: 0; 
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent; 
   cursor: pointer;
+}
+.main-date-viewer > .main-date-next {
+  border-left: 10px solid black;
+  margin-left: 16px;
+}
+.main-date-viewer > .main-date-prev {
+  border-right: 10px solid black;
+  margin-right: 16px;
 }
 .main-date-viewer > .main-date-text {
   pointer-events: none;

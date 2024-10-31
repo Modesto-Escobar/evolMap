@@ -1083,9 +1083,6 @@ function renderMap(data){
         dateDivSpan = L.DomUtil.create('span','main-date-text',dateDiv),
         dateDivNext = L.DomUtil.create('span','main-date-next',dateDiv);
 
-    dateDivPrev.innerHTML = "&#129168;&nbsp;";
-    dateDivNext.innerHTML = "&nbsp;&#129170;";
-
     var dateSpan = L.DomUtil.create('span','date-viewer');
     var dateInput = L.DomUtil.create('input','date-input');
     dateInput.type = "text";

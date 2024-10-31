@@ -167,9 +167,9 @@ padding: 16px 40px;
 
 /* time control */
 .leaflet-touch .leaflet-bar a {
-  width: 48px;
-  height: 48px;
-  line-height: 48px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
   margin-right: 8px;
 }
 
@@ -181,8 +181,8 @@ padding: 16px 40px;
   float: left;
   border-bottom-width: 0px;
   background-color: #ffffff;
-  height: 48px;
-  line-height: 48px;
+  height: 36px;
+  line-height: 36px;
 }
 
 .time-control .leaflet-control-time-control:hover {
@@ -197,8 +197,8 @@ padding: 16px 40px;
 }
 
 .time-control .leaflet-control-time-control svg.icon {
-  width: 24px;
-  height: 24px;
+  width: 12px;
+  height: 12px;
   margin: 12px auto;
   fill: #b55b2b;
 }
@@ -528,8 +528,8 @@ div.infopanel-background > div.infopanel > .panel-content > div {
 .zoom-buttons > button {
   display: block;
   margin: 8px 0;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: #d9d9d9;
   color: #000000;
@@ -541,8 +541,8 @@ div.infopanel-background > div.infopanel > .panel-content > div {
   height: 24px;
   background-color: #000000;
   position: absolute;
-  top: 12px;
-  left: 21px;
+  top: 8px;
+  left: 17px;
 }
 .zoom-buttons > button.zoomout:after,
 .zoom-buttons > button.zoomin:after {
@@ -551,15 +551,15 @@ div.infopanel-background > div.infopanel > .panel-content > div {
   height: 6px;
   background-color: #000000;
   position: absolute;
-  top: 21px;
-  left: 12px;
+  top: 17px;
+  left: 8px;
 }
 .zoom-buttons > button.zoomreset {
   background-color: #b55b2b;
   color: #ffffff;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAxNiAxNiIgd2lkdGg9IjMyIj48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJtOS4xNTA0IDAuMDAzOTA2Yy0wLjUyNjEtMC4wMTY2Ni0xLjA2MzkgMC4wMzc4MS0xLjYwMTYgMC4xNzE4Ny0zLjIwNjEgMC43OTk1NC01LjE3MDUgNC4wNjkzLTQuMzcxMSA3LjI3NTQgMC4xNDQ3IDAuNTgwMSAwLjM3MjcgMS4xMTc2IDAuNjY0MSAxLjYwNzRsLTMuNTIzNCAzLjUyMzRjLTAuNDI1NDggMC40MjU0OC0wLjQyNTQ4IDEuMTA5NyAwIDEuNTM1MmwwLjU2NDQ1IDAuNTY0NDVjMC40MjU0OCAwLjQyNTQ4IDEuMTA5NyAwLjQyNTQ4IDEuNTM1MiAwbDMuNTI3My0zLjUyNzNjMS4zMTI2IDAuNzc4NDggMi45MTY5IDEuMDY0NiA0LjUwNzggMC42Njc5NyAxLjQ2MjYtMC4zNjQ2NyAyLjYxNjgtMS4yODM1IDMuNDE4LTIuNDM1NSAwIDAgMC4yMDkyMy0wLjIzMjQxLTAuMjE2OC0wLjQxNjAyLTAuNDI2LTAuMTgzMy0wLjU0NC0wLjI0My0wLjkwNC0wLjQwMDJzLTAuNTQzIDAuMDg3OS0wLjU0MyAwLjA4NzljLTAuNTU2IDAuNjY5OC0xLjI2NSAxLjIyMTItMi4xOCAxLjQ0ODgtMi4yODAxIDAuNTY5LTQuNTY3OC0wLjgwMzEtNS4xMzY0LTMuMDgzNi0wLjU2ODUtMi4yODAyIDAuODA1Ny00LjU2NjIgMy4wODYtNS4xMzQ3IDEuNDE1My0wLjM1Mjk3IDIuODA3IDAuMDYzMyAzLjgwNjYgMC45NjQ4NC0wLjcwNjY2IDAuMzMwMDYtMS4yMzQ0IDAuNDI3NzMtMS4yMzQ0IDAuNDI3NzMtMC4wODI1OCAwLjA0OTE5LTAuMTM5MzMgMC4xMjI5Ny0wLjE2OTkyIDAuMjA3MDMtMC4wNDQ0IDAuMTAwNi0wLjAzODk0IDAuMjA0NTIgMC4wMTM2NyAwLjMwMjc0IDAuMDA2MiAwLjAxMzE1IDAuMDA5NyAwLjAyNzgyIDAuMDE3NTggMC4wNDEwMiAwLjAzMDAyIDAuMDQ5NzMgMC4wNzM4MyAwLjA4Nzc3IDAuMTE5MTQgMC4xMTkxNGwtMC4wMDM5IDAuMDAyIDAuMDcwMzEgMC4wNDI5N2MwLjAxMTA2IDAuMDA3NiAwLjAyMDM4IDAuMDE0MjggMC4wMzMyIDAuMDIxNDhsMC4xMDkzOCAwLjA2MDU1IDEuNjczOCAwLjkzMTY0IDAuNTQyOTcgMC4zMDI3MyAwLjIzODI4IDAuMTMyODEgMC44MzM5OCAwLjQ2Mjg5YzAuMzc0NDYgMC4yMDgxOCAwLjY3MzkyIDAuMDI5MyAwLjY2NjAyLTAuMzk4NDRsLTAuMDAyLTAuMjA3MDMtMC4wMDk4LTAuNjQyNTgtMC4wMTE3Mi0wLjcyNjU2LTAuMDM3MTEtMi4zMTI1YzAuMDAxLTAuMDUyOS0wLjAwNi0wLjEwMjItMC4wMTYtMC4xNDY0bC0wLjAwMi0wLjAwMmMtMC4wMDgtMC4wNTExLTAuMDIyLTAuMTAyMS0wLjA1MS0wLjE0ODUtMC4wNzUtMC4xMjY4LTAuMjA5LTAuMTk1NC0wLjM0NS0wLjE5NTMtMC4wMDMzLTAuMDAwMTk4LTAuMDA2NiAwLjAwMDIzMS0wLjAwOTggMC0wLjAyNzk2IDAuMDAwNzItMC4wNTQ1MyAwLjAwMzQtMC4wODIwMyAwLjAwOTgtMC4wMDkxIDAuMDAyMy0wLjAxNTc0IDAuMDAyOS0wLjAyMzQ0IDAuMDA1OS0wLjAzMTEzIDAuMDA4Ny0wLjA2NDgzIDAuMDIxNS0wLjA5Mzc1IDAuMDM5MDYtMC4wMTA3NSAwLjAwNzEtMC4wMjMyOCAwLjAxNzAyLTAuMDM1MTYgMC4wMjczNC0wLjAzMjI5IDAuMDI1MTUtMC4wNjA3MiAwLjA1MjEzLTAuMDgzOTggMC4wODM5OC0wLjAzMzU1IDAuMDM5LTAuMDUwNTUgMC4wNjQyLTAuMDIzNDQgMC4wMzUxNi0wLjAyODg4IDAuMDMwNS0wLjIyOTc2IDAuMjM4NDgtMC41MTc1OCAwLjQ5MDIzLTAuMDI1MDcgMC4wMTkzMy0wLjA0MjMxIDAuMDMwMzctMC4wNjY0MSAwLjA0ODgzLTEuMDc2LTEuMTIzMS0yLjU1My0xLjgxNTItNC4xMzA4LTEuODY1MnoiLz48L3N2Zz4=);
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAxNiAxNiIgd2lkdGg9IjI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJtOS4xNTA0IDAuMDAzOTA2Yy0wLjUyNjEtMC4wMTY2Ni0xLjA2MzkgMC4wMzc4MS0xLjYwMTYgMC4xNzE4Ny0zLjIwNjEgMC43OTk1NC01LjE3MDUgNC4wNjkzLTQuMzcxMSA3LjI3NTQgMC4xNDQ3IDAuNTgwMSAwLjM3MjcgMS4xMTc2IDAuNjY0MSAxLjYwNzRsLTMuNTIzNCAzLjUyMzRjLTAuNDI1NDggMC40MjU0OC0wLjQyNTQ4IDEuMTA5NyAwIDEuNTM1MmwwLjU2NDQ1IDAuNTY0NDVjMC40MjU0OCAwLjQyNTQ4IDEuMTA5NyAwLjQyNTQ4IDEuNTM1MiAwbDMuNTI3My0zLjUyNzNjMS4zMTI2IDAuNzc4NDggMi45MTY5IDEuMDY0NiA0LjUwNzggMC42Njc5NyAxLjQ2MjYtMC4zNjQ2NyAyLjYxNjgtMS4yODM1IDMuNDE4LTIuNDM1NSAwIDAgMC4yMDkyMy0wLjIzMjQxLTAuMjE2OC0wLjQxNjAyLTAuNDI2LTAuMTgzMy0wLjU0NC0wLjI0My0wLjkwNC0wLjQwMDJzLTAuNTQzIDAuMDg3OS0wLjU0MyAwLjA4NzljLTAuNTU2IDAuNjY5OC0xLjI2NSAxLjIyMTItMi4xOCAxLjQ0ODgtMi4yODAxIDAuNTY5LTQuNTY3OC0wLjgwMzEtNS4xMzY0LTMuMDgzNi0wLjU2ODUtMi4yODAyIDAuODA1Ny00LjU2NjIgMy4wODYtNS4xMzQ3IDEuNDE1My0wLjM1Mjk3IDIuODA3IDAuMDYzMyAzLjgwNjYgMC45NjQ4NC0wLjcwNjY2IDAuMzMwMDYtMS4yMzQ0IDAuNDI3NzMtMS4yMzQ0IDAuNDI3NzMtMC4wODI1OCAwLjA0OTE5LTAuMTM5MzMgMC4xMjI5Ny0wLjE2OTkyIDAuMjA3MDMtMC4wNDQ0IDAuMTAwNi0wLjAzODk0IDAuMjA0NTIgMC4wMTM2NyAwLjMwMjc0IDAuMDA2MiAwLjAxMzE1IDAuMDA5NyAwLjAyNzgyIDAuMDE3NTggMC4wNDEwMiAwLjAzMDAyIDAuMDQ5NzMgMC4wNzM4MyAwLjA4Nzc3IDAuMTE5MTQgMC4xMTkxNGwtMC4wMDM5IDAuMDAyIDAuMDcwMzEgMC4wNDI5N2MwLjAxMTA2IDAuMDA3NiAwLjAyMDM4IDAuMDE0MjggMC4wMzMyIDAuMDIxNDhsMC4xMDkzOCAwLjA2MDU1IDEuNjczOCAwLjkzMTY0IDAuNTQyOTcgMC4zMDI3MyAwLjIzODI4IDAuMTMyODEgMC44MzM5OCAwLjQ2Mjg5YzAuMzc0NDYgMC4yMDgxOCAwLjY3MzkyIDAuMDI5MyAwLjY2NjAyLTAuMzk4NDRsLTAuMDAyLTAuMjA3MDMtMC4wMDk4LTAuNjQyNTgtMC4wMTE3Mi0wLjcyNjU2LTAuMDM3MTEtMi4zMTI1YzAuMDAxLTAuMDUyOS0wLjAwNi0wLjEwMjItMC4wMTYtMC4xNDY0bC0wLjAwMi0wLjAwMmMtMC4wMDgtMC4wNTExLTAuMDIyLTAuMTAyMS0wLjA1MS0wLjE0ODUtMC4wNzUtMC4xMjY4LTAuMjA5LTAuMTk1NC0wLjM0NS0wLjE5NTMtMC4wMDMzLTAuMDAwMTk4LTAuMDA2NiAwLjAwMDIzMS0wLjAwOTggMC0wLjAyNzk2IDAuMDAwNzItMC4wNTQ1MyAwLjAwMzQtMC4wODIwMyAwLjAwOTgtMC4wMDkxIDAuMDAyMy0wLjAxNTc0IDAuMDAyOS0wLjAyMzQ0IDAuMDA1OS0wLjAzMTEzIDAuMDA4Ny0wLjA2NDgzIDAuMDIxNS0wLjA5Mzc1IDAuMDM5MDYtMC4wMTA3NSAwLjAwNzEtMC4wMjMyOCAwLjAxNzAyLTAuMDM1MTYgMC4wMjczNC0wLjAzMjI5IDAuMDI1MTUtMC4wNjA3MiAwLjA1MjEzLTAuMDgzOTggMC4wODM5OC0wLjAzMzU1IDAuMDM5LTAuMDUwNTUgMC4wNjQyLTAuMDIzNDQgMC4wMzUxNi0wLjAyODg4IDAuMDMwNS0wLjIyOTc2IDAuMjM4NDgtMC41MTc1OCAwLjQ5MDIzLTAuMDI1MDcgMC4wMTkzMy0wLjA0MjMxIDAuMDMwMzctMC4wNjY0MSAwLjA0ODgzLTEuMDc2LTEuMTIzMS0yLjU1My0xLjgxNTItNC4xMzA4LTEuODY1MnoiLz48L3N2Zz4=);
 }
 
 /* visual selectors */
@@ -1402,8 +1402,20 @@ img.leaflet-marker-icon.low-opacity {
 }
 .main-date-viewer > .main-date-prev,
 .main-date-viewer > .main-date-next {
+  display: inline-block;
+  width: 0; 
+  height: 0; 
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent; 
   cursor: pointer;
-  color: #b55b2b;
+}
+.main-date-viewer > .main-date-next {
+  border-left: 16px solid #b55b2b;
+  margin-left: 16px;
+}
+.main-date-viewer > .main-date-prev {
+  border-right: 16px solid #b55b2b;
+  margin-right: 16px;
 }
 .main-date-viewer > .main-date-text {
   pointer-events: none;

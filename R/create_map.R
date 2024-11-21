@@ -40,6 +40,7 @@ if(provider %in% providers){
   object$options$provider <- provider
 }else{
   object$options$provider <- providers[1]
+  warning("provider: Not supported provider")
 }
 
 if(isColor(defaultColor)){

@@ -144,8 +144,13 @@ if(!is.null(label)){
 
 map$options$markerText <- NULL
 if(!is.null(text)){
-  data[[text]] <- as.character(data[[text]])
-  map$options$markerText <- text
+  if(map$options$mode==2){
+    text <- NULL
+    warning("text: this argument has no effects in mode 2")
+  }else{
+    data[[text]] <- as.character(data[[text]])
+    map$options$markerText <- text
+  }
 }
 
 map$options$markerSize <- NULL
@@ -495,7 +500,6 @@ map_html <- function(object, directory){
   }
   if(!is.null(object$options$tutorial) && !identical(as.logical(object$options$tutorial),FALSE)){
     scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
-    styles <- c(styles,"tutorial.css")
   }
 
   indexfile <- paste0(directory,"/index.html")

@@ -97,7 +97,7 @@ function renderMap(data){
       topbar.appendChild(button);
 
       button.addEventListener("click",function(){
-        window.history.back();
+        window.location.href = "../../index.html";
       })
     }
 
@@ -4947,14 +4947,18 @@ function multiVariableUniqueValues(values){
 }
 
 function intersection(a, b){
+    var aa = a.slice(), bb = b.slice();
+    aa.sort();
+    bb.sort();
+
     var ai=0, bi=0;
     var result = [];
 
-    while( ai < a.length && bi < b.length ){
-       if      (a[ai] < b[bi] ){ ai++; }
-       else if (a[ai] > b[bi] ){ bi++; }
+    while( ai < aa.length && bi < bb.length ){
+       if      (aa[ai] < bb[bi] ){ ai++; }
+       else if (aa[ai] > bb[bi] ){ bi++; }
        else{
-         result.push(a[ai]);
+         result.push(aa[ai]);
          ai++;
          bi++;
        }

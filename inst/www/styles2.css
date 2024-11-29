@@ -1496,3 +1496,123 @@ margin: 5px;
 color: #000000;
 }
 
+/* tutorial */
+div.tutorial {
+  position: absolute;
+  border-radius: 0 0 40px 0;
+  background-color: #ffffff;
+  z-index: 1010;
+  padding: 40px;
+  text-align: center;
+  font-size: 18px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.07);
+}
+div.tutorial p {
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+div.tutorial > .tutorial-content > h3 {
+  font-weight: bold;
+  margin-top: 12px;
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+div.tutorial button.primary {
+  min-width: 60px;
+}
+div.tutorial button.primary.prev {
+  float: left;
+}
+div.tutorial button.primary.next {
+  float: right;
+}
+div.tutorial > .tutorial-content > div.mncars-logo > svg {
+  height: 60px;
+}
+div.tutorial span.highlight {
+  color: #b55b2b;
+}
+div.tutorial p > img {
+  vertical-align: middle;
+}
+
+div.tutorial > .tutorial-content > ul {
+  text-align: left;
+}
+div.tutorial > .tutorial-content > ul.ul-table {
+  text-align: center;
+}
+div.tutorial > .tutorial-content > ul.ul-table > li {
+  display: inline-block;
+  width: 30%;
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+div.tutorial > .tutorial-content > ul.ul-table > li > span {
+  display: block;
+}
+
+div.tutorial-arrow {
+width: 40px;
+height: 60px;
+margin-left: -20px;
+position: absolute;
+display: inline-block;
+z-index: 1011;
+pointer-events: none;
+}
+div.tutorial-arrow:before,
+div.tutorial-arrow:after {
+content: '';
+border-color: transparent;
+border-style: solid;
+position: absolute;
+}
+div.tutorial-arrow:before {
+border: none;
+background-color: #b55b2b;
+height: 80%;
+width: 30%;
+top: 20%;
+left: 35%;
+}
+div.tutorial-arrow:after {
+left: 0;
+top: -35%;
+border-width: 20px 20px;
+border-bottom-color: #b55b2b;
+}
+
+div.tutorial > .img-and-text {
+  text-align: left;
+}
+div.tutorial > .img-and-text > img:first-child {
+  border: solid #b55b2b 4px;
+  width: 180px;
+  float: left;
+  margin-right: 20px
+}
+div.tutorial > .img-and-text:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+div.tutorial-icon {
+  width: 24px;
+  height: 24px;
+  float: right;
+  margin: 0 5px;
+  background-color: #b55b2b;
+  border-radius: 50%;
+  cursor: pointer;
+}
+div.tutorial-icon:after {
+  content: "?";
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 20px;
+  width: 24px;
+  display: inline-block;
+  text-align: center;
+}

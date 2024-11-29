@@ -7,8 +7,8 @@ var tutorial_texts = {
   collectionofelements: 'This is a map that represents some elements.',
   eachfigure: 'Each <span class="highlight">circle</span> represents an element.',
 
-  hoveringthemouse: '<span class="highlight">Hovering the mouse</span> over any figure will open a box with basic information.',
-  whenclicking: 'And <span class="highlight">clicking</span> on the figure will open its Wikipedia page in the box on the right of the screen.',
+  hoveringthemouse: '<span class="highlight">Clicking</span> over any figure will open a box with basic information.',
+  whenclicking: '<span class="highlight">Clicking</span> on the figure will open an information page in a panel',
   
   timecontrol: 'You can change the time that is displayed using these controls.',
 

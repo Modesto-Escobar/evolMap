@@ -80,6 +80,8 @@ function tutorialTour(options){
     .style("width",(dim.width/3-panelOffset)+"px")
 
   steps.push(function(){
+    tutorial.style("top",(dim.height/4)+"px")
+    tutorial.style("left",(dim.width/4)+"px")
     tutorialContent.selectAll("*").remove()
     if(options.tutorial.image){
       tutorialContent.append("img")
@@ -88,25 +90,35 @@ function tutorialTour(options){
     }
     tutorialContent.append("h3").text(tutorial_texts["elementsmap"])
     tutorialContent.append("p").html(tutorial_texts["beforestarting"])
+    tutorialArrow.style("display","none")
   });
 
   if(options.tutorial.description){
     steps.push(function(){
+      tutorial.style("top",(dim.height/4)+"px")
+      tutorial.style("left",(dim.width/4)+"px")
       tutorialContent.selectAll("*").remove()
       tutorialContent.append("p").html(tutorial_texts["mainpage"])
       tutorialContent.append("p").html(options.tutorial.description)
       tutorialContent.append("p").html(tutorial_texts['eachfigure'])
+      tutorialArrow.style("display","none")
     });
   }
 
-  steps.push(function(){
-    tutorial.style("top",(dim.height/4)+"px")
-    tutorial.style("left",(dim.width/4)+"px")
-    tutorialContent.selectAll("*").remove()
-    tutorialContent.append("p").html(tutorial_texts['hoveringthemouse'])
-    tutorialContent.append("p").html(tutorial_texts['whenclicking'])
-    tutorialArrow.style("display","none")
-  });
+  if(options.markerText || options.markerInfo){
+    steps.push(function(){
+      tutorial.style("top",(dim.height/4)+"px")
+      tutorial.style("left",(dim.width/4)+"px")
+      tutorialContent.selectAll("*").remove()
+      if(options.markerText){
+        tutorialContent.append("p").html(tutorial_texts['hoveringthemouse'])
+      }
+      if(options.markerInfo){
+        tutorialContent.append("p").html(tutorial_texts['whenclicking'])
+      }
+      tutorialArrow.style("display","none")
+    });
+  }
 
   var timeNav = body.select(".leaflet-bar.time-control");
   if(!timeNav.empty() && timeNav.node().offsetWidth){
@@ -148,7 +160,6 @@ function tutorialTour(options){
       tutorial.style("top",(searchDim.bottom+30)+"px")
       tutorialContent.selectAll("*").remove()
       tutorialContent.append("p").html(tutorial_texts['tofindaspecificelement'])
-      tutorialContent.append("p").html(tutorial_texts['todomultiplesearches'])
 
       tutorialArrow.style("display",null)
         .style("transform",null)
@@ -215,7 +226,11 @@ function tutorialTour(options){
         ul.append("li").html('<span>'+tutorial_texts["statisticalgraphs"]+'</span><span><img src="'+b64Icons.chart+'"/></span>')
       }
       ul.append("li").html('<span>'+tutorial_texts["informativetables"]+'</span><span><img src="'+b64Icons.table+'"/></span>')
-      tutorial.style("left",30+"px")
+      if(left<dim.width/2){
+        tutorial.style("left",30+"px")
+      }else{
+        tutorial.style("left",(tutorial.node().getBoundingClientRect().width-30)+"px")
+      }
       tutorial.style("top",(top-tutorial.node().getBoundingClientRect().height-30)+"px")
 
       tutorialArrow.style("display",null)

@@ -155,6 +155,12 @@ function tutorialTour(options){
   var searchBox = body.select(".search-wrapper > .search-box");
   if(!searchBox.empty() && searchBox.node().offsetWidth){
     steps.push(function(){
+      if(options.mode==2){
+        var filterpanel = body.select(".filter-panel-wrapper.collapsible-panel.leaflet-control");
+        if(!filterpanel.empty() && !filterpanel.classed("collapse-panel")){
+          filterpanel.select(".highlight-header > .close-button").node().click();
+        }
+      }
       var searchDim = searchBox.node().getBoundingClientRect();
       tutorial.style("left",Math.max(60,searchDim.left)+"px")
       tutorial.style("top",(searchDim.bottom+30)+"px")
@@ -196,7 +202,7 @@ function tutorialTour(options){
     steps.push(function(){
       var legendDim = legendsPanel.node().getBoundingClientRect();
       tutorialContent.selectAll("*").remove()
-      tutorialContent.append("p").html(tutorial_texts['figurescanalsobefiltered'])
+      tutorialContent.append("p").html(tutorial_texts[options.mode==2 ? 'inthelegend' : 'figurescanalsobefiltered'])
       var tutorialDim = tutorial.node().getBoundingClientRect();
       tutorialArrow.style("display",null)
         .style("transform","rotate(90deg)")

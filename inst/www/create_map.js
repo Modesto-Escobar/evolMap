@@ -3516,14 +3516,12 @@ function renderMap(data){
         panelTemplateAutoColor(template,color);
         var links = template.querySelectorAll("a[target=rightframe]");
         if(links.length){
+            var iframe = document.createElement("iframe");
+            iframe.name = "rightframe";
             for(var i=0; i<links.length; i++){
-              links[i].addEventListener("mousedown",function(e){
-                var iframe = document.createElement("iframe");
-                iframe.name = "rightframe";
-                content.appendChild(iframe);
-              });
               links[i].addEventListener("mouseup",function(e){
                 template.style.display = "none";
+                content.appendChild(iframe);
               });
             }
         }

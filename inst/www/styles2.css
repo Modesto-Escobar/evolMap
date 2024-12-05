@@ -116,7 +116,7 @@ button.primary-outline.clear {
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjAzNSAxMC41TDE4LjM3NSAxNC4xNkwxNC43MTUgMTAuNUwxMy4xMjUgMTIuMDlMMTYuNzg1IDE1Ljc1TDEzLjEyNSAxOS40MUwxNC43MTUgMjFMMTguMzc1IDE3LjM0TDIyLjAzNSAyMUwyMy42MjUgMTkuNDFMMTkuOTY1IDE1Ljc1TDIzLjYyNSAxMi4wOUwyMi4wMzUgMTAuNVpNNy41IDMxLjVMOSAzMS41TDkgMzQuNUwxMiAzNC41TDEyIDMxLjVMMjQgMzEuNUwyNCAzNC41TDI3IDM0LjVMMjcgMzEuNUwyOC41IDMxLjVDMzAuMTY1IDMxLjUgMzEuNDg1IDMwLjE1IDMxLjQ4NSAyOC41TDMxLjUgNy41QzMxLjUgNS44NSAzMC4xNjUgNC41IDI4LjUgNC41TDcuNSA0LjVDNS44NSA0LjUgNC41IDUuODUgNC41IDcuNUw0LjUgMjguNUM0LjUgMzAuMTUgNS44NSAzMS41IDcuNSAzMS41Wk03LjUgNy41TDI4LjUgNy41TDI4LjUgMjRMNy41IDI0TDcuNSA3LjVaIiBmaWxsPSIjQjU1QjJCIi8+Cjwvc3ZnPg==);
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==);
 }
 
 #Wrapper {
@@ -332,7 +332,7 @@ div.infopanel-background {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1007;
+  z-index: 1008;
   display: none;
 }
 div.infopanel-background > div.infopanel {
@@ -417,7 +417,7 @@ div.infopanel-background > div.infopanel > .panel-content > div {
   padding-top: 8px;
 }
 .items-nav > ul > li {
-  padding: 16px;
+  padding: 8px 16px;
   cursor: pointer;
   color: #ffffff;
   display: inline-block;
@@ -559,7 +559,8 @@ div.infopanel-background > div.infopanel > .panel-content > div {
   color: #ffffff;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAxNiAxNiIgd2lkdGg9IjI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJtOS4xNTA0IDAuMDAzOTA2Yy0wLjUyNjEtMC4wMTY2Ni0xLjA2MzkgMC4wMzc4MS0xLjYwMTYgMC4xNzE4Ny0zLjIwNjEgMC43OTk1NC01LjE3MDUgNC4wNjkzLTQuMzcxMSA3LjI3NTQgMC4xNDQ3IDAuNTgwMSAwLjM3MjcgMS4xMTc2IDAuNjY0MSAxLjYwNzRsLTMuNTIzNCAzLjUyMzRjLTAuNDI1NDggMC40MjU0OC0wLjQyNTQ4IDEuMTA5NyAwIDEuNTM1MmwwLjU2NDQ1IDAuNTY0NDVjMC40MjU0OCAwLjQyNTQ4IDEuMTA5NyAwLjQyNTQ4IDEuNTM1MiAwbDMuNTI3My0zLjUyNzNjMS4zMTI2IDAuNzc4NDggMi45MTY5IDEuMDY0NiA0LjUwNzggMC42Njc5NyAxLjQ2MjYtMC4zNjQ2NyAyLjYxNjgtMS4yODM1IDMuNDE4LTIuNDM1NSAwIDAgMC4yMDkyMy0wLjIzMjQxLTAuMjE2OC0wLjQxNjAyLTAuNDI2LTAuMTgzMy0wLjU0NC0wLjI0My0wLjkwNC0wLjQwMDJzLTAuNTQzIDAuMDg3OS0wLjU0MyAwLjA4NzljLTAuNTU2IDAuNjY5OC0xLjI2NSAxLjIyMTItMi4xOCAxLjQ0ODgtMi4yODAxIDAuNTY5LTQuNTY3OC0wLjgwMzEtNS4xMzY0LTMuMDgzNi0wLjU2ODUtMi4yODAyIDAuODA1Ny00LjU2NjIgMy4wODYtNS4xMzQ3IDEuNDE1My0wLjM1Mjk3IDIuODA3IDAuMDYzMyAzLjgwNjYgMC45NjQ4NC0wLjcwNjY2IDAuMzMwMDYtMS4yMzQ0IDAuNDI3NzMtMS4yMzQ0IDAuNDI3NzMtMC4wODI1OCAwLjA0OTE5LTAuMTM5MzMgMC4xMjI5Ny0wLjE2OTkyIDAuMjA3MDMtMC4wNDQ0IDAuMTAwNi0wLjAzODk0IDAuMjA0NTIgMC4wMTM2NyAwLjMwMjc0IDAuMDA2MiAwLjAxMzE1IDAuMDA5NyAwLjAyNzgyIDAuMDE3NTggMC4wNDEwMiAwLjAzMDAyIDAuMDQ5NzMgMC4wNzM4MyAwLjA4Nzc3IDAuMTE5MTQgMC4xMTkxNGwtMC4wMDM5IDAuMDAyIDAuMDcwMzEgMC4wNDI5N2MwLjAxMTA2IDAuMDA3NiAwLjAyMDM4IDAuMDE0MjggMC4wMzMyIDAuMDIxNDhsMC4xMDkzOCAwLjA2MDU1IDEuNjczOCAwLjkzMTY0IDAuNTQyOTcgMC4zMDI3MyAwLjIzODI4IDAuMTMyODEgMC44MzM5OCAwLjQ2Mjg5YzAuMzc0NDYgMC4yMDgxOCAwLjY3MzkyIDAuMDI5MyAwLjY2NjAyLTAuMzk4NDRsLTAuMDAyLTAuMjA3MDMtMC4wMDk4LTAuNjQyNTgtMC4wMTE3Mi0wLjcyNjU2LTAuMDM3MTEtMi4zMTI1YzAuMDAxLTAuMDUyOS0wLjAwNi0wLjEwMjItMC4wMTYtMC4xNDY0bC0wLjAwMi0wLjAwMmMtMC4wMDgtMC4wNTExLTAuMDIyLTAuMTAyMS0wLjA1MS0wLjE0ODUtMC4wNzUtMC4xMjY4LTAuMjA5LTAuMTk1NC0wLjM0NS0wLjE5NTMtMC4wMDMzLTAuMDAwMTk4LTAuMDA2NiAwLjAwMDIzMS0wLjAwOTggMC0wLjAyNzk2IDAuMDAwNzItMC4wNTQ1MyAwLjAwMzQtMC4wODIwMyAwLjAwOTgtMC4wMDkxIDAuMDAyMy0wLjAxNTc0IDAuMDAyOS0wLjAyMzQ0IDAuMDA1OS0wLjAzMTEzIDAuMDA4Ny0wLjA2NDgzIDAuMDIxNS0wLjA5Mzc1IDAuMDM5MDYtMC4wMTA3NSAwLjAwNzEtMC4wMjMyOCAwLjAxNzAyLTAuMDM1MTYgMC4wMjczNC0wLjAzMjI5IDAuMDI1MTUtMC4wNjA3MiAwLjA1MjEzLTAuMDgzOTggMC4wODM5OC0wLjAzMzU1IDAuMDM5LTAuMDUwNTUgMC4wNjQyLTAuMDIzNDQgMC4wMzUxNi0wLjAyODg4IDAuMDMwNS0wLjIyOTc2IDAuMjM4NDgtMC41MTc1OCAwLjQ5MDIzLTAuMDI1MDcgMC4wMTkzMy0wLjA0MjMxIDAuMDMwMzctMC4wNjY0MSAwLjA0ODgzLTEuMDc2LTEuMTIzMS0yLjU1My0xLjgxNTItNC4xMzA4LTEuODY1MnoiLz48L3N2Zz4=);
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==);
+  background-size: 24px 24px;
 }
 
 /* visual selectors */
@@ -986,30 +987,6 @@ button.custom-color {
   vertical-align: top;
 }
 
-div.goback {
-  background: #b55b2b;
-  color: #ffffff;
-  cursor: pointer;
-  margin: 0 12px;
-  margin-top: 6px;
-  border-radius: 5px;
-  width: 20px;
-  height: 16px;
-  position: relative;
-}
-div.goback:after {
-  content: '';
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjEyIj48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMjAgMTFINy44M2w1LjU5LTUuNTlMMTIgNGwtOCA4IDggOCAxLjQxLTEuNDFMNy44MyAxM0gyMHYtMnoiLz48L3N2Zz4=);
-  background-position: center;
-  background-repeat: no-repeat;
-  position: absolute;
-  width: 20px;
-  height: 16px;
-}
-div.goback.disabled {
-  display: none;
-}
-
 /* tables */
 table {
   color: #000000;
@@ -1128,7 +1105,7 @@ th {
   position: absolute;
   bottom: 0;
   left: 0;
-  z-index: 999;
+  z-index: 1007;
   display: flex;
   flex-direction: column;
 }
@@ -1137,7 +1114,7 @@ th {
 }
 .tables-section > .tables-section-header {
   position: relative;
-  margin: 0 20px;
+  margin: 0 40px;
 }
 .tables-section > .tables-section-header > .close-button {
   margin: 8px 10px 0 0;
@@ -1161,7 +1138,7 @@ th {
   margin: 0 40px 40px 40px;
 }
 .tables-section > .tables-section-header > .table-title {
-  margin: 20px;
+  margin: 20px 0;
 }
 .tables-section > .tables-section-header > .table-title > span {
   font-size: 22px;
@@ -1187,15 +1164,16 @@ th {
 }
 .frequencies-section > .frequencies-section-header {
   position: relative;
-  margin: 20px;
+  margin: 20px 40px;
 }
 .frequencies-section > .frequencies-container {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
 }
 .frequencies-section > .frequencies-container > .frequency-barplots {
-  padding: 0 20px;
+  padding: 0 40px;
 }
 .frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > h2 {
   margin: 12px 0 6px 0;
@@ -1248,7 +1226,8 @@ th {
     display: inline-block;
     width: 18px;
     height: 10px;
-    background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlMMTIgMTVMNiA5IiBzdHJva2U9IiMyRjdCRUUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4=);
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==);
+    background-size: 18px 18px;
     background-position: center;
     background-repeat: no-repeat;
     pointer-events: none;

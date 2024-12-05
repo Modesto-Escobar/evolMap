@@ -25,6 +25,7 @@ var tutorial_texts = {
   toolsmenu4: '- Los filtros de la información visualizada.',
 
   figurescanalsobefiltered: 'También pueden <span class="highlight">filtrarse</span> los elementos seleccionando una o varias de las categorías de la leyenda para ver en el mapa solo los tipos que interesen.',
+  inthelegend: 'En la <span class="highlight">leyenda</span> pueden cambiarse colores y formas, así como el atributo a mostrar.',
 
   otherfunctions: 'Otras funciones posibles',
   statisticalgraphs: 'Gráficos estadísticos',

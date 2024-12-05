@@ -25,6 +25,7 @@ var tutorial_texts = {
   toolsmenu4: '- The filters of the displayed information.',
 
   figurescanalsobefiltered: 'You can also <span class="highlight">filter</span> items by selecting one or more of the categories in the legend to see only the types of interest on the map.',
+  inthelegend: 'In the <span class="highlight">legend</span> you can change colors and shapes, as well as the attribute to display.',
 
   otherfunctions: 'Other possible functions',
   statisticalgraphs: 'Statistical graphs',

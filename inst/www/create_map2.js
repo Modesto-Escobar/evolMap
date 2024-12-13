@@ -734,7 +734,7 @@ function renderMap(data){
           tabMarkers.setAttribute("tabname","markers");
 
           var markersFilter = L.DomUtil.create('div','items-filter markers-filter',tabMarkers);
-          displayItemFilter(markersFilter,"markers",filter_selected,remove_items_filters,update_items,select_none);
+          displayItemFilter(markersFilter,"markers",filter_selected,remove_items_filters,update_items,select_none,center_selection);
         }
 
         if(tabname=="links"){
@@ -743,7 +743,7 @@ function renderMap(data){
           tabLinks.setAttribute("tabname","links");
 
           var linkFilter = L.DomUtil.create('div','items-filter links-filter',tabLinks);
-          displayItemFilter(linkFilter,"links",filter_selected,remove_items_filters,update_items,select_none);
+          displayItemFilter(linkFilter,"links",filter_selected,remove_items_filters,update_items,select_none,center_selection);
         }
 
         if(tabname=="entities"){
@@ -752,7 +752,7 @@ function renderMap(data){
           tabEntities.setAttribute("tabname","entities");
 
           var entitiesFilter = L.DomUtil.create('div','items-filter entities-filter',tabEntities);
-          displayItemFilter(entitiesFilter,"entities",filter_selected,remove_items_filters,update_items,select_none);
+          displayItemFilter(entitiesFilter,"entities",filter_selected,remove_items_filters,update_items,select_none,center_selection);
         }
         });
 
@@ -967,7 +967,7 @@ function renderMap(data){
       var getDivText = function(t,v){ return t; };
       if(data.periods){
         getDivText = function(text,val){
-          return getCurrentPeriod(val);
+          return getCurrentPeriod(val) + " (" + text + ")";
         }
       }
 
@@ -1512,6 +1512,11 @@ function renderMap(data){
       tbody = false;
 
       var columns = getItemsColumns(items);
+      if(!data.options.showCoords){
+        columns = columns.filter(function(d){
+          return d!=data.options.markerLatitude && d!=data.options.markerLongitude;
+        });
+      }
       var tabletitle = parent.querySelector(".table-title");
       if(tabletitle){
         tabletitle.querySelector("span").textContent = texts[items];
@@ -2335,6 +2340,7 @@ function renderMap(data){
             img.style.float = "right";
             img.addEventListener("click",function(){
               filter_selected();
+              center_selection();
               select_none();
             });
             header.appendChild(img);
@@ -3034,7 +3040,7 @@ function renderMap(data){
     }else if(points.length==1){
       map.setView(points[0],7,{animate:false});
     }else if(points.length>1){
-      var bounds = L.polygon(points).getBounds().pad(0.05);
+      var bounds = L.polygon(points).getBounds().pad(0.5);
       map.fitBounds(bounds);
     }
   }
@@ -3896,7 +3902,7 @@ function addVisualSelector(sel,items,visual,applyVisual){
     },data.options[getItemOption(items,visual)]);
 }
 
-function displayItemFilter(div,items,filter_selected,remove_filters,update_items,select_none){
+function displayItemFilter(div,items,filter_selected,remove_filters,update_items,select_none,center_selection){
     var selectChangeFunction = function(value){
       L.DomUtil.empty(valueSelector);
       var values = data.storeItems[items].filter(function(d){ return !d._hidden && !d._outoftime; }).map(function(d){ return d.properties[value]; });
@@ -3985,6 +3991,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
     filter.textContent = texts["filter"];
     filter.addEventListener("click",function(){
       filter_selected(items);
+      center_selection();
       select_none();
     });
 

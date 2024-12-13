@@ -1505,6 +1505,11 @@ function renderMap(data){
       tbody = false;
 
       var columns = getItemsColumns(items);
+      if(!data.options.showCoords){
+        columns = columns.filter(function(d){
+          return d!=data.options.markerLatitude && d!=data.options.markerLongitude;
+        });
+      }
       var tabletitle = parent.querySelector(".table-title");
       if(tabletitle){
         tabletitle.querySelector("span").textContent = texts[items];

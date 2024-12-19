@@ -873,7 +873,10 @@ function renderMap(data){
   // marker Cluster
   if(data.storeItems.markers){
     if(L.hasOwnProperty("markerClusterGroup")){
-      var markers_layer = L.markerClusterGroup();
+      var markers_layer = L.markerClusterGroup({ zoomToBoundsOnClick: false });
+      markers_layer.on('clusterclick', function (e) {
+	map.setView(e.latlng, map.getZoom() + 1.5);
+      });
     }else{
       var markers_layer = L.layerGroup();
     }

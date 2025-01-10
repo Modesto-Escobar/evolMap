@@ -323,6 +323,9 @@ input.slider::-moz-range-thumb {
     border-radius: 50%;
     color: transparent;
 }
+.select-wrapper > select > option{
+    color: black;
+}
 
 /* info panel */
 div.infopanel-background {

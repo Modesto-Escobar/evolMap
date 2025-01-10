@@ -53,7 +53,7 @@ function contrastColor(color){
 }
 
 function renderMap(data){
-  var zoomstep = 0.25,
+  var zoomstep = data.options.zoomstep,
       panstep = 25;
 
   document.body.innerHTML = '<div id="Wrapper"></div>';
@@ -873,10 +873,23 @@ function renderMap(data){
   // marker Cluster
   if(data.storeItems.markers){
     if(L.hasOwnProperty("markerClusterGroup")){
-      var markers_layer = L.markerClusterGroup({ zoomToBoundsOnClick: false });
-      markers_layer.on('clusterclick', function (e) {
-	map.setView(e.latlng, map.getZoom() + 1.5);
+      var markers_layer = L.markerClusterGroup();
+
+      var clickedMarker = "";
+      map.on('zoomend', function() {
+        if(clickedMarker!==""){
+          map.setZoom(map.getZoom()-0.25);
+          clickedMarker = "";
+        }
       });
+
+      markers_layer.on('clusterclick', function (a) {
+        if(a.layer._childCount>0){
+          clusterMarkers = a.layer.getAllChildMarkers();
+          clickedMarker = clusterMarkers[0];
+        }
+      });
+
     }else{
       var markers_layer = L.layerGroup();
     }
@@ -1515,11 +1528,6 @@ function renderMap(data){
       tbody = false;
 
       var columns = getItemsColumns(items);
-      if(!data.options.showCoords){
-        columns = columns.filter(function(d){
-          return d!=data.options.markerLatitude && d!=data.options.markerLongitude;
-        });
-      }
       var tabletitle = parent.querySelector(".table-title");
       if(tabletitle){
         tabletitle.querySelector("span").textContent = texts[items];
@@ -4756,6 +4764,12 @@ function getItemsColumns(items){
           return false;
         }
         if(items=="markers" && d==data.options.markerInfo){
+          return false;
+        }
+        if(items=="entities" && d==data.options.entityInfo){
+          return false;
+        }
+        if(!data.options.showCoords && (d==data.options.markerLatitude || d==data.options.markerLongitude)){
           return false;
         }
         if(d.charAt(0)!="_"){

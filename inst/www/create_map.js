@@ -1505,11 +1505,6 @@ function renderMap(data){
       tbody = false;
 
       var columns = getItemsColumns(items);
-      if(!data.options.showCoords){
-        columns = columns.filter(function(d){
-          return d!=data.options.markerLatitude && d!=data.options.markerLongitude;
-        });
-      }
       var tabletitle = parent.querySelector(".table-title");
       if(tabletitle){
         tabletitle.querySelector("span").textContent = texts[items];
@@ -4900,6 +4895,15 @@ function getItemsColumns(items){
           return false;
         }
         if(items=="markers" && d==data.options.markerText){
+          return false;
+        }
+        if(items=="entities" && d==data.options.entityInfo){
+          return false;
+        }
+        if(items=="entities" && d==data.options.entityText){
+          return false;
+        }
+        if(!data.options.showCoords && (d==data.options.markerLatitude || d==data.options.markerLongitude)){
           return false;
         }
         if(d.charAt(0)!="_"){

@@ -37,7 +37,7 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
 \item{roundedIcons}{display markers with rounded borders.}
 \item{jitteredPoints}{add an amount of noise to markers to avoid overlapping.}
-\item{coords}{should coordinates (latitude and longitude) must be shown in the table? (FALSE by default)}
+\item{coords}{should coordinates (latitude and longitude) must be shown in the table and filters? (FALSE by default)}
 }
 \author{
 Modesto Escobar \email{modesto@usal.es}, Department of Sociology and Communication, University of Salamanca, Carlos Prieto \email{cprietos@usal.es}, and  David Barrios \email{metal@usal.es}, Bioinformatics Service, University of Salamanca.

@@ -490,6 +490,9 @@ map_html <- function(object, directory){
     styles <- c(styles, "MarkerCluster.css", "MarkerCluster.Default.css")
     scripts <- c(scripts, "leaflet.markercluster.js")
   }
+  if(length(object$minicharts)){
+    scripts <- c(scripts, "leaflet.minichart.min.js")
+  }
   if(length(object$links)){
     scripts <- c(scripts, "leaflet.curve.js")
   }
@@ -556,6 +559,11 @@ map_html <- function(object, directory){
   #periods
   if(length(object$periods)){
     data$periods <- DFdecompose(object$periods)
+  }
+
+  #minicharts
+  if(length(object$minicharts)){
+    data$minicharts <- DFdecompose(object$minicharts)
   }
 
   json <- toJSON(data,na='null',auto_unbox=TRUE)

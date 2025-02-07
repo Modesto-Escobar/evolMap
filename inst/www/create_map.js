@@ -538,6 +538,48 @@ function renderMap(data){
     var links_layer = L.layerGroup();
   }
 
+  // minicharts
+  var minicharts = false;
+  if(data.hasOwnProperty("minicharts")){
+    var types = data.minicharts.columns.filter(function(d){
+        return d!="_lat" && d!="_lng";
+      });
+    var chartColor = d3.scaleOrdinal()
+      .domain(types)
+      .range(data.colors.categoryColors)
+
+    minicharts = [];
+
+    for(var i = 0; i<data.minicharts.data[0].length; i++){
+      var item = {};
+
+      item.properties = {};
+
+      data.minicharts.columns.forEach(function(k,j){
+        item.properties[k] = data.minicharts.data[j][i];
+      });
+
+      minicharts.push(item);
+    }
+
+    function updateChart(item){
+      var values = types.map(function(d){
+        return item.properties[d];
+      });
+      var colors = types.map(function(d){
+        return chartColor(d);
+      });
+      var size = data.options.minichartsSize;
+      item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, color: colors});
+    }
+
+    if(L.hasOwnProperty("markerClusterGroup")){
+      var minicharts_layer = L.markerClusterGroup();
+    }else{
+      var minicharts_layer = L.layerGroup();
+    }
+  }
+
   // panel buttons
   L.Control.buttonsPanel = L.Control.extend({
       onAdd: function(map) {
@@ -1054,6 +1096,19 @@ function renderMap(data){
             });
           }
 
+          if(minicharts){
+            minicharts.forEach(function(item){
+              updateChart(item);
+              if(item.chart){
+                if(!item._hidden){
+                  item.chart.addTo(minicharts_layer);
+                }else{
+                  item.chart.removeFrom(minicharts_layer);
+                }
+              }
+            });
+          }
+
           update_entities_style();
           update_tools();
           update_legends();
@@ -1370,6 +1425,19 @@ function renderMap(data){
         });
       }
 
+      if(minicharts){
+        minicharts.forEach(function(item){
+          updateChart(item);
+          if(item.chart){
+            if(!item._hidden){
+              item.chart.addTo(minicharts_layer);
+            }else{
+              item.chart.removeFrom(minicharts_layer);
+            }
+          }
+        });
+      }
+
       update_entities_style();
       update_tools();
       update_legends();
@@ -1387,6 +1455,9 @@ function renderMap(data){
   }
   if(data.storeItems.markers){
     map.addLayer(markers_layer);
+  }
+  if(minicharts){
+    map.addLayer(minicharts_layer);
   }
 
   // display controls
@@ -2702,6 +2773,7 @@ function renderMap(data){
 
       var legendsContent = legendsPanel.getElementsByClassName("legends-content")[0];
       L.DomUtil.empty(legendsContent);
+      chartLegend(legendsContent);
       Object.keys(data.storeItems).forEach(function(items){
         listLegend(legendsContent,items,"Color");
         if(items=="markers" && data.options.markerShape!=="-markerShape-"){
@@ -2725,6 +2797,24 @@ function renderMap(data){
         filterButton.classList[checked && (allboxes!=checked) ? "remove" : "add"]("disabled");
       }
       legendsPanel.parentNode.style.display = legendsContent.childNodes.length ? null : "none";
+    }
+
+    function chartLegend(container){
+      if(minicharts){
+        var legend = L.DomUtil.create('div','legend',container);
+        var legendTitle = L.DomUtil.create('div','legend-title',legend);
+        legendTitle.textContent = texts["Color"]+" (minicharts)";
+        L.DomUtil.create('div','legend-separator',legend);
+        chartColor.domain().forEach(function(d){
+                var legendItem = L.DomUtil.create('div','legend-item',legend);
+                var bullet = L.DomUtil.create('div','legend-bullet',legendItem);
+                var color = "#000000";
+                var shape = "Circle";
+                color =  chartColor(d);
+                displayBullet(bullet,color,shape);
+                L.DomUtil.create('span','',legendItem).textContent = d;
+        })
+      }
     }
 
     function listLegend(container,items,visual){
@@ -2880,24 +2970,6 @@ function renderMap(data){
         delete data.checkedLegendItems[itemVisual];
       }
 
-      function displayBullet(bullet,color,shape){
-        var w = 16,
-            h = 16,
-            namespace = "http://www.w3.org/2000/svg";
-
-        var svg = document.createElementNS(namespace,"svg");
-        svg.setAttribute("width", w);
-        svg.setAttribute("height", h);
-        var g = document.createElementNS(namespace,"g");
-        g.setAttribute("transform", "translate(" + (w/2) + "," + (h/2) + ")");
-        svg.appendChild(g);
-        var path = document.createElementNS(namespace,"path");
-        path.setAttribute("d",d3.symbol(d3["symbol"+shape])());
-        path.setAttribute("fill",color);
-        g.appendChild(path);
-        bullet.appendChild(svg);
-      }
-
       function displayLegendHeader(container,items,visual,column){
             var legend = L.DomUtil.create('div','legend',container);
             var legendTitle = L.DomUtil.create('div','legend-title',legend);
@@ -2938,6 +3010,25 @@ function renderMap(data){
             L.DomUtil.create('div','legend-separator',legend);
             return legend;
       }
+    }
+
+    function displayBullet(bullet,color,shape){
+        var w = 16,
+            h = 16,
+
+            namespace = "http://www.w3.org/2000/svg";
+
+        var svg = document.createElementNS(namespace,"svg");
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        var g = document.createElementNS(namespace,"g");
+        g.setAttribute("transform", "translate(" + (w/2) + "," + (h/2) + ")");
+        svg.appendChild(g);
+        var path = document.createElementNS(namespace,"path");
+        path.setAttribute("d",d3.symbol(d3["symbol"+shape])());
+        path.setAttribute("fill",color);
+        g.appendChild(path);
+        bullet.appendChild(svg);
     }
   }
 

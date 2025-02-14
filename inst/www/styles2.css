@@ -453,9 +453,9 @@ div.infopanel-background > div.infopanel:hover > button.left2-button {
   background-color: #ffffff;
 }
 
-.items-nav > ul {
+.tables-section > .tables-section-header > .items-nav > ul {
   display: block;
-  padding-top: 8px;
+  padding: 8px 0;
 }
 .items-nav > ul > li {
   padding: 8px 16px;
@@ -1179,12 +1179,16 @@ th {
   margin: 0 40px 16px 40px;
 }
 .tables-section > .tables-section-header > .table-title {
-  margin: 20px 0;
+  margin: 8px 0 16px 0;
 }
 .tables-section > .tables-section-header > .table-title > span {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 10px;
+}
+.tables-section > .tables-section-header > .table-title > input[type=text] {
+  height: 32px;
+  padding: 2px 8px;
 }
 
 .maximize-table > .leaflet-container > .leaflet-control-container > div > .leaflet-control:not(.time-control) {

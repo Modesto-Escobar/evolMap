@@ -304,6 +304,8 @@ function renderMap(data){
 
   map.attributionControl.setPosition('bottomleft');
 
+  var n_markers = false;
+
   var showLocation = L.DomUtil.create('div', 'show-location',mapWrapper);
   panelStopPropagation(showLocation);
 
@@ -313,7 +315,7 @@ function renderMap(data){
   function writeLocation(){
     var loc = map.getCenter(),
         zoom = map.getZoom();
-    showLocation.textContent = "@"+loc.lat.toFixed(4)+","+loc.lng.toFixed(4)+","+zoom+"z";
+    showLocation.textContent = (n_markers===false?"":"n="+n_markers+" ")+"@"+loc.lat.toFixed(4)+","+loc.lng.toFixed(4)+","+zoom+"z";
   }
 
   // zoom buttons
@@ -1135,6 +1137,7 @@ function renderMap(data){
           update_entities_style();
           update_tools();
           update_legends();
+          update_nmarkers();
           show_tables();
           show_frequencies();
 
@@ -1463,6 +1466,7 @@ function renderMap(data){
       update_entities_style();
       update_tools();
       update_legends();
+      update_nmarkers();
       show_tables();
       show_frequencies();
     }
@@ -1607,16 +1611,10 @@ function renderMap(data){
 
       var columns = getItemsColumns(items);
       var tabletitle = parent.querySelector(".table-title");
-      if(tabletitle){
-        tabletitle.querySelector("span").textContent = texts[items];
-      }else{
+      if(!tabletitle){
         tabletitle = document.createElement("div");
         tabletitle.classList.add("table-title");
         tablesSectionHeader.appendChild(tabletitle);
-
-        var span = document.createElement("span");
-        span.textContent = texts[items];
-        tabletitle.appendChild(span);
 
         var xlsxButton = document.createElement("img");
         xlsxButton.setAttribute("src", b64Icons.xlsx);
@@ -2466,7 +2464,7 @@ function renderMap(data){
       })
       ul.childNodes[0].classList.add("active");
       if(list.length<2){
-        itemsNav.style.visibility = "hidden";
+        itemsNav.style.display = "none";
       }
   }
 
@@ -2772,6 +2770,12 @@ function renderMap(data){
       var icon = L.customIcon(options);
       item.marker.setIcon(icon);
     }
+  }
+
+  function update_nmarkers(){
+    n_markers = data.storeItems && data.storeItems.markers ? data.storeItems.markers.filter(function(d){
+      return !d._hidden && !d._outoftime;
+    }).length : false;
   }
 
   function update_legends(){

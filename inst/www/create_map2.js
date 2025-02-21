@@ -1655,7 +1655,7 @@ function renderMap(data){
         var matchedButton = document.createElement("button");
         matchedButton.classList.add("table-select");
         matchedButton.classList.add("primary");
-        matchedButton.textContent = texts["matchedintable"];
+        matchedButton.textContent = texts["select"];
         matchedButton.style.marginLeft = "14px";
         matchedButton.addEventListener("click",function(){
           onlyselectedCheck.classList.add("checked");
@@ -3196,7 +3196,6 @@ function renderMap(data){
     data.storeItems[items].forEach(function(item){
       delete item._selected;
       if(item._table_selection){
-        delete item._table_selection;
         item._selected = true;
       }
     });
@@ -3462,17 +3461,12 @@ function renderMap(data){
     return false;
   }
 
-  function displayInfo(items,column,index){
-    var infodata = data.storeItems[items].map(function(d){
-          return d.properties[column];
-        }),
-        images = data.storeItems[items].map(function(d){
-          return d.image ? d.image : false;
-        });
+  function displayInfo(items,infocolumn,index){
+    var dataitems = data.storeItems[items];
     if(data.options.infoFrame=="left"){
       if(description){
-        descriptionContent(infodata[index]);
-        checkTemplateInDescription(images[index]);
+        descriptionContent(dataitems[index].properties[infocolumn]);
+        checkTemplateInDescription(dataitems[index].image ? dataitems[index].image : false);
       }
     }else{
       var navigation = data.storeItems[items].filter(function(d){
@@ -3480,7 +3474,15 @@ function renderMap(data){
         }).map(function(d){
           return d["_index"];
         });
-      infoPanel.openNavigation(infodata,index,navigation,checkTemplateInInfoPanel,images);
+      infoPanel.openNavigation(dataitems,index,navigation,infocolumn,checkTemplateInInfoPanel,function(item){
+        select_none();
+        item._selected = true;
+        center_selection();
+        if(L.hasOwnProperty("markerClusterGroup")){
+          open_marker_cluster(item);
+        }
+        update_items();
+      });
     }
   }
 
@@ -3845,12 +3847,19 @@ function InfoPanel(){
 
     this.leftButton.onclick = function(){};
     this.rightButton.onclick = function(){};
+
+  this.location = document.createElement("button");
+  this.location.classList.add("location-button");
+  this.panel.appendChild(this.location);
+  var locationimage = document.createElement("img");
+  locationimage.setAttribute("src",getIconMarkerURI("#000000"));
+  this.location.appendChild(locationimage);
 }
 
 InfoPanel.prototype = {
-  openNavigation: function(data,index,navigation,checkTemplate,images){
+  openNavigation: function(dataitems,index,navigation,infocolumn,checkTemplate,goToMarker){
     if(typeof navigation == "undefined"){
-      navigation = data.map(function(d,i){ return i; });
+      navigation = dataitems.map(function(d,i){ return i; });
     }
 
     openMainFrame(this,index);
@@ -3874,6 +3883,7 @@ InfoPanel.prototype = {
     obj.left2Button.style.display = "";
     obj.leftButton.style.display = "";
     obj.rightButton.style.display = "";
+    obj.location.style.display = "";
 
     if(leftindex!==false){
       obj.leftButton.style.display = "block";
@@ -3889,9 +3899,16 @@ InfoPanel.prototype = {
       };
     }
 
-    obj.panelContentDiv.innerHTML = data[index];
-    checkTemplate(obj,images[index]);
+    obj.panelContentDiv.innerHTML = dataitems[index].properties[infocolumn];
+    checkTemplate(obj,dataitems[index].image);
 
+      if(dataitems[index].marker){
+        obj.location.style.display = "block";
+        obj.location.onclick = function(){
+          goToMarker(dataitems[index]);
+          obj.closeButton.click();
+        };
+      }
     }
   },
 
@@ -3905,6 +3922,7 @@ InfoPanel.prototype = {
     this.left2Button.style.display = "";
     this.leftButton.style.display = "";
     this.rightButton.style.display = "";
+    this.location.style.display = "";
   },
 
   close: function(){
@@ -4133,39 +4151,48 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
 
         if(values.length>20){
           var simpleSearch = L.DomUtil.create('div','simple-search',valueSelector);
-          L.DomUtil.create('input','search-box',simpleSearch)
-            .addEventListener("input",function(){
-              displayTags(this.value);
+          var searchBox = L.DomUtil.create('input','search-box',simpleSearch)
+          searchBox.addEventListener("input",function(){
+              hideTags(this.value);
+            })
+          searchBox.addEventListener("keyup",function(event){
+              L.DomEvent.stopPropagation(event);
             })
           L.DomUtil.create('button','search-icon disabled',simpleSearch)
             .appendChild(getSVG("search"))
         }
 
-        displayTags();
-
-        function displayTags(filter){
-          valueSelector.querySelectorAll(".tag").forEach(function(e){ e.remove(); });
-          values.forEach(function(v){
-            if(filter && !v.toLowerCase().includes(filter.toLowerCase())){
-              return;
-            }
-
+        valueSelector.querySelectorAll(".tag").forEach(function(e){ e.remove(); });
+        values.forEach(function(v){
             var tag = L.DomUtil.create('span','tag'+(allItemsSelectedByValue(items,value,v)?" tag-selected":""),valueSelector);
             tag.textContent = v+" ("+crosstab[v]+")";
             tag.setAttribute("tag-value",v);
             tag.addEventListener("click",function(){
+              valueSelector.querySelectorAll(".tag").forEach(function(e){ e.style.display = ""; });
               tag.classList.toggle("tag-selected");
               var selectedvalues = Array.from(valueSelector.querySelectorAll(".tag.tag-selected")).map(function(d){
                 return d.getAttribute("tag-value");
+
               });
               data.storeItems[items].forEach(function(item){
                 delete item._selected;
                 if(isItemSelected(items,item,value,selectedvalues)){
+
                   item._selected = true;
                 }
               });
               update_items();
             })
+        });
+
+        function hideTags(filter){
+          valueSelector.querySelectorAll(".tag").forEach(function(tag){
+            var v = tag.getAttribute("tag-value");
+            if(filter && !v.toLowerCase().includes(filter.toLowerCase())){
+              tag.style.display = "none";
+              return;
+            }
+            tag.style.display = "";
           });
         }
       }

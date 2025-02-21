@@ -399,6 +399,20 @@ div.infopanel-background > div.infopanel:hover > button.left-button,
 div.infopanel-background > div.infopanel:hover > button.left2-button {
   opacity: 0.75;
 }
+
+div.infopanel-background > div.infopanel > button.location-button {
+position: absolute;
+  left: 0;
+  top: 0;
+  cursor: pointer;
+  border: none;
+  margin: 10px;
+  display: none;
+}
+div.infopanel-background > div.infopanel > button.location-button > img {
+  width: 24px;
+  height: 24px;
+}
 /* info template */
 .info-template {
   display: flex;
@@ -659,6 +673,7 @@ ul.visual-selector > li.active {
   margin-bottom: 16px;
   border-radius: 8px;
   padding: 16px 24px;
+  width: 219px;
 }
 .items-filter > .list-variables > .value-selector > .simple-search > .search-icon {
   border: none;

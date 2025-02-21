@@ -1627,7 +1627,7 @@ function renderMap(data){
         var matchedButton = document.createElement("button");
         matchedButton.classList.add("table-select");
         matchedButton.classList.add("primary");
-        matchedButton.textContent = texts["matchedintable"];
+        matchedButton.textContent = texts["select"];
         matchedButton.style.marginLeft = "14px";
         matchedButton.addEventListener("click",function(){
           onlyselectedCheck.classList.add("checked");

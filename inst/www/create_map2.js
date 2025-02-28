@@ -2776,6 +2776,7 @@ function renderMap(data){
     n_markers = data.storeItems && data.storeItems.markers ? data.storeItems.markers.filter(function(d){
       return !d._hidden && !d._outoftime;
     }).length : false;
+    writeLocation();
   }
 
   function update_legends(){

@@ -2,7 +2,7 @@ var texts = {
 "select": "Seleccionar",
 "selectall": "seleccionar tots",
 "filter": "Filtrar",
-"clear": "Netejar",
+"clear": "Netejar filtres",
 "opacity": "Opacitat",
 "speed": "Velocitat",
 "period": "Període",

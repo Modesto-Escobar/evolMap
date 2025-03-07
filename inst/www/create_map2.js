@@ -11,13 +11,17 @@ window.onload = function(){
   }
 }
 
+var filter_criteria = {
+  selection: new Set(),
+  filter: new Set()
+};
+
 function colorScheme(defaultColor){
     var contrast = contrastColor(defaultColor);
     var style = document.createElement("style");
     style.textContent =
 'button.primary { background-color: '+defaultColor+'; color: '+contrast+'; } '+
 'button.primary-outline { background-color: '+contrast+'; color: '+defaultColor+'; border-color: '+defaultColor+'; } '+
-'button.primary-outline.clear { background-image: url('+b64Icons.resetfilter+'); } '+
 '#Wrapper > .footer-note { background-color: '+defaultColor+'; color: '+contrast+'; } '+
 '.time-control .leaflet-control-time-control svg.icon { fill: '+defaultColor+'; } '+
 'input.slider::-webkit-slider-thumb { background-color: '+defaultColor+'; } '+
@@ -38,6 +42,7 @@ function colorScheme(defaultColor){
 '.frequencies-section > .frequencies-container > .frequency-barplots > .bar-plot > .show-more-less-bars > span:after { background-image: url('+b64Icons.chevron+'); } '+
 '.main-date-viewer > .main-date-next { border-left-color: '+defaultColor+'; } '+
 '.main-date-viewer > .main-date-prev { border-right-color: '+defaultColor+'; } '+
+'.show-panel-button >  span { background-color: '+contrast+'; color: '+defaultColor+'; }' +
 'div.tutorial span.highlight { color: '+defaultColor+'; } '+
 'div.tutorial-arrow:before { background-color: '+defaultColor+'; } '+
 'div.tutorial-arrow:after { border-bottom-color: '+defaultColor+'; } '+
@@ -765,6 +770,8 @@ function renderMap(data){
         showPanelButton.textContent = ''
         var img = L.DomUtil.create('img','show-filters-button',showPanelButton);
         img.setAttribute("src",b64Icons.filterContrast);
+        var showPanelButtonSpan = L.DomUtil.create('span','',showPanelButton);
+        showPanelButtonSpan.style.display = "none";
 
         displayItemNav2(filterPanel,tabnames,function(){
           var name = filterPanel.querySelector(".items-nav2 > ul > li.active").item;
@@ -783,7 +790,7 @@ function renderMap(data){
           tabMarkers.setAttribute("tabname","markers");
 
           var markersFilter = L.DomUtil.create('div','items-filter markers-filter',tabMarkers);
-          displayItemFilter(markersFilter,"markers",filter_selected,remove_items_filters,update_items,select_none,center_selection);
+          displayItemFilter(markersFilter,"markers",filter_selected,remove_filters,update_items,select_none,center_selection);
         }
 
         if(tabname=="links"){
@@ -792,7 +799,7 @@ function renderMap(data){
           tabLinks.setAttribute("tabname","links");
 
           var linkFilter = L.DomUtil.create('div','items-filter links-filter',tabLinks);
-          displayItemFilter(linkFilter,"links",filter_selected,remove_items_filters,update_items,select_none,center_selection);
+          displayItemFilter(linkFilter,"links",filter_selected,remove_filters,update_items,select_none,center_selection);
         }
 
         if(tabname=="entities"){
@@ -801,7 +808,7 @@ function renderMap(data){
           tabEntities.setAttribute("tabname","entities");
 
           var entitiesFilter = L.DomUtil.create('div','items-filter entities-filter',tabEntities);
-          displayItemFilter(entitiesFilter,"entities",filter_selected,remove_items_filters,update_items,select_none,center_selection);
+          displayItemFilter(entitiesFilter,"entities",filter_selected,remove_filters,update_items,select_none,center_selection);
         }
         });
 
@@ -1620,7 +1627,7 @@ function renderMap(data){
         xlsxButton.setAttribute("src", b64Icons.xlsx);
         xlsxButton.setAttribute("alt", "xlsx");
         xlsxButton.style.cursor = "pointer";
-        xlsxButton.style.marginLeft = "14px";
+        xlsxButton.style.marginLeft = "16px";
         xlsxButton.addEventListener("click",function(){
           table2xlsx(items,tbody.data,columns);
         });
@@ -1629,7 +1636,7 @@ function renderMap(data){
         var searchInput = document.createElement("input");
         searchInput.type = "text";
         searchInput.placeholder = texts["searchsomething"];
-        searchInput.style.marginLeft = "14px";
+        searchInput.style.marginLeft = "16px";
         searchInput.addEventListener("keydown",function(event){
           event.stopPropagation();
         });
@@ -1656,7 +1663,7 @@ function renderMap(data){
         matchedButton.classList.add("table-select");
         matchedButton.classList.add("primary");
         matchedButton.textContent = texts["select"];
-        matchedButton.style.marginLeft = "14px";
+        matchedButton.style.marginLeft = "16px";
         matchedButton.addEventListener("click",function(){
           onlyselectedCheck.classList.add("checked");
           selectFromTable(items);
@@ -1667,7 +1674,7 @@ function renderMap(data){
         filterButton.classList.add("table-filter");
         filterButton.classList.add("primary");
         filterButton.textContent = texts["filter"];
-        filterButton.style.marginLeft = "14px";
+        filterButton.style.marginLeft = "16px";
         filterButton.addEventListener("click",function(){
           data.storeItems[items].forEach(function(item){
             if(item._table_selection){
@@ -1686,10 +1693,8 @@ function renderMap(data){
         resetButton.classList.add("primary-outline");
         resetButton.classList.add("clear");
         resetButton.textContent = texts["clear"];
-        resetButton.style.marginLeft = "14px";
-        resetButton.addEventListener("click",function(){
-          remove_filters(items);
-        });
+        resetButton.style.marginLeft = "16px";
+        resetButton.addEventListener("click",remove_filters);
         tabletitle.appendChild(resetButton);
       }
 
@@ -3164,6 +3169,7 @@ function renderMap(data){
         delete item._selected;
       });
     });
+    filter_criteria.selection.clear();
     update_items();
 
     if(infoPanel){
@@ -3190,6 +3196,11 @@ function renderMap(data){
         });
       }
     }
+    filter_criteria.filter.clear();
+    filter_criteria.selection.forEach(function(v){
+      filter_criteria.filter.add(v);
+    });
+    updateFiltersButtonCounter();
     update_items();
   }
 
@@ -3203,15 +3214,6 @@ function renderMap(data){
     update_items();
   }
 
-  function remove_items_filters(items){
-    if(data.storeItems[items]){
-      data.storeItems[items].forEach(function(item){
-        delete item._hidden;
-      });
-      update_items();
-    }
-  }
-
   function remove_filters(){
     Object.keys(data.storeItems).forEach(function(items){
       if(data.storeItems[items]){
@@ -3220,6 +3222,8 @@ function renderMap(data){
         });
       }
     });
+    filter_criteria.filter.clear();
+    updateFiltersButtonCounter();
     update_items();
   }
 
@@ -4112,6 +4116,12 @@ function addVisualSelector(sel,items,visual,applyVisual){
     },data.options[getItemOption(items,visual)]);
 }
 
+function updateFiltersButtonCounter(){
+  var showPanelButtonSpan = document.querySelector(".show-panel-button > span");
+  showPanelButtonSpan.textContent = filter_criteria.filter.size;
+  showPanelButtonSpan.style.display = filter_criteria.filter.size ? "" : "none";
+}
+
 function displayItemFilter(div,items,filter_selected,remove_filters,update_items,select_none,center_selection){
     var selectChangeFunction = function(value){
       L.DomUtil.empty(valueSelector);
@@ -4125,9 +4135,11 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
           .domain(extent)
           .current([mid,mid])
           .callback(function(selectedValues){
+            filter_criteria.selection.delete(value);
             data.storeItems[items].forEach(function(item){
               delete item._selected;
               if(!(item._hidden || item._outoftime) && (item.properties[value]>=selectedValues[0] && item.properties[value]<=selectedValues[1])){
+                filter_criteria.selection.add(value);
                 item._selected = true;
               }
             });
@@ -4175,10 +4187,11 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
                 return d.getAttribute("tag-value");
 
               });
+              filter_criteria.selection.delete(value);
               data.storeItems[items].forEach(function(item){
                 delete item._selected;
                 if(isItemSelected(items,item,value,selectedvalues)){
-
+                  filter_criteria.selection.add(value);
                   item._selected = true;
                 }
               });
@@ -4215,9 +4228,10 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
     });
 
     var clear = L.DomUtil.create('button','primary-outline clear resetfilter-button',filterButtons);
+    clear.style.marginLeft = "16px";
     clear.textContent = texts["clear"];
     clear.addEventListener("click",function(){
-      remove_filters(items);
+      remove_filters();
       select_none();
     });
 
@@ -4931,8 +4945,6 @@ function b64IconsColor(iconColor,iconSize){
   filterContrast: iconFilter(contrast),
 
   removefilter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="'+iconSize+'" viewBox="0 0 24 24" width="'+iconSize+'"><g fill="'+iconColor+'"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="m16.397 15.738-0.70703 0.70703 1.4238 1.4238-1.4238 1.4238 0.70703 0.70703 1.4238-1.4238 1.4238 1.4238 0.70703-0.70703-1.4238-1.4238 1.4238-1.4238-0.70703-0.70703-1.4238 1.4238z"/></g></svg>'),
-
-  resetfilter: "data:image/svg+xml;base64,"+btoa('<svg width="'+iconSize+'" height="'+iconSize+'" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.035 10.5L18.375 14.16L14.715 10.5L13.125 12.09L16.785 15.75L13.125 19.41L14.715 21L18.375 17.34L22.035 21L23.625 19.41L19.965 15.75L23.625 12.09L22.035 10.5ZM7.5 31.5L9 31.5L9 34.5L12 34.5L12 31.5L24 31.5L24 34.5L27 34.5L27 31.5L28.5 31.5C30.165 31.5 31.485 30.15 31.485 28.5L31.5 7.5C31.5 5.85 30.165 4.5 28.5 4.5L7.5 4.5C5.85 4.5 4.5 5.85 4.5 7.5L4.5 28.5C4.5 30.15 5.85 31.5 7.5 31.5ZM7.5 7.5L28.5 7.5L28.5 24L7.5 24L7.5 7.5Z" fill="'+iconColor+'"/></svg>'),
 
   xlsx: "data:image/svg+xml;base64,PHN2ZyB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgaGVpZ2h0PSIxNCIgd2lkdGg9IjE0IiB2ZXJzaW9uPSIxLjEiIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgdmlld0JveD0iMCAwIDE0IDE0Ij4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAtMTAzOC40KSI+CjxnPgo8cmVjdCBoZWlnaHQ9IjEwLjQ3MiIgc3Ryb2tlPSIjMjA3MjQ1IiBzdHJva2Utd2lkdGg9Ii41MDIwMSIgZmlsbD0iI2ZmZiIgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIuNTM2OTYiIHdpZHRoPSI3Ljg2NDYiIHk9IjEwNDAiIHg9IjUuODc4OCIvPgo8ZyBmaWxsPSIjMjA3MjQ1Ij4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSIxMC4xNjUiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0MS4yIiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Mi45IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0NC43IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0Ni40IiB4PSI3LjI0NzgiLz4KPHJlY3Qgc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIHJ5PSIwIiBoZWlnaHQ9IjEuMDYwNyIgd2lkdGg9IjIuMjA5NyIgeT0iMTA0OC4yIiB4PSI3LjI0NzgiLz4KPHBhdGggc3R5bGU9ImNvbG9yLXJlbmRlcmluZzphdXRvO2NvbG9yOiMwMDAwMDA7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsO3NoYXBlLXJlbmRlcmluZzphdXRvO3NvbGlkLWNvbG9yOiMwMDAwMDA7aW1hZ2UtcmVuZGVyaW5nOmF1dG8iIGQ9Im0wIDEwMzkuNyA4LjIzMDEtMS4zN3YxNGwtOC4yMzAxLTEuNHoiLz4KPC9nPgo8L2c+CjxnIGZpbGw9IiNmZmYiIHRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuMzI1OCAuMDYyNSAtMzM5LjcyKSI+CjxwYXRoIGQ9Im00LjQwNiAxMDQ0LjZsMS4zNzUzIDIuMDU2OC0xLjA3MjUtMC4wNjEtMC44OTAzLTEuMzU2LTAuODQ1NjYgMS4yNTc4LTAuOTQxNTYtMC4wNTMgMS4yMTg3LTEuODU0NC0xLjE3My0xLjgwMDggMC45NDE0MS0wLjAzNSAwLjgwMDE0IDEuMjAxMSAwLjgzMDQzLTEuMjYyNiAxLjA3NzUtMC4wNDFzLTEuMzIwNSAxLjk0ODItMS4zMjA1IDEuOTQ4MiIgZmlsbD0iI2ZmZiIvPgo8L2c+CjwvZz4KPC9zdmc+Cg==",
 

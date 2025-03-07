@@ -2,7 +2,7 @@ var texts = {
 "select": "Select",
 "selectall": "Select all",
 "filter": "Filter",
-"clear": "Clear",
+"clear": "Clear filter",
 "opacity": "Opacity",
 "speed": "Speed",
 "period": "Period",

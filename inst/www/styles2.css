@@ -95,28 +95,16 @@ button.primary {
   height: 32px;
 }
 button.primary-outline {
-  background-color: #fff;
+  background-color: #ffffff;
   color: #b55b2b;
   border-color: #b55b2b;
-  padding: 3px 7px;
+  min-width: 120px;
+  height: 32px;
 }
 button.primary.disabled,
 button.primary-outline.disabled {
   opacity: 0.5;
   pointer-events: none;
-}
-button.primary-outline.clear {
-  border: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  color: transparent;
-  width: 36px;
-  height: 36px;
-  border-radius: 0;
-  background-color: transparent;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==);
 }
 
 #Wrapper {
@@ -349,7 +337,11 @@ div.infopanel-background > div.infopanel {
   border-radius: 0 20px 20px 20px;
 }
 div.infopanel-background > div.infopanel > .close-button {
-  margin: 10px;
+  padding: 20px;
+}
+div.infopanel-background > div.infopanel > .close-button:before,
+div.infopanel-background > div.infopanel > .close-button:after {
+  margin: 0 20px;
 }
 div.infopanel-background > div.infopanel > .panel-content {
   padding: 40px 0;
@@ -460,11 +452,12 @@ div.infopanel-background > div.infopanel > button.location-button > img {
   line-height: 64px;
 }
 .highlight-header > .close-button {
-  margin: 22px;
+  padding: 22px;
 }
 .highlight-header > .close-button:before,
 .highlight-header > .close-button:after {
   background-color: #ffffff;
+  margin: 0 22px;
 }
 
 .tables-section > .tables-section-header > .items-nav > ul {
@@ -916,6 +909,22 @@ button.custom-color {
 
 .show-panel-button > .show-filters-button {
   padding: 16px;
+}
+.show-panel-button >  span {
+  border-radius: 50%;
+  background-color: #ffffff;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 8px;
+  display: inline-block;
+  text-align: center;
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+  line-height: 2;
+  animation: myhighlight 1s 10;
+  color: #2f7bee;
 }
 
 /* legend styles */

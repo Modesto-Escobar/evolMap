@@ -167,6 +167,31 @@ background-color: #ffffff;
 padding: 1em;
 }
 
+.footer-note h1 {
+  font-size: 34px;
+  font-weight: bold;
+}
+.footer-note h2 {
+  font-size: 30px;
+  font-weight: bold;
+}
+.footer-note h3 {
+  font-size: 24px;
+  font-weight: bold;
+}
+.footer-note h4 {
+  font-size: 20px;
+  font-weight: bold;
+}
+.footer-note h5 {
+  font-size: 18px;
+  font-weight: bold;
+}
+.footer-note h6 {
+  font-size: 16px;
+  font-weight: bold;
+}
+
 /* time control */
 .leaflet-touch .leaflet-bar a {
   width: 36px;

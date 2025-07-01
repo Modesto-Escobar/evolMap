@@ -629,8 +629,12 @@ print.evolMap <- function(x, ...) {
 
 plot.evolMap <- function(x, directory = NULL, ...){
   if(is.null(directory)){
-    directory <- paste0(tempdir(),"/evolMap")
+    directory <- tempfile()
   }
   map_html(x, directory)
-  browseURL(normalizePath(paste(directory, "index.html", sep = "/")))
+  if(interactive()){
+    browseURL(normalizePath(paste(directory, "index.html", sep = "/")))
+  }else{
+    message(paste0("The graph has been generated in the \"",normalizePath(directory),"\" path."))
+  }
 }

@@ -1015,15 +1015,17 @@ function renderMap(data){
         };
 
     var getSpanText = String;
-    if(data.options.time.type=="POSIXct"){
+    if(data.options.time){
+      if(data.options.time.type=="POSIXct"){
         getSpanText = function(val){
           return (new Date(val*1000)).toUTCString();
         }
-    }else if(data.options.time.type=="Date"){
+      }else if(data.options.time.type=="Date"){
         getSpanText = function(val){
           var d = new Date(val*86400000);
           return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
         }
+      }
     }
 
     var updateShowedDates;

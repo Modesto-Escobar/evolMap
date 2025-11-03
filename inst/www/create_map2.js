@@ -3498,6 +3498,8 @@ function renderMap(data){
     if(content){
       var template = content.querySelector(":scope > .info-template");
       if(template){
+        template.setAttribute("lang",data.options.language);
+        template.style.hyphens = "auto";
         var links = template.querySelectorAll("a[target=mainframe]");
         if(links.length){
           for(var i=0; i<links.length; i++){
@@ -3527,6 +3529,8 @@ function renderMap(data){
     if(content){
       var template = content.querySelector(":scope > .info-template");
       if(template){
+        template.setAttribute("lang",data.options.language);
+        template.style.hyphens = "auto";
         var links = template.querySelectorAll("a[target=mainframe]");
         if(links.length){
             for(var i=0; i<links.length; i++){

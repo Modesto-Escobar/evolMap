@@ -1472,6 +1472,7 @@ img.leaflet-marker-icon.low-opacity {
   text-shadow: none;
   color: #000000;
 }
+.noresults-panel,
 .period-description {
   position: absolute;
   bottom: 0;
@@ -1483,10 +1484,12 @@ img.leaflet-marker-icon.low-opacity {
   font-size: 1em;
   pointer-events: none;
 }
+.noresults-panel > .noresults-popup,
 .period-description > .period-popup {
   display: inline-block;
   position : relative;
 }
+.noresults-panel > .noresults-popup > .noresults-popup-content,
 .period-description > .period-popup > .period-popup-content {
   background-color: #fff;
   border: 1px solid #fff;

@@ -1,7 +1,7 @@
 Package: evolMap
 Type: Package
-Version: 1.3.16
-Date: 2025-11-03
+Version: 1.3.17
+Date: 2025-11-28
 Title: Dynamic and Interactive Maps
 Description: Dynamic and Interactive Maps with R, powered by 'leaflet' <https://leafletjs.com>. 'evolMap' generates a web page with interactive and dynamic maps to which you can add geometric entities (points, lines or colored geographic areas), and/or markers with optional links between them. The dynamic ability of these maps allows their components to evolve over a continuous period of time or by periods.
 License: BSD_2_clause + file LICENSE

@@ -510,7 +510,26 @@ function renderMap(data){
         return chartColor(d);
       });
       var size = data.options.minichartsSize;
-      item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, color: colors});
+      item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, colors: colors, transitionTime:0});
+
+      var max = values.reduce(function(a, b){ return a+b; }, 0),
+          popupContent = values.map(function(d,i){
+            return types[i]+": "+d+" ("+formatter(d/max*100)+"%)";
+          }).join("<br/>");
+      var options = { autoPan: false, closeButton: false };
+      item.chart.bindPopup(popupContent,options);
+      item.chart.on('mouseover', function (e) {
+          this.openPopup();
+      });
+      item.chart.on('mouseout', function (e) {
+          this.closePopup();
+      });
+
+      if(!item._hidden){
+        item.chart.addTo(minicharts_layer);
+      }else{
+        item.chart.removeFrom(minicharts_layer);
+      }
     }
 
     if(L.hasOwnProperty("markerClusterGroup")){
@@ -590,6 +609,7 @@ function renderMap(data){
         searchIcon.appendChild(getSVG("search"));
         searchIcon.addEventListener("click",function(){
           if(searchInput.value!=""){
+            if(some_selected()){
             center_selection();
             searchInput.value = "";
             searchIcon.classList.add("disabled");
@@ -628,6 +648,16 @@ function renderMap(data){
               if(item){
                 displayInfo("entites",data.options.entityInfo,item["_index"]);
               }
+            }
+            }else{
+              var li = document.createElement("li");
+              ul.appendChild(li);
+              var span = document.createElement("span");
+              span.textContent = texts['noresults'];
+              li.appendChild(span);
+              setTimeout(function(){
+                L.DomUtil.empty(ul);
+              },5000);
             }
           }
         });
@@ -1132,14 +1162,7 @@ function renderMap(data){
 
           if(minicharts){
             minicharts.forEach(function(item){
-              updateChart(item);
-              if(item.chart){
-                if(!item._hidden){
-                  item.chart.addTo(minicharts_layer);
-                }else{
-                  item.chart.removeFrom(minicharts_layer);
-                }
-              }
+              updateChart(item,minicharts_layer);
             });
           }
 
@@ -1461,14 +1484,7 @@ function renderMap(data){
 
       if(minicharts){
         minicharts.forEach(function(item){
-          updateChart(item);
-          if(item.chart){
-            if(!item._hidden){
-              item.chart.addTo(minicharts_layer);
-            }else{
-              item.chart.removeFrom(minicharts_layer);
-            }
-          }
+          updateChart(item,minicharts_layer);
         });
       }
 

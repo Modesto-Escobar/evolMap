@@ -562,7 +562,7 @@ function renderMap(data){
       minicharts.push(item);
     }
 
-    function updateChart(item){
+    function updateChart(item,minicharts_layer){
       var values = types.map(function(d){
         return item.properties[d];
       });
@@ -570,7 +570,26 @@ function renderMap(data){
         return chartColor(d);
       });
       var size = data.options.minichartsSize;
-      item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, color: colors});
+      item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, colors: colors, transitionTime:0});
+
+      var max = values.reduce(function(a, b){ return a+b; }, 0),
+          popupContent = values.map(function(d,i){
+            return types[i]+": "+d+" ("+formatter(d/max*100)+"%)";
+          }).join("<br/>");
+      var options = { autoPan: false, closeButton: false };
+      item.chart.bindPopup(popupContent,options);
+      item.chart.on('mouseover', function (e) {
+          this.openPopup();
+      });
+      item.chart.on('mouseout', function (e) {
+          this.closePopup();
+      });
+
+      if(!item._hidden){
+        item.chart.addTo(minicharts_layer);
+      }else{
+        item.chart.removeFrom(minicharts_layer);
+      }
     }
 
     if(L.hasOwnProperty("markerClusterGroup")){
@@ -649,11 +668,22 @@ function renderMap(data){
         searchIcon.appendChild(getSVG("search"));
         searchIcon.addEventListener("click",function(){
           if(searchInput.value!=""){
-            center_selection();
-            open_marker_popup();
-            searchInput.value = "";
-            searchIcon.classList.add("disabled");
-            L.DomUtil.empty(ul);
+            if(some_selected()){
+              center_selection();
+              open_marker_popup();
+              searchInput.value = "";
+              searchIcon.classList.add("disabled");
+              L.DomUtil.empty(ul);
+            }else{
+              var li = document.createElement("li");
+              ul.appendChild(li);
+              var span = document.createElement("span");
+              span.textContent = texts['noresults'];
+              li.appendChild(span);
+              setTimeout(function(){
+                L.DomUtil.empty(ul);
+              },5000);
+            }
           }
         });
 
@@ -1098,14 +1128,7 @@ function renderMap(data){
 
           if(minicharts){
             minicharts.forEach(function(item){
-              updateChart(item);
-              if(item.chart){
-                if(!item._hidden){
-                  item.chart.addTo(minicharts_layer);
-                }else{
-                  item.chart.removeFrom(minicharts_layer);
-                }
-              }
+              updateChart(item,minicharts_layer);
             });
           }
 
@@ -1427,14 +1450,7 @@ function renderMap(data){
 
       if(minicharts){
         minicharts.forEach(function(item){
-          updateChart(item);
-          if(item.chart){
-            if(!item._hidden){
-              item.chart.addTo(minicharts_layer);
-            }else{
-              item.chart.removeFrom(minicharts_layer);
-            }
-          }
+          updateChart(item,minicharts_layer);
         });
       }
 
@@ -2775,7 +2791,9 @@ function renderMap(data){
       L.DomUtil.empty(legendsContent);
       chartLegend(legendsContent);
       Object.keys(data.storeItems).forEach(function(items){
-        listLegend(legendsContent,items,"Color");
+        if(items=="entities" && data.options.entityColor!=="-minichart-color-"){
+          listLegend(legendsContent,items,"Color");
+        }
         if(items=="markers" && data.options.markerShape!=="-markerShape-"){
           listLegend(legendsContent,items,"Shape");
         }

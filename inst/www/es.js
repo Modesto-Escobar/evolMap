@@ -33,5 +33,6 @@ var texts = {
 "none": "nada",
 "default": "por defecto",
 "searchsomething": "Busca algo...",
-"changespeed": "Cambia la velocidad"
+"changespeed": "Cambia la velocidad",
+"noresults": "Sin resultados"
 }

@@ -33,5 +33,6 @@ var texts = {
 "none": "cap",
 "default": "Per defecte",
 "searchsomething": "Busca alguna cosa...",
-"changespeed": "Canvia la velocitat"
+"changespeed": "Canvia la velocitat",
+"noresults": "Sense resultats"
 }

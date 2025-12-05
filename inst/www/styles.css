@@ -373,6 +373,16 @@ div.infopanel > .panel-content > div {
   height: 100%;
 }
 
+.links-2-columns {
+  display: block;
+  width: 100%;
+}
+.links-2-columns > ul {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+}
+
 /* panels */
 .panel-style {
   background-color: #ffffff;
@@ -1435,4 +1445,9 @@ div.tutorial-icon:after {
   width: 24px;
   display: inline-block;
   text-align: center;
+}
+
+table.piedata td:nth-child(3),
+table.piedata td:nth-child(2) {
+  text-align: right;
 }

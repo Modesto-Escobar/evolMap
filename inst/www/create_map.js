@@ -324,7 +324,9 @@ function renderMap(data){
   });
 
   // providers
-  L.tileLayer.provider(data.options.provider,{ noWrap: true }).addTo(map);
+  if(data.options.provider){
+    L.tileLayer.provider(data.options.provider,{ noWrap: true }).addTo(map);
+  }
 
   var attribution = mapid.querySelector(".leaflet-control-attribution");
   attribution.innerHTML =  '<a href="https://CRAN.R-project.org/package=evolMap">evolMap</a> | ' + attribution.innerHTML;
@@ -573,9 +575,9 @@ function renderMap(data){
       item.chart = L.minichart([item.properties["_lat"],item.properties["_lng"]], {data: values, type:"pie", width: size, height: size, colors: colors, transitionTime:0});
 
       var max = values.reduce(function(a, b){ return a+b; }, 0),
-          popupContent = values.map(function(d,i){
-            return types[i]+": "+d+" ("+formatter(d/max*100)+"%)";
-          }).join("<br/>");
+          popupContent = '<table class="piedata">'+values.map(function(d,i){
+            return '<tr><td>'+types[i]+"</td><td>"+d+"</td><td>("+formatter(d/max*100)+"%)</td></tr>";
+          }).join("")+'</table>';
       var options = { autoPan: false, closeButton: false };
       item.chart.bindPopup(popupContent,options);
       item.chart.on('mouseover', function (e) {

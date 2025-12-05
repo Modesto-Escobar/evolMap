@@ -17,7 +17,7 @@ create_map(center = NULL, zoom = NULL, zoomStep = NULL,
 \item{center}{a numeric two size vector length giving latitude and longitude to set the initial view. (default: 0,0)}
 \item{zoom}{a number greater than or equal to 0 to stablish the startet zoom. (default: 3)}
 \item{zoomStep}{a number greater than 0 to determine the zoom step. (default: 0.25)}
-\item{provider}{character string with the map provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available map providers.}
+\item{provider}{character string with the map provider to represent as background, OpenStreetMap by default. See \code{\link{list_providers}} for available map providers. Type 'None' for an empty map.}
 \item{main}{upper title of the graph.}
 \item{note}{text to appear at the bottom of the map.}
 \item{mode}{a number indicating the graphic style. (default: 1)}

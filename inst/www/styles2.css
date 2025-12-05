@@ -429,6 +429,16 @@ div.infopanel-background > div.infopanel > button.location-button > img {
   width: 50%;
 }
 
+.links-2-columns {
+  display: block;
+  width: 100%;
+}
+.links-2-columns > ul {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+}
+
 /* panels */
 .panel-style {
   border: 0 !important;
@@ -1666,4 +1676,9 @@ div.tutorial-icon:after {
   width: 24px;
   display: inline-block;
   text-align: center;
+}
+
+table.piedata td:nth-child(3),
+table.piedata td:nth-child(2) {
+  text-align: right;
 }

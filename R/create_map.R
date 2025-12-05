@@ -38,6 +38,8 @@ create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "
 providers <- list_providers()
 if(provider %in% providers){
   object$options$provider <- provider
+}else if(provider=="None"){
+  object$options$provider <- FALSE
 }else{
   object$options$provider <- providers[1]
   warning("provider: Not supported provider")

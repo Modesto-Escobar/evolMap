@@ -801,7 +801,7 @@ function renderMap(data){
         var showPanelButton = filterPanelWrapper.querySelector(".show-panel-button");
         showPanelButton.textContent = ''
         var img = L.DomUtil.create('img','show-filters-button',showPanelButton);
-        img.setAttribute("src",b64Icons.filterContrast);
+        img.setAttribute("src",b64Icons.menuconfig);
         var showPanelButtonSpan = L.DomUtil.create('span','',showPanelButton);
         showPanelButtonSpan.style.display = "none";
 
@@ -4967,6 +4967,8 @@ function b64IconsColor(iconColor,iconSize){
   filter: iconFilter(iconColor),
 
   filterContrast: iconFilter(contrast),
+
+  menuconfig: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="'+iconSize+'" viewBox="0 0 24 24" width="'+iconSize+'"><path fill="'+contrast+'" d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>'),
 
   removefilter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="'+iconSize+'" viewBox="0 0 24 24" width="'+iconSize+'"><g fill="'+iconColor+'"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="m16.397 15.738-0.70703 0.70703 1.4238 1.4238-1.4238 1.4238 0.70703 0.70703 1.4238-1.4238 1.4238 1.4238 0.70703-0.70703-1.4238-1.4238 1.4238-1.4238-0.70703-0.70703-1.4238 1.4238z"/></g></svg>'),
 

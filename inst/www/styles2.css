@@ -432,6 +432,7 @@ div.infopanel-background > div.infopanel > button.location-button > img {
 .links-2-columns {
   display: block;
   width: 100%;
+  clear: both;
 }
 .links-2-columns > ul {
   display: inline-block;

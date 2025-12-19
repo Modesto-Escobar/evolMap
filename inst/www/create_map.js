@@ -1932,7 +1932,7 @@ function renderMap(data){
     function renderBars(container,items){
       var itemName = getItemOption(items,"Name"),
           itemColor = getItemOption(items,"Color");
-      var columns = getItemsColumns(items),
+      var columns = getItemsColumns(items,true),
           visibleItems = data.storeItems[items].filter(function(item){ return !item._hidden && !item._outoftime; }),
           renderPercentage = data.options.freqMode=="relative" ? "%" : "";
 
@@ -3005,7 +3005,7 @@ function renderMap(data){
               ul.classList.add("visual-selector");
               win.appendChild(ul)
 
-              var options = getItemsColumns(items).map(function(d){ return [d,d]; });
+              var options = getItemsColumns(items,true).map(function(d){ return [d,d]; });
               options.unshift(["_default_","-"+texts.default+"-"])
               options.forEach(function(d){
                 var value = d[0],
@@ -3560,7 +3560,7 @@ function renderMap(data){
   }
 
   function displayInfo(info,color,image){
-    if(data.options.infoFrame=="left"){
+    if(data.options.infoFrame){
       if(description){
         descriptionContent(info);
         checkTemplateInDescription(color,image);
@@ -4010,8 +4010,8 @@ function InfoPanel(){
   this.panelContent.appendChild(this.panelContentDiv);
   document.body.appendChild(this.panel);
 
-  if(data.options.rightFrameWidth){
-    panel.style.left = (100 - data.options.rightFrameWidth) + "%";
+  if(data.options.frameWidth){
+    panel.style.left = (100 - data.options.frameWidth) + "%";
   }
 
   dragElementX(this.dragbar,function(pos){
@@ -4219,7 +4219,7 @@ function addVisualSelector(sel,items,visual,applyVisual){
     var div = L.DomUtil.create('div','',wrapper);
     L.DomUtil.create('span','',div).textContent = texts[visual];
 
-    var options = getItemsColumns(items);
+    var options = getItemsColumns(items,true);
     if(visual=="Size"){
       options = options.filter(function(d){
         return getDFcolumnType(items,d) == "number";
@@ -4291,7 +4291,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
       }
     }
 
-    var columns = getItemsColumns(items);
+    var columns = getItemsColumns(items,true);
     displaySelectWrapper(div,columns,selectChangeFunction,columns[0]);
     var valueSelector = L.DomUtil.create('div','value-selector',div);
 
@@ -4997,7 +4997,7 @@ function getDFcolumnType(items,col){
   return false;
 }
 
-function getItemsColumns(items){
+function getItemsColumns(items,filter){
   return data[items].columns.filter(function(d,i){
         if(items=="markers" && d==data.options.image){
           return false;
@@ -5012,6 +5012,9 @@ function getItemsColumns(items){
           return false;
         }
         if(items=="entities" && d==data.options.entityText){
+          return false;
+        }
+        if(filter && data.options[items+"_noFilterCols"] && data.options[items+"_noFilterCols"].indexOf(d)!=-1){
           return false;
         }
         if(!data.options.showCoords && (d==data.options.markerLatitude || d==data.options.markerLongitude)){

@@ -1,4 +1,4 @@
-create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, mode = 1, defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
+create_map <- function(center = NULL, zoom = NULL, zoomStep = NULL, provider = "OpenStreetMap", main = NULL, note = NULL, mode = 1, frameWidth = NULL , defaultColor = "#2f7bee", controls = 1:4, language = c("en","es","ca")){
 
   object <- list(options=list())
 
@@ -64,37 +64,39 @@ if(isColor(defaultColor)){
     object$options[["note"]] <- as.character(note)
   }
 
+  if(!is.null(frameWidth)){
+    if(is.numeric(frameWidth) && frameWidth>=0 && frameWidth<=100){
+      object$options[["frameWidth"]] <- frameWidth
+    }else{
+      warning("frameWidth: not a valid percentage.")
+    }
+  }
+
   object$options$language <- checkLanguage(language)
 
   return(structure(object, class="evolMap"))
 }
 
-setInfoFrame <- function(map,infoFrame){
-  if(is.character(infoFrame) && (infoFrame[1] %in% c("right","left"))){
-    map$options$infoFrame <- infoFrame[1]
-    if(map$options$infoFrame=="left" && is.null(map$options$description)){
-      warning("infoFrame: you must add a description (with add_description) to use the left panel")
+mgmtNoFilterCols <- function(map,noFilterCols,items){
+    if(!is.null(noFilterCols)){
+      datanames <- colnames(map[[items]])
+      noFilterCols <- as.character(noFilterCols)
+      coldiff <- setdiff(noFilterCols,datanames)
+      if(length(coldiff)){
+        noFilterCols <- intersect(noFilterCols,datanames)
+        warning(paste0("noFilterCols: some columns (",paste0(coldiff,collapse=", "),") mising in ",items," data"))
+      }
+      map$options[[paste0(items,"_noFilterCols")]] <- noFilterCols
     }
-  }
-  return(map)
+    return(map)
 }
 
-setRightFrameWidth <- function(map,width){
-  map$options[["rightFrameWidth"]] <- NULL
-  if (!is.null(width)){
-    if(is.numeric(width) && width>=0 && width<=100){
-      map$options[["rightFrameWidth"]] <- width
-    }else{
-      warning("width: not a valid percentage.")
-    }
-  }
-  return(map)
-}
-
-add_markers <- function(map, data, latitude = NULL, longitude = NULL,
-  name = NULL, label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL,
-  start = NULL, end = NULL, period = NULL, markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0,
-  coords = FALSE){
+add_markers <- function(map, data, latitude = NULL, longitude = NULL, name = NULL,
+  label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL,
+  text = NULL, info = NULL, infoFrame = NULL, rightFrameWidth = NULL,
+  start = NULL, end = NULL, period = NULL,
+  noFilterCols = NULL, markerCluster = FALSE, roundedIcons = TRUE,
+  jitteredPoints = 0, coords = FALSE){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -187,8 +189,12 @@ if(!is.null(info)){
   map$options$markerInfo <- info
 }
 
-map <- setInfoFrame(map,infoFrame)
-map <- setRightFrameWidth(map,rightFrameWidth)
+if(!is.null(infoFrame)){
+  warning("infoFrame: Deprecated. Replaced by argument 'infoFrame' in 'add_description' function.")
+}
+if(!is.null(rightFrameWidth)){
+  warning("rightFrameWidth: Deprecated. Replaced by argument 'frameWidth' in 'create_map' function.")
+}
 
 map$options$markerPeriod <- NULL
 if(!is.null(period)){
@@ -206,10 +212,12 @@ if(!is.null(period)){
   }
   map <- checkTime(map,"markers",start,end)
 
+  map <- mgmtNoFilterCols(map,noFilterCols,"markers")
+
   return(map)
 }
 
-add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period = NULL, curve = TRUE, arrows = FALSE){
+add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period = NULL, noFilterCols = NULL, curve = TRUE, arrows = FALSE){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -256,10 +264,16 @@ add_links <- function(map, links, color = NULL, start = NULL, end = NULL, period
   map <- checkItemValue(map,"links","linkColor",color,"color",isColor,applyCategoryColors,col2hex)
   map <- checkTime(map,"links",start,end)
 
+  map <- mgmtNoFilterCols(map,noFilterCols,"links")
+
   return(map)
 }
 
-add_entities <- function(map, entities, attributes = NULL, name = NULL, label = NULL, color = NULL, text = NULL, info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL, start = NULL, end = NULL, period = NULL, opacity = 0.2){
+add_entities <- function(map, entities, attributes = NULL, name = NULL,
+  label = NULL, color = NULL, text = NULL,
+  info = NULL, infoFrame = NULL, rightFrameWidth = NULL,
+  start = NULL, end = NULL, period = NULL,
+  noFilterCols = NULL, opacity = 0.2){
 
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
@@ -330,8 +344,12 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
       }
     }
 
-    map <- setInfoFrame(map,infoFrame)
-    map <- setRightFrameWidth(map,rightFrameWidth)
+    if(!is.null(infoFrame)){
+      warning("infoFrame: Deprecated. Replaced by argument 'infoFrame' in 'add_description' function.")
+    }
+    if(!is.null(rightFrameWidth)){
+      warning("rightFrameWidth: Deprecated. Replaced by argument 'frameWidth' in 'create_map' function.")
+    }
 
     map$options$entityName <- name
 
@@ -365,6 +383,8 @@ add_entities <- function(map, entities, attributes = NULL, name = NULL, label = 
   }else{
     warning("entities: must be a spatial object")
   }
+
+  map <- mgmtNoFilterCols(map,noFilterCols,"entities")
 
   return(map)
 }
@@ -437,7 +457,7 @@ add_periods <- function(map, periods, name = NULL, start = NULL, end = NULL, lat
   return(map)
 }
 
-add_description <- function(map, content = "", width = NULL){
+add_description <- function(map, content = "", width = NULL, infoFrame = FALSE){
   if(!inherits(map, "evolMap")){
     stop("map: must be an object of class 'evolMap'")
   }
@@ -450,6 +470,11 @@ add_description <- function(map, content = "", width = NULL){
     }else{
       warning("width: not a valid percentage.")
     }
+  }
+
+  map$options$infoFrame <- FALSE
+  if(infoFrame){
+    map$options$infoFrame <- TRUE
   }
 
   return(map)

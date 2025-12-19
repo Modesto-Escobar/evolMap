@@ -1968,7 +1968,7 @@ function renderMap(data){
     function renderBars(container,items){
       var itemName = getItemOption(items,"Name"),
           itemColor = getItemOption(items,"Color");
-      var columns = getItemsColumns(items),
+      var columns = getItemsColumns(items,true),
           visibleItems = data.storeItems[items].filter(function(item){ return !item._hidden && !item._outoftime; }),
           renderPercentage = data.options.freqMode=="relative" ? "%" : "";
 
@@ -2967,7 +2967,7 @@ function renderMap(data){
               ul.classList.add("visual-selector");
               win.appendChild(ul)
 
-              var options = getItemsColumns(items).map(function(d){ return [d,d]; });
+              var options = getItemsColumns(items,true).map(function(d){ return [d,d]; });
               options.unshift(["_default_","-"+texts.default+"-"])
               options.forEach(function(d){
                 var value = d[0],
@@ -3488,7 +3488,7 @@ function renderMap(data){
 
   function displayInfo(items,infocolumn,index){
     var dataitems = data.storeItems[items];
-    if(data.options.infoFrame=="left"){
+    if(data.options.infoFrame){
       if(description){
         descriptionContent(dataitems[index].properties[infocolumn]);
         checkTemplateInDescription(dataitems[index].image ? dataitems[index].image : false);
@@ -3857,6 +3857,16 @@ function InfoPanel(){
     this.panel.style.marginTop = nmt+"px";
   }
 
+  if(data.options.frameWidth){
+      var ww = window.innerWidth-(mt*2);
+      w = ww*data.options.frameWidth/100;
+      if(ww<w){
+        w = ww;
+      }
+      this.panel.style.maxWidth = w+"px";
+      this.panel.style.width = w+"px";
+  }
+
   function closePanel(){
     background.style.display = "none";
   }
@@ -4133,7 +4143,7 @@ function addVisualSelector(sel,items,visual,applyVisual){
     var div = L.DomUtil.create('div','',wrapper);
     L.DomUtil.create('span','',div).textContent = texts[visual];
 
-    var options = getItemsColumns(items).map(function(d){ return [d,d]; });
+    var options = getItemsColumns(items,true).map(function(d){ return [d,d]; });
     options.unshift(["_default_","-"+texts.default+"-"])
     displaySelectWrapper(wrapper,options,function(value){
       applyVisual(items,visual,value);
@@ -4236,7 +4246,7 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
       }
     }
 
-    var columns = getItemsColumns(items);
+    var columns = getItemsColumns(items,true);
     displaySelectWrapper(div,columns,selectChangeFunction,columns[0]);
 
     var valueSelector = L.DomUtil.create('div','value-selector',div);
@@ -5004,7 +5014,7 @@ function getDFcolumnType(items,col){
   return false;
 }
 
-function getItemsColumns(items){
+function getItemsColumns(items,filter){
   return data[items].columns.filter(function(d,i){
         if(items=="markers" && d==data.options.image){
           return false;
@@ -5013,6 +5023,9 @@ function getItemsColumns(items){
           return false;
         }
         if(items=="entities" && d==data.options.entityInfo){
+          return false;
+        }
+        if(filter && data.options[items+"_noFilterCols"] && data.options[items+"_noFilterCols"].indexOf(d)!=-1){
           return false;
         }
         if(!data.options.showCoords && (d==data.options.markerLatitude || d==data.options.markerLongitude)){

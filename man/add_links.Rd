@@ -10,7 +10,7 @@ Object of class \code{evolMap}.
 
 \usage{
 add_links(map, links, color = NULL, start = NULL, end = NULL, period = NULL,
-  curve = TRUE, arrows = FALSE)
+  noFilterCols = NULL, curve = TRUE, arrows = FALSE)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -19,6 +19,7 @@ add_links(map, links, color = NULL, start = NULL, end = NULL, period = NULL,
 \item{start}{name of the column with the start time of a period in the link data frame.}
 \item{end}{name of the column with the end time of a period in the link data frame.}
 \item{period}{name of the column with the period name in the link data frame.}
+\item{noFilterCols}{disable filtering by especified column names.}
 \item{curve}{Links will be displayed as a curve.}
 \item{arrows}{Links will show an arrow at the end.}
 }

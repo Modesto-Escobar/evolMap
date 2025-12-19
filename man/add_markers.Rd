@@ -11,10 +11,10 @@ Object of class \code{evolMap}.
 \usage{
 add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
   label = NULL, image = NULL, size = NULL, color = NULL, shape = NULL,
-  text = NULL, info = NULL, infoFrame = c("right","left"),
-  rightFrameWidth = NULL, start = NULL, end = NULL, period = NULL,
-  markerCluster = FALSE, roundedIcons = TRUE, jitteredPoints = 0,
-  coords = FALSE)
+  text = NULL, info = NULL, infoFrame = NULL, rightFrameWidth = NULL,
+  start = NULL, end = NULL, period = NULL,
+  noFilterCols = NULL, markerCluster = FALSE, roundedIcons = TRUE,
+  jitteredPoints = 0, coords = FALSE)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -29,11 +29,12 @@ add_markers(map, data, latitude = NULL, longitude = NULL, name = NULL,
 \item{shape}{name of the column with shape variable in the marker data frame.}
 \item{text}{name of the column with texts in the marker data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the marker data frame.}
-\item{infoFrame}{Panel (right or left) where the information is to be displayed. The left panel is only available if a description is provided with \code{add_description}.}
-\item{rightFrameWidth}{a percentage indicating the width for the right information panel.}
+\item{infoFrame}{Deprecated. Replaced by argument \code{infoFrame} in \code{add_description} function.}
+\item{rightFrameWidth}{Deprecated. Replaced by argument \code{frameWidth} in \code{create_map} function.}
 \item{start}{name of the column with the start time of a period in the marker data frame.}
 \item{end}{name of the column with the end time of a period in the marker data frame.}
-\item{period}{name of the column with the period name in the marker data frame.} 
+\item{period}{name of the column with the period name in the marker data frame.}
+\item{noFilterCols}{disable filtering by especified column names.}
 \item{markerCluster}{enable joining of nearby markers when zooming out.}
 \item{roundedIcons}{display markers with rounded borders.}
 \item{jitteredPoints}{add an amount of noise to markers to avoid overlapping.}

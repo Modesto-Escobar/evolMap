@@ -11,8 +11,9 @@ Object of class \code{evolMap}.
 \usage{
 add_entities(map, entities, attributes = NULL, name = NULL,
   label = NULL, color = NULL, text = NULL,
-  info = NULL, infoFrame = c("right","left"), rightFrameWidth = NULL,
-  start = NULL, end = NULL, period = NULL, opacity = 0.2)
+  info = NULL, infoFrame = NULL, rightFrameWidth = NULL,
+  start = NULL, end = NULL, period = NULL,
+  noFilterCols = NULL, opacity = 0.2)
 }
 \arguments{
 \item{map}{an object of class \code{evolMap}.}
@@ -23,11 +24,12 @@ add_entities(map, entities, attributes = NULL, name = NULL,
 \item{color}{name of the column with color variable in the entities or attributes data frame.}
 \item{text}{name of the column in the entities or attributes data frame with texts in the entities or attributes data frame. This information will be shown as a popup.}
 \item{info}{name of the column with information to display in a panel in the data matrix.}
-\item{infoFrame}{Panel (right or left) where the information is to be displayed. The left panel is only available if a description is provided with \code{add_description}.}
-\item{rightFrameWidth}{a percentage indicating the width for the right information panel.}
+\item{infoFrame}{Deprecated. Replaced by argument \code{infoFrame} in \code{add_description} function.}
+\item{rightFrameWidth}{Deprecated. Replaced by argument \code{frameWidth} in \code{create_map} function.}
 \item{start}{name of the column with the start time of a period in the entities or attributes data frame.}
 \item{end}{name of the column with the end time of a period in the entities or attributes data frame.}
 \item{period}{name of the column with the period name in the entities or attributes data frame.}
+\item{noFilterCols}{disable filtering by especified column names.}
 \item{opacity}{Entity opacity expressed as a numeric vector between 0 and 1. Default: 0.2.}
 }
 \author{

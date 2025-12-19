@@ -376,6 +376,7 @@ div.infopanel > .panel-content > div {
 .links-2-columns {
   display: block;
   width: 100%;
+  clear: both;
 }
 .links-2-columns > ul {
   display: inline-block;

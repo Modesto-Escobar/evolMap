@@ -2,7 +2,7 @@ var texts = {
 "select": "Select",
 "selectall": "Select all",
 "filter": "Filter",
-"clear": "Clear filter",
+"clear": "Restart",
 "opacity": "Opacity",
 "speed": "Speed",
 "period": "Period",
@@ -34,5 +34,7 @@ var texts = {
 "default": "default",
 "searchsomething": "Search something...",
 "changespeed": "Change speed",
-"noresults": "No results"
+"noresults": "No results",
+"jointfilter": "Joint filter",
+"deselect": "Deselect"
 }

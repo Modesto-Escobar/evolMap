@@ -11,11 +11,6 @@ window.onload = function(){
   }
 }
 
-var filter_criteria = {
-  selection: new Set(),
-  filter: new Set()
-};
-
 function colorScheme(defaultColor){
     var contrast = contrastColor(defaultColor);
     var style = document.createElement("style");
@@ -479,6 +474,14 @@ function renderMap(data){
 
     var links_layer = L.layerGroup();
   }
+
+  data.filter_criteria = {};
+  Object.keys(data.storeItems).forEach(function(items){
+    data.filter_criteria[items] = {
+      selection: new SelectionSet(),
+      filter: new Set()
+    };
+  });
 
   // minicharts
   var minicharts = false;
@@ -2293,14 +2296,16 @@ function renderMap(data){
             row.style.display = i>9 ? "none" : null;
             row.setAttribute("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""));
             row.addEventListener("click",function(event){
-              visibleItems.forEach(function(item){
-                if(!(event.ctrlKey || event.metaKey)){
-                  delete item._selected;
+              if(!(event.ctrlKey || event.metaKey)){
+                data.filter_criteria[items].selection.clear();
+              }else{
+                var keys = data.filter_criteria[items].selection.keys();
+                if(keys.length!=1 || keys[0]!=col){
+                  data.filter_criteria[items].selection.clear();
                 }
-                if(isItemSelected(items,item,col,v)){
-                  item._selected = true;
-                }
-              });
+              }
+              data.filter_criteria[items].selection.add(col,v);
+              applySelectionCriteria();
               update_items();
             });
             barplot.appendChild(row);
@@ -3100,6 +3105,8 @@ function renderMap(data){
             filterButton.classList[some_selected(items)&&!all_selected(items) ? "remove" : "add"]("disabled");
             var resetfilterButton = element.getElementsByClassName("resetfilter-button")[0];
             resetfilterButton.classList[some_filtered(items) ? "remove" : "add"]("disabled");
+            var deselectButton = element.getElementsByClassName("deselect-button")[0];
+            deselectButton.classList[some_selected(items) ? "remove" : "add"]("disabled");
           }
         }
       });
@@ -3185,11 +3192,11 @@ function renderMap(data){
 
   function select_none(){
     Object.keys(data.storeItems).forEach(function(items){
+      data.filter_criteria[items].selection.clear();
       data.storeItems[items].forEach(function(item){
         delete item._selected;
       });
     });
-    filter_criteria.selection.clear();
     update_items();
 
     if(infoPanel){
@@ -3215,11 +3222,11 @@ function renderMap(data){
           }
         });
       }
+      data.filter_criteria[items[i]].filter.clear();
+      data.filter_criteria[items[i]].selection.keys().forEach(function(v){
+        data.filter_criteria[items[i]].filter.add(v);
+      });
     }
-    filter_criteria.filter.clear();
-    filter_criteria.selection.forEach(function(v){
-      filter_criteria.filter.add(v);
-    });
     updateFiltersButtonCounter();
     update_items();
   }
@@ -3241,8 +3248,8 @@ function renderMap(data){
           delete item._hidden;
         });
       }
+      data.filter_criteria[items].filter.clear();
     });
-    filter_criteria.filter.clear();
     updateFiltersButtonCounter();
     update_items();
   }
@@ -3444,48 +3451,6 @@ function renderMap(data){
       }
   }
 
-  function some_selected(items){
-    if(typeof items == "string"){
-      items = [items];
-    }else{
-      items = Object.keys(data.storeItems);
-    }
-    for(var i=0; i<items.length; i++){
-      if(data.storeItems[items[i]].filter(function(item){ return item._selected; }).length){
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function all_selected(items){
-    if(typeof items == "string"){
-      items = [items];
-    }else{
-      items = Object.keys(data.storeItems);
-    }
-    for(var i=0; i<items.length; i++){
-      if(data.storeItems[items[i]].filter(function(item){ return !item._selected; }).length){
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function some_filtered(items){
-    if(typeof items == "string"){
-      items = [items];
-    }else{
-      items = Object.keys(data.storeItems);
-    }
-    for(var i=0; i<items.length; i++){
-      if(data.storeItems[items[i]].filter(function(item){ return item._hidden; }).length){
-        return true;
-      }
-    }
-    return false;
-  }
-
   function displayInfo(items,infocolumn,index){
     var dataitems = data.storeItems[items];
     if(data.options.infoFrame){
@@ -3589,6 +3554,48 @@ function renderMap(data){
   }
 
 } // end function renderMap
+
+function some_selected(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return item._selected; }).length){
+        return true;
+      }
+    }
+    return false;
+}
+
+function all_selected(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return !item._selected; }).length){
+        return false;
+      }
+    }
+    return true;
+}
+
+function some_filtered(items){
+    if(typeof items == "string"){
+      items = [items];
+    }else{
+      items = Object.keys(data.storeItems);
+    }
+    for(var i=0; i<items.length; i++){
+      if(data.storeItems[items[i]].filter(function(item){ return item._hidden; }).length){
+        return true;
+      }
+    }
+    return false;
+}
 
 // color management
 function colorMgmt(items,itemProp){
@@ -4102,31 +4109,20 @@ function getKey(event){
   }
 }
 
-function allItemsSelectedByValue(items,column,value){
-        var checked = false;
-        var storeItems = data.storeItems[items];
-        for(var i=0; i<storeItems.length; i++){
-          if(!storeItems[i]._hidden && !storeItems[i]._outoftime){
-            if(isItemSelected(items,storeItems[i],column,value)){
-              if(storeItems[i]._selected){
-                checked = true;
-              }else{
-                checked = false;
-                break;
-              }
-            }
-          }
-        }
-        return checked;
-}
-
 function isItemSelected(items,item,column,value){
+  var type = getDFcolumnType(items,column);
   var itemValue = item.properties[column];
-  if(getDFcolumnType(items,column)=="object"){
-    if(typeof value == "object"){
-      return intersection(value,itemValue).length;
+  if(type=="number"){
+    return (itemValue>=value[0] && itemValue<=value[1]);
+  }else if(type=="object"){
+    if(typeof value != "object"){
+      value = [value];
+    }
+    var len = intersection(value,itemValue).length;
+    if(data.options.jointfilter){
+      return len==value.length;
     }else{
-      return itemValue.indexOf(String(value))!=-1;
+      return len;
     }
   }else{
     if(typeof value == "object"){
@@ -4135,6 +4131,30 @@ function isItemSelected(items,item,column,value){
       return String(value)==String(itemValue);
     }
   }
+}
+
+function applySelectionCriteria(){
+  Object.keys(data.storeItems).forEach(function(items){
+    var keys = data.filter_criteria[items].selection.keys();
+    data.storeItems[items].forEach(function(item){
+      delete item._selected;
+      if(keys.length && !(item._hidden || item._outoftime)){
+        var selected = true;
+        for(var i=0; i<keys.length; i++){
+          var values = data.filter_criteria[items].selection.values(keys[i]);
+          if(!isItemSelected(items,item,keys[i],values)){
+            selected = false;
+          }
+        }
+        if(selected){
+          item._selected = true;
+        }
+      }
+    });
+    if(!some_selected(items)){
+      data.filter_criteria[items].selection.clear();
+    }
+  });
 }
 
 function addVisualSelector(sel,items,visual,applyVisual){
@@ -4151,9 +4171,13 @@ function addVisualSelector(sel,items,visual,applyVisual){
 }
 
 function updateFiltersButtonCounter(){
-  var showPanelButtonSpan = document.querySelector(".show-panel-button > span");
-  showPanelButtonSpan.textContent = filter_criteria.filter.size;
-  showPanelButtonSpan.style.display = filter_criteria.filter.size ? "" : "none";
+  var showPanelButtonSpan = document.querySelector(".show-panel-button > span"),
+      filtersize = 0;
+  Object.keys(data.filter_criteria).forEach(function(items){
+    filtersize = filtersize + data.filter_criteria[items].filter.size;
+  });
+  showPanelButtonSpan.textContent = filtersize;
+  showPanelButtonSpan.style.display = filtersize ? "" : "none";
 }
 
 function displayItemFilter(div,items,filter_selected,remove_filters,update_items,select_none,center_selection){
@@ -4169,14 +4193,9 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
           .domain(extent)
           .current([mid,mid])
           .callback(function(selectedValues){
-            filter_criteria.selection.delete(value);
-            data.storeItems[items].forEach(function(item){
-              delete item._selected;
-              if(!(item._hidden || item._outoftime) && (item.properties[value]>=selectedValues[0] && item.properties[value]<=selectedValues[1])){
-                filter_criteria.selection.add(value);
-                item._selected = true;
-              }
-            });
+            data.filter_criteria[items].selection.delete(value);
+            data.filter_criteria[items].selection.add(value,selectedValues);
+            applySelectionCriteria();
             update_items();
           })
         slider(valueSelector);
@@ -4209,26 +4228,42 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
             .appendChild(getSVG("search"))
         }
 
+        if(type != 'string'){
+          var jointfilter = L.DomUtil.create('div','joint-filter',valueSelector);
+          var span = document.createElement("span");
+          span.textContent = texts['jointfilter'];
+          jointfilter.appendChild(span)
+          var button = L.DomUtil.create('button','switch-button',jointfilter);
+          if(data.options.jointfilter){
+            button.classList.add("active");
+          }
+          button.addEventListener("click",function(){
+            this.classList.toggle("active");
+            if(this.classList.contains("active")){
+              data.options.jointfilter = true;
+            }else{
+              delete data.options.jointfilter;
+            }
+            applySelectionCriteria();
+            update_items();
+          })
+        }
+
         valueSelector.querySelectorAll(".tag").forEach(function(e){ e.remove(); });
         values.forEach(function(v){
-            var tag = L.DomUtil.create('span','tag'+(allItemsSelectedByValue(items,value,v)?" tag-selected":""),valueSelector);
+            var tag = L.DomUtil.create('span','tag'+(data.filter_criteria[items].selection.has(value,v)?" tag-selected":""),valueSelector);
             tag.textContent = v+" ("+crosstab[v]+")";
             tag.setAttribute("tag-value",v);
             tag.addEventListener("click",function(){
               valueSelector.querySelectorAll(".tag").forEach(function(e){ e.style.display = ""; });
-              tag.classList.toggle("tag-selected");
-              var selectedvalues = Array.from(valueSelector.querySelectorAll(".tag.tag-selected")).map(function(d){
-                return d.getAttribute("tag-value");
-
-              });
-              filter_criteria.selection.delete(value);
-              data.storeItems[items].forEach(function(item){
-                delete item._selected;
-                if(isItemSelected(items,item,value,selectedvalues)){
-                  filter_criteria.selection.add(value);
-                  item._selected = true;
-                }
-              });
+              this.classList.toggle("tag-selected");
+              if(this.classList.contains("tag-selected")){
+                data.filter_criteria[items].selection.add(value,this.getAttribute("tag-value"));
+              }else{
+                data.filter_criteria[items].selection.delete(value,this.getAttribute("tag-value"));
+              }
+              var selectedvalues = data.filter_criteria[items].selection.values(value);
+              applySelectionCriteria();
               update_items();
             })
         });
@@ -4266,6 +4301,13 @@ function displayItemFilter(div,items,filter_selected,remove_filters,update_items
     clear.textContent = texts["clear"];
     clear.addEventListener("click",function(){
       remove_filters();
+      select_none();
+    });
+
+    var selectnone = L.DomUtil.create('button','primary-outline deselect-button',filterButtons);
+    selectnone.style.marginLeft = "16px";
+    selectnone.textContent = texts["deselect"];
+    selectnone.addEventListener("click",function(){
       select_none();
     });
 
@@ -5266,3 +5308,57 @@ function quadraticPoint(sx,sy,tx,ty){
 
       return [offSetX,offSetY];
 }
+
+function SelectionSet(){
+  this._data = {};
+}
+
+SelectionSet.prototype = {
+  add: function(key,val){
+    if(!Array.isArray(val)){
+      val = [val]
+    }
+    if(!this._data.hasOwnProperty(key)){
+      this._data[key] = new Set();
+    }
+    for(var i=0; i<val.length; i++){
+      this._data[key].add(val[i]);
+    }
+  },
+  has: function(key,val){
+    if(this._data.hasOwnProperty(key)){
+      return this._data[key].has(val);
+    }
+    return false;
+  },
+  delete: function(key,val){
+    if(this._data.hasOwnProperty(key)){
+      if(typeof val != "undefined"){
+        if(!Array.isArray(val)){
+          val = [val]
+        }
+        for(var i=0; i<val.length; i++){
+          this._data[key].delete(val[i]);
+        }
+        if(!this._data[key].size){
+          delete this._data[key];
+        }
+      }else{
+        delete this._data[key];
+      }
+    }
+  },
+  values: function(key){
+    if(this._data.hasOwnProperty(key)){
+      return Array.from(this._data[key].values());
+    }
+    return [];
+  },
+  clear: function(){
+    this._data = {};
+  },
+  keys: function(){
+    return Object.keys(this._data);
+  }
+}
+

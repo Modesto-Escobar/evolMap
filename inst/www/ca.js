@@ -2,7 +2,7 @@ var texts = {
 "select": "Seleccionar",
 "selectall": "seleccionar tots",
 "filter": "Filtrar",
-"clear": "Netejar filtres",
+"clear": "Reiniciar",
 "opacity": "Opacitat",
 "speed": "Velocitat",
 "period": "Període",
@@ -34,5 +34,7 @@ var texts = {
 "default": "Per defecte",
 "searchsomething": "Busca alguna cosa...",
 "changespeed": "Canvia la velocitat",
-"noresults": "Sense resultats"
+"noresults": "Sense resultats",
+"jointfilter": "Filtre conjunt",
+"deselect": "Deseleccionar"
 }

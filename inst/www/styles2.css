@@ -91,20 +91,50 @@ button.primary {
   background-color: #b55b2b;
   color: #ffffff;
   border: none;
-  min-width: 120px;
+  min-width: 90px;
   height: 32px;
 }
 button.primary-outline {
   background-color: #ffffff;
   color: #b55b2b;
   border-color: #b55b2b;
-  min-width: 120px;
+  min-width: 90px;
   height: 32px;
 }
 button.primary.disabled,
 button.primary-outline.disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+button.switch-button {
+  width: 22px;
+  height: 14px;
+  border-radius: 10px;
+  background-color: #777777;
+  border: none;
+  vertical-align: middle;
+  padding: 0;
+}
+button.switch-button:after {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  border: solid 1px #777777;
+}
+button.switch-button.active {
+  background-color: #2f7bee;
+}
+button.switch-button.active:after {
+  margin-left: 8px;
+  border-color: #2f7bee;
 }
 
 #Wrapper {
@@ -705,6 +735,13 @@ ul.visual-selector > li.active {
   background-color: #000000;
   color: #ffffff;
 }
+.items-filter > .list-variables > .value-selector > div.joint-filter {
+  text-align: right;
+  margin-bottom: 8px;
+}
+.items-filter > .list-variables > .value-selector > div.joint-filter > span {
+  margin-right: 8px;
+}
 .items-filter > .list-variables > .item-variable {
   margin-left: 32px;
   margin-bottom: 16px;
@@ -932,8 +969,9 @@ button.custom-color {
   text-align: center;
   width: 16px;
   height: 16px;
-  font-size: 8px;
-  line-height: 2;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.7;
   animation: myhighlight 1s 10;
   color: #2f7bee;
 }
